@@ -4,6 +4,7 @@
 package blog4go
 
 import (
+	"fmt"
 	"os"
 )
 
@@ -97,6 +98,10 @@ func (self *FileLogWriter) Start() {
 	self.validateConfig()
 
 	self.c = make(chan *LogRecord, self.bufferSize)
+
+	// 打开文件描述符
+
+	go self.run()
 }
 
 func (self *FileLogWriter) write(record *LogRecord) {
@@ -112,6 +117,12 @@ func (self *FileLogWriter) Close() {
 }
 
 func (self *FileLogWriter) run() {
+	for {
+		select {
+		case record := <-self.c:
+			os.Stdout.WriteString(record.message)
+		}
+	}
 
 }
 
@@ -122,4 +133,32 @@ func (self *FileLogWriter) SetLevel(level Level) *FileLogWriter {
 
 func (self *FileLogWriter) GetLevel() Level {
 	return self.level
+}
+
+func (self *FileLogWriter) Debug(message string) {
+
+}
+
+func (self *FileLogWriter) Debugf(message string, args ...interface{}) {
+	// 格式化构造message
+	// 使用 % 作占位符
+
+	// 识别占位符标记
+	var tag bool = false
+
+	for i := 0; i < len(message); i++ {
+		switch message[i] {
+		//占位符，百分号
+		case '%':
+			tag = true
+		//占位符，有意义部分
+		case 's':
+			if !tag {
+				continue
+			}
+		//转义符
+		case '\\':
+		}
+	}
+	fmt.Println(tag)
 }
