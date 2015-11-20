@@ -4,8 +4,11 @@
 package blog4go
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
 	"os"
+	"time"
 )
 
 type Level int
@@ -23,8 +26,15 @@ var (
 	levelStrings = [...]string{"DEBUG", "TRAC", "INFO", "WARN", "ERROR", "CRITAL"}
 )
 
-func (self Level) ToString() string {
-	if 0 > self || int(self) >= len(levelStrings) {
+func (self Level) valid() bool {
+	if DEBUG > self || CRITICAL < self {
+		return false
+	}
+	return true
+}
+
+func (self Level) String() string {
+	if !self.valid() {
 		return "UNKNOWN"
 	}
 	return levelStrings[self]
@@ -36,44 +46,44 @@ type LogRecord struct {
 	message string
 }
 
+func (self *LogRecord) String() string {
+	var b bytes.Buffer
+	now := time.Now().Format("2006-01-02 15:04:05")
+	b.WriteString(now)
+	b.WriteString(" [" + self.level.String() + "] ")
+	b.WriteString(self.message)
+
+	return b.String()
+}
+
 // 各种日志结构接口
 type LogWriter interface {
-	// 用户调用开始装逼地写log
-	Start()
-
-	// 提供用户主动将log输出到文件的方法
-	// 当chan为有缓冲时
-	Flush()
-
 	// 关闭log writer的处理方法
 	// 善后
 	Close()
 
 	// 用于内部写log的方法
-	write(record *LogRecord)
+	write(level Level, format string, args ...interface{})
 
-	// 装逼logger自动将log输出到文件
-	run()
+	// 供用户强制刷日志到输出
+	Flush()
 }
 
 // DefaultFileLogWriter.c 为无缓冲channel
 var DefaultFileLogWriter *FileLogWriter = new(FileLogWriter)
 
-var (
-	DefaultBufferSize = 32
+const (
+	DefaultBufferSize = 4096
 )
 
 // 装逼的logger
 type FileLogWriter struct {
 	level Level
 
-	c chan *LogRecord
-	// c channel buffer size
-	bufferSize int
-
 	// log文件
 	filename string
 	file     *os.File
+	writer   *bufio.Writer
 
 	// logrotate
 	rotate bool
@@ -84,46 +94,28 @@ func init() {
 
 }
 
-func (self *FileLogWriter) validateConfig() {
-	if self.level < DEBUG || self.level > CRITICAL {
-		panic("Please set an valid log level.")
-	}
-
-	if self.bufferSize < 0 {
-		self.bufferSize = DefaultBufferSize
-	}
-}
-
-func (self *FileLogWriter) Start() {
-	self.validateConfig()
-
-	self.c = make(chan *LogRecord, self.bufferSize)
+func NewFileLogWriter(filename string) (fileWriter *FileLogWriter, err error) {
+	fileWriter = new(FileLogWriter)
 
 	// 打开文件描述符
+	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
+	if nil != err {
+		return nil, err
+	}
+	fileWriter.filename = filename
+	fileWriter.file = file
+	fileWriter.writer = bufio.NewWriterSize(file, DefaultBufferSize)
 
-	go self.run()
-}
-
-func (self *FileLogWriter) write(record *LogRecord) {
-	self.c <- record
-}
-
-func (self *FileLogWriter) Flush() {
-
+	return fileWriter, nil
 }
 
 func (self *FileLogWriter) Close() {
-	close(self.c)
+	self.writer.Flush()
+	self.file.Close()
 }
 
-func (self *FileLogWriter) run() {
-	for {
-		select {
-		case record := <-self.c:
-			os.Stdout.WriteString(record.message)
-		}
-	}
-
+func (self *FileLogWriter) Flush() {
+	self.writer.Flush()
 }
 
 func (self *FileLogWriter) SetLevel(level Level) *FileLogWriter {
@@ -135,19 +127,28 @@ func (self *FileLogWriter) GetLevel() Level {
 	return self.level
 }
 
-func (self *FileLogWriter) Debug(message string) {
+func (self *FileLogWriter) write(level Level, format string, args ...interface{}) {
+	if level < self.level {
+		return
+	}
 
+	// TODO 优化format
+	now := time.Now().Format("[2006/01/02:15:04:05]")
+	self.writer.WriteString(now + " [" + level.String() + "] ")
+	self.writer.WriteString(format + "\n")
+
+	//self.writer.Flush()
 }
 
-func (self *FileLogWriter) Debugf(message string, args ...interface{}) {
+func (self *FileLogWriter) writef(level Level, format string, args ...interface{}) {
 	// 格式化构造message
 	// 使用 % 作占位符
 
 	// 识别占位符标记
 	var tag bool = false
 
-	for i := 0; i < len(message); i++ {
-		switch message[i] {
+	for i := 0; i < len(format); i++ {
+		switch format[i] {
 		//占位符，百分号
 		case '%':
 			tag = true
@@ -161,4 +162,13 @@ func (self *FileLogWriter) Debugf(message string, args ...interface{}) {
 		}
 	}
 	fmt.Println(tag)
+
+}
+
+func (self *FileLogWriter) Debug(format string) {
+	self.write(DEBUG, format)
+}
+
+func (self *FileLogWriter) Debugf(format string, args ...interface{}) {
+	self.writef(DEBUG, format, args...)
 }
