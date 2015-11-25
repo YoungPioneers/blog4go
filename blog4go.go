@@ -6,6 +6,7 @@ package blog4go
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -140,29 +141,55 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 	//self.writer.Flush()
 }
 
-func (self *FileLogWriter) writef(level Level, format string, args ...interface{}) {
+func (self *FileLogWriter) writef(level Level, format string, args ...interface{}) (err error) {
 	// 格式化构造message
 	// 使用 % 作占位符
 
+	now := time.Now().Format("[2006/01/02:15:04:05]")
+	self.writer.WriteString(now + " [" + level.String() + "] ")
+	self.writer.WriteString(format + "\n")
+
 	// 识别占位符标记
 	var tag bool = false
+	var n int = 0
+	var last int = 0
 
 	for i := 0; i < len(format); i++ {
-		switch format[i] {
-		//占位符，百分号
-		case '%':
-			tag = true
-		//占位符，有意义部分
-		case 's':
-			if !tag {
+		if tag {
+			switch format[i] {
+			// 类型检查
+			// 占位符，有意义部分
+			// 字符串
+			case 's':
+				if str, ok := args[n].(string); !ok {
+					return errors.New("Wrong format type.")
+				}
+			// 数字型
+			case 'd':
+				if digit, ok := args[n].(int64); !ok {
+					return errors.New("Wrong format type.")
+				}
+			//转义符
+			case '\\':
+
+			//默认
+			default:
+
+			}
+			self.writer.Write(args[n].([]byte))
+			tag = false
+		} else {
+			// 占位符，百分号
+			if '%' == format[i] {
+				tag = true
+				self.writer.Write([]byte(format[last:i]))
+				last = i + 1
 				continue
 			}
-		//转义符
-		case '\\':
 		}
 	}
-	fmt.Println(tag)
 
+	return
 }
 
 func (self *FileLogWriter) Debug(format string) {
