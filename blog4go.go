@@ -151,32 +151,58 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 
 	// 识别占位符标记
 	var tag bool = false
+	// 转义字符标记
+	var escape bool = false
+
 	var n int = 0
 	var last int = 0
 
 	for i := 0; i < len(format); i++ {
 		if tag {
 			switch format[i] {
-			// 类型检查
+			// 类型检查/ 特殊字符处理
 			// 占位符，有意义部分
 			// 字符串
 			case 's':
-				if str, ok := args[n].(string); !ok {
+				if escape {
+
+					escape = false
+				}
+
+				if _, ok := args[n].(string); !ok {
 					return errors.New("Wrong format type.")
 				}
-			// 数字型
+			// 整型
 			case 'd':
-				if digit, ok := args[n].(int64); !ok {
+				if escape {
+
+					escape = false
+				}
+
+				if _, ok := args[n].(int64); !ok {
 					return errors.New("Wrong format type.")
 				}
+			// 浮点型
+			case 'f':
+				if escape {
+
+					escape = false
+				}
+
+				if _, ok := args[n].(float64); !ok {
+					return errors.New("Wrong format type.")
+				}
+
 			//转义符
 			case '\\':
+				escape = true
 
 			//默认
 			default:
 
 			}
 			self.writer.Write(args[n].([]byte))
+			n++
 			tag = false
 		} else {
 			// 占位符，百分号
