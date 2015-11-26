@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -147,7 +148,6 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 
 	now := time.Now().Format("[2006/01/02:15:04:05]")
 	self.writer.WriteString(now + " [" + level.String() + "] ")
-	self.writer.WriteString(format + "\n")
 
 	// 识别占位符标记
 	var tag bool = false
@@ -169,7 +169,10 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 					escape = false
 				}
 
-				if _, ok := args[n].(string); !ok {
+				if str, ok := args[n].(string); ok {
+					self.writer.WriteString(str)
+					n++
+				} else {
 					return errors.New("Wrong format type.")
 				}
 			// 整型
@@ -179,17 +182,26 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 					escape = false
 				}
 
-				if _, ok := args[n].(int64); !ok {
+				// 判断数据类型
+				if number, ok := args[n].(int); ok {
+					self.writer.WriteString(strconv.Itoa(number))
+					n++
+				} else {
 					return errors.New("Wrong format type.")
 				}
 			// 浮点型
+			// 暂时不支持
 			case 'f':
 				if escape {
 
 					escape = false
 				}
 
-				if _, ok := args[n].(float64); !ok {
+				if f, ok := args[n].(float64); ok {
+					// %.6f
+					self.writer.WriteString(strconv.FormatFloat(f, 'f', 6, 64))
+
+				} else {
 					return errors.New("Wrong format type.")
 				}
 
@@ -201,20 +213,22 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 			default:
 
 			}
-			self.writer.Write(args[n].([]byte))
-			n++
+
 			tag = false
 		} else {
 			// 占位符，百分号
 			if '%' == format[i] {
 				tag = true
 				self.writer.Write([]byte(format[last:i]))
-				last = i + 1
+				last = i + 2
 				continue
 			}
 		}
 	}
+	self.writer.Write([]byte(format[last:]))
+	self.writer.WriteString("\n")
 
+	fmt.Println("success")
 	return
 }
 
