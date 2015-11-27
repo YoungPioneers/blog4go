@@ -199,7 +199,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				if f, ok := args[n].(float64); ok {
 					// %.6f
 					self.writer.WriteString(strconv.FormatFloat(f, 'f', 6, 64))
-
+					n++
 				} else {
 					return errors.New("Wrong format type.")
 				}
@@ -220,7 +220,6 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				tag = true
 				self.writer.Write([]byte(format[last:i]))
 				last = i + 2
-				continue
 			}
 		}
 	}
