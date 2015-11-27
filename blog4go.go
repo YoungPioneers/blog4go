@@ -7,7 +7,6 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"fmt"
 	"os"
 	"strconv"
 	"time"
@@ -228,7 +227,6 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 	self.writer.Write([]byte(format[last:]))
 	self.writer.WriteString("\n")
 
-	fmt.Println("success")
 	return
 }
 
