@@ -92,7 +92,8 @@ type FileLogWriter struct {
 
 // 包初始化函数
 func init() {
-
+	timeCache.now = time.Now()
+	timeCache.format = timeCache.now.Format("[2006/01/02:15:04:05]")
 }
 
 func NewFileLogWriter(filename string) (fileWriter *FileLogWriter, err error) {
@@ -128,25 +129,51 @@ func (self *FileLogWriter) GetLevel() Level {
 	return self.level
 }
 
+// 时间格式化的cache
+type timeFormatCacheType struct {
+	now    time.Time
+	format string
+}
+
+var timeCache = timeFormatCacheType{}
+
 func (self *FileLogWriter) write(level Level, format string, args ...interface{}) {
 	if level < self.level {
 		return
 	}
 
-	// TODO 优化format
-	now := time.Now().Format("[2006/01/02:15:04:05]")
-	self.writer.WriteString(now + " [" + level.String() + "] ")
+	// 尝试缓存time format, 高并发的时候或许有用
+	// 可以尝试独立goroutine每秒修改timeCache
+	now := time.Now()
+	if now != timeCache.now {
+		timeCache.now = now
+		timeCache.format = now.Format("[2006/01/02:15:04:05]")
+	}
+
+	self.writer.WriteString(timeCache.format)
+	self.writer.WriteString(" [" + level.String() + "] ")
 	self.writer.WriteString(format + "\n")
 
 	//self.writer.Flush()
 }
 
 func (self *FileLogWriter) writef(level Level, format string, args ...interface{}) (err error) {
+	if level < self.level {
+		return
+	}
 	// 格式化构造message
 	// 使用 % 作占位符
 
-	now := time.Now().Format("[2006/01/02:15:04:05]")
-	self.writer.WriteString(now + " [" + level.String() + "] ")
+	// 尝试缓存time format, 高并发的时候或许有用
+	// 可以尝试独立goroutine每秒修改timeCache
+	now := time.Now()
+	if now != timeCache.now {
+		timeCache.now = now
+		timeCache.format = now.Format("[2006/01/02:15:04:05]")
+	}
+
+	self.writer.WriteString(timeCache.format)
+	self.writer.WriteString(" [" + level.String() + "] ")
 
 	// 识别占位符标记
 	var tag bool = false
@@ -215,7 +242,10 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 
 			//转义符
 			case '\\':
-				escape = true
+				if !escape {
+					self.writer.WriteString("\\")
+				}
+				escape = !escape
 
 			//默认
 			default:
@@ -224,13 +254,13 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 
 		} else {
 			// 占位符，百分号
-			if '%' == format[i] {
+			if '%' == format[i] && !escape {
 				tag = true
-				self.writer.Write([]byte(format[last:i]))
+				self.writer.WriteString(format[last:i])
 			}
 		}
 	}
-	self.writer.Write([]byte(format[last:]))
+	self.writer.WriteString(format[last:])
 	self.writer.WriteString("\n")
 
 	return
