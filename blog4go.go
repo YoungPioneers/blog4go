@@ -171,9 +171,11 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				if str, ok := args[n].(string); ok {
 					self.writer.WriteString(str)
 					n++
+					last = i + 1
 				} else {
 					return errors.New("Wrong format type.")
 				}
+				tag = false
 			// 整型
 			case 'd':
 				if escape {
@@ -185,9 +187,11 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				if number, ok := args[n].(int); ok {
 					self.writer.WriteString(strconv.Itoa(number))
 					n++
+					last = i + 1
 				} else {
 					return errors.New("Wrong format type.")
 				}
+				tag = false
 			// 浮点型
 			// 暂时不支持
 			case 'f':
@@ -197,12 +201,17 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				}
 
 				if f, ok := args[n].(float64); ok {
-					// %.6f
-					self.writer.WriteString(strconv.FormatFloat(f, 'f', 6, 64))
+					// 获取精确度
+
+					prec, _ := strconv.ParseInt(format[i-1:i], 10, 0)
+					// %.xf
+					self.writer.WriteString(strconv.FormatFloat(f, 'f', int(prec), 64))
 					n++
+					last = i + 1
 				} else {
 					return errors.New("Wrong format type.")
 				}
+				tag = false
 
 			//转义符
 			case '\\':
@@ -213,13 +222,11 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 
 			}
 
-			tag = false
 		} else {
 			// 占位符，百分号
 			if '%' == format[i] {
 				tag = true
 				self.writer.Write([]byte(format[last:i]))
-				last = i + 2
 			}
 		}
 	}

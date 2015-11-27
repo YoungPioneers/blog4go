@@ -15,5 +15,5 @@ func main() {
 	}
 
 	writer.Debug("test")
-	writer.Debugf("haha %s. enen, always %d and %f", "eddie", 18, 3.1415)
+	writer.Debugf("haha %s. enen, always %d and %.4f", "eddie", 18, 3.1415)
 }
