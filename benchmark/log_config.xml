@@ -1,0 +1,18 @@
+<seelog>
+	<outputs>
+
+		<filter levels="info,trace" formatid="short">
+			<file path="output.log"/>
+
+		</filter>
+
+		<filter levels="error,critical,warn" formatid="short">
+			<file path="output.log"/>
+		</filter>
+	</outputs>
+
+	<formats>
+		<format id="short" format="[%LEVEL] %Date %Time %Msg%n"/>
+		<format id="debug" format="[%LEVEL] %RelFile:%Line:%Func %Date %Time %Msg%n"/>
+	</formats>
+</seelog>

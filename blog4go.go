@@ -242,7 +242,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 
 			//转义符
 			case '\\':
-				if !escape {
+				if escape {
 					self.writer.WriteString("\\")
 				}
 				escape = !escape
