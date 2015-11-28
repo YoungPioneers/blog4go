@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func BenchmarkFormat(b *testing.B) {
+func BenchmarkSeelogFormat(b *testing.B) {
 	b.StopTimer()
 	logger, err := log.LoggerFromConfigAsFile("log_config.xml")
 	if nil != err {
