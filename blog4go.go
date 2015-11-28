@@ -5,57 +5,11 @@ package blog4go
 
 import (
 	"bufio"
-	"bytes"
 	"errors"
 	"os"
 	"strconv"
 	"time"
 )
-
-type Level int
-
-const (
-	DEBUG Level = iota
-	TRACE
-	INFO
-	WARNING
-	ERROR
-	CRITICAL
-)
-
-var (
-	levelStrings = [...]string{"DEBUG", "TRAC", "INFO", "WARN", "ERROR", "CRITAL"}
-)
-
-func (self Level) valid() bool {
-	if DEBUG > self || CRITICAL < self {
-		return false
-	}
-	return true
-}
-
-func (self Level) String() string {
-	if !self.valid() {
-		return "UNKNOWN"
-	}
-	return levelStrings[self]
-}
-
-// 单条日志记录结构体
-type LogRecord struct {
-	level   Level
-	message string
-}
-
-func (self *LogRecord) String() string {
-	var b bytes.Buffer
-	now := time.Now().Format("2006-01-02 15:04:05")
-	b.WriteString(now)
-	b.WriteString(" [" + self.level.String() + "] ")
-	b.WriteString(self.message)
-
-	return b.String()
-}
 
 // 各种日志结构接口
 type LogWriter interface {
@@ -74,6 +28,7 @@ type LogWriter interface {
 var DefaultFileLogWriter *FileLogWriter = new(FileLogWriter)
 
 const (
+	// 好像buffer size 调大点benchmark效果更好
 	DefaultBufferSize = 4096
 )
 
@@ -86,7 +41,7 @@ type FileLogWriter struct {
 	file     *os.File
 	writer   *bufio.Writer
 
-	// logrotate
+	// TODO logrotate
 	rotate bool
 }
 
@@ -151,8 +106,10 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 	}
 
 	self.writer.WriteString(timeCache.format)
-	self.writer.WriteString(" [" + level.String() + "] ")
+	self.writer.WriteString(" [")
+	self.writer.WriteString(level.String())
 	self.writer.WriteString(format + "\n")
+	self.writer.WriteString("\n")
 
 	//self.writer.Flush()
 }
@@ -173,7 +130,9 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 	}
 
 	self.writer.WriteString(timeCache.format)
-	self.writer.WriteString(" [" + level.String() + "] ")
+	self.writer.WriteString(" [")
+	self.writer.WriteString(level.String())
+	self.writer.WriteString("] ")
 
 	// 识别占位符标记
 	var tag bool = false
