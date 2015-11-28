@@ -24,7 +24,6 @@ type LogWriter interface {
 	Flush()
 }
 
-// DefaultFileLogWriter.c 为无缓冲channel
 var DefaultFileLogWriter *FileLogWriter = new(FileLogWriter)
 
 const (
@@ -51,6 +50,7 @@ func init() {
 	timeCache.format = timeCache.now.Format("[2006/01/02:15:04:05]")
 }
 
+// 创建file writer
 func NewFileLogWriter(filename string) (fileWriter *FileLogWriter, err error) {
 	fileWriter = new(FileLogWriter)
 
@@ -108,7 +108,7 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 	self.writer.WriteString(timeCache.format)
 	self.writer.WriteString(" [")
 	self.writer.WriteString(level.String())
-	self.writer.WriteString(format + "\n")
+	self.writer.WriteString(format)
 	self.writer.WriteString("\n")
 
 	//self.writer.Flush()
