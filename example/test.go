@@ -6,11 +6,11 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func main() {
 	writer, err := blog4go.NewFileLogWriter("output.log")
-	defer writer.Close()
 	if nil != err {
 		fmt.Println(err.Error())
 		os.Exit(1)
@@ -20,9 +20,9 @@ func main() {
 	writer.Debugf("haha %s. en\\en, always %d and %.4f", "eddie", 18, 3.1415)
 
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGTERM)
+	signal.Notify(c, syscall.SIGTERM, os.Interrupt, os.Kill)
 
-	for i := 1; i < 20; i++ {
+	for i := 1; i < 5; i++ {
 		go logging(writer)
 	}
 
@@ -31,6 +31,7 @@ func main() {
 		case <-c:
 			fmt.Println("Exit..")
 			writer.Close()
+			time.Sleep(5 * time.Second)
 			return
 		}
 	}
