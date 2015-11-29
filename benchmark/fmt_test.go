@@ -29,6 +29,7 @@ func BenchmarkFmtFormat(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		writer.WriteString(fmt.Sprintf("%s [%s]haha %s. en\\en, always %d and %.4f", time.Now().Format("2006-01-02 15:04:05"), "DEBUG", "eddie", 18, 3.1415))
 	}
+	writer.Flush()
 }
 
 func BenchmarkFmtWithTimecacheFormat(b *testing.B) {
@@ -56,4 +57,5 @@ func BenchmarkFmtWithTimecacheFormat(b *testing.B) {
 		}
 		writer.WriteString(fmt.Sprintf("%s [%s]haha %s. en\\en, always %d and %.4f", timeCache.format, "DEBUG", "eddie", 18, 3.1415))
 	}
+	writer.Flush()
 }

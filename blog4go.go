@@ -69,6 +69,7 @@ func NewFileLogWriter(filename string) (fileWriter *FileLogWriter, err error) {
 func (self *FileLogWriter) Close() {
 	self.writer.Flush()
 	self.file.Close()
+	self.writer = nil
 }
 
 func (self *FileLogWriter) Flush() {
@@ -108,6 +109,7 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 	self.writer.WriteString(timeCache.format)
 	self.writer.WriteString(" [")
 	self.writer.WriteString(level.String())
+	self.writer.WriteString("] ")
 	self.writer.WriteString(format)
 	self.writer.WriteString("\n")
 
@@ -138,9 +140,10 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 	var tag bool = false
 	// 转义字符标记
 	var escape bool = false
-
+	// 在处理的args 下标
 	var n int = 0
-	var last int = 0
+	// 未输出的，第一个普通字符位置
+	var last int = 0 //
 
 	for i := 0; i < len(format); i++ {
 		if tag {
@@ -150,7 +153,6 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 			// 字符串
 			case 's':
 				if escape {
-
 					escape = false
 				}
 
@@ -165,7 +167,6 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 			// 整型
 			case 'd':
 				if escape {
-
 					escape = false
 				}
 
@@ -188,7 +189,6 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 
 				if f, ok := args[n].(float64); ok {
 					// 获取精确度
-
 					prec, _ := strconv.ParseInt(format[i-1:i], 10, 0)
 					// %.xf
 					self.writer.WriteString(strconv.FormatFloat(f, 'f', int(prec), 64))
@@ -221,6 +221,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 	}
 	self.writer.WriteString(format[last:])
 	self.writer.WriteString("\n")
+	//self.writer.Flush()
 
 	return
 }

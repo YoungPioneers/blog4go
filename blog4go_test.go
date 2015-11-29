@@ -16,4 +16,5 @@ func BenchmarkFormat(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		writer.Debugf("haha %s. en\\en, always %d and %.4f", "eddie", 18, 3.1415)
 	}
+	writer.Close()
 }
