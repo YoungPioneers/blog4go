@@ -8,6 +8,7 @@ import (
 	"errors"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -42,6 +43,9 @@ type FileLogWriter struct {
 
 	// TODO logrotate
 	rotate bool
+
+	lock   *sync.RWMutex
+	closed bool
 }
 
 // 包初始化函数
@@ -62,14 +66,19 @@ func NewFileLogWriter(filename string) (fileWriter *FileLogWriter, err error) {
 	fileWriter.filename = filename
 	fileWriter.file = file
 	fileWriter.writer = bufio.NewWriterSize(file, DefaultBufferSize)
+	fileWriter.lock = new(sync.RWMutex)
+	fileWriter.closed = false
 
 	return fileWriter, nil
 }
 
 func (self *FileLogWriter) Close() {
+	self.lock.Lock()
 	self.writer.Flush()
 	self.file.Close()
 	self.writer = nil
+	self.closed = false
+	self.lock.Unlock()
 }
 
 func (self *FileLogWriter) Flush() {
@@ -106,6 +115,13 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 		timeCache.format = now.Format("[2006/01/02:15:04:05]")
 	}
 
+	self.lock.RLock()
+	defer self.lock.RUnlock()
+
+	if self.closed {
+		return
+	}
+
 	self.writer.WriteString(timeCache.format)
 	self.writer.WriteString(" [")
 	self.writer.WriteString(level.String())
@@ -129,6 +145,13 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 	if now != timeCache.now {
 		timeCache.now = now
 		timeCache.format = now.Format("[2006/01/02:15:04:05]")
+	}
+
+	self.lock.RLock()
+	defer self.lock.RUnlock()
+
+	if self.closed {
+		return
 	}
 
 	self.writer.WriteString(timeCache.format)
