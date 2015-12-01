@@ -47,13 +47,13 @@ type FileLogWriter struct {
 	// TODO logrotate
 	rotate bool
 
-	lock   *sync.RWMutex
+	lock   *sync.Mutex
 	closed bool
 }
 
 // 时间格式化的cache
 type timeFormatCacheType struct {
-	now    time.Time
+	now    time.Time // 这个字段暂时没什么作用, 好像可以尝试用来做logrotate
 	format string
 }
 
@@ -75,7 +75,7 @@ func NewFileLogWriter(filename string) (fileWriter *FileLogWriter, err error) {
 	fileWriter.filename = filename
 	fileWriter.file = file
 	fileWriter.writer = bufio.NewWriterSize(file, DefaultBufferSize)
-	fileWriter.lock = new(sync.RWMutex)
+	fileWriter.lock = new(sync.Mutex)
 	fileWriter.closed = false
 
 	go fileWriter.daemon()
@@ -112,13 +112,18 @@ var timeCache = timeFormatCacheType{}
 // 常驻goroutine, 更新格式化的时间及logrotate
 func (self *FileLogWriter) daemon() {
 	t := time.Tick(1 * time.Second)
+
+DaemonLoop:
 	for {
 		select {
 		case <-t:
+			if self.closed {
+				break DaemonLoop
+			}
+
 			now := time.Now()
 			timeCache.now = now
 			timeCache.format = now.Format("[2006/01/02:15:04:05]")
-
 		}
 	}
 }
@@ -141,12 +146,12 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 	self.writer.WriteString("\n")
 }
 
+// 格式化构造message
+// 使用 % 作占位符
 func (self *FileLogWriter) writef(level Level, format string, args ...interface{}) (err error) {
 	if level < self.level {
 		return
 	}
-	// 格式化构造message
-	// 使用 % 作占位符
 
 	self.lock.Lock()
 	defer self.lock.Unlock()
@@ -205,7 +210,6 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 			// %.xf
 			case 'f':
 				if escape {
-
 					escape = false
 				}
 
