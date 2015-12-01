@@ -6,7 +6,6 @@ package blog4go
 import (
 	"bufio"
 	"errors"
-	"fmt"
 	"os"
 	"strconv"
 	"sync"
@@ -48,6 +47,12 @@ type FileLogWriter struct {
 
 	lock   *sync.RWMutex
 	closed bool
+}
+
+// 时间格式化的cache
+type timeFormatCacheType struct {
+	now    time.Time
+	format string
 }
 
 // 包初始化函数
@@ -96,12 +101,6 @@ func (self *FileLogWriter) SetLevel(level Level) *FileLogWriter {
 
 func (self *FileLogWriter) GetLevel() Level {
 	return self.level
-}
-
-// 时间格式化的cache
-type timeFormatCacheType struct {
-	now    time.Time
-	format string
 }
 
 var timeCache = timeFormatCacheType{}
