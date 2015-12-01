@@ -86,7 +86,7 @@ func (self *FileLogWriter) Close() {
 	self.writer.Flush()
 	self.file.Close()
 	self.writer = nil
-	self.closed = false
+	self.closed = true
 	self.lock.Unlock()
 }
 
@@ -117,7 +117,6 @@ func (self *FileLogWriter) daemon() {
 
 		}
 	}
-
 }
 
 func (self *FileLogWriter) write(level Level, format string, args ...interface{}) {
@@ -125,8 +124,8 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 		return
 	}
 
-	self.lock.RLock()
-	defer self.lock.RUnlock()
+	self.lock.Lock()
+	defer self.lock.Unlock()
 
 	if self.closed {
 		return
@@ -138,8 +137,6 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 	self.writer.WriteString("] ")
 	self.writer.WriteString(format)
 	self.writer.WriteString("\n")
-
-	//self.writer.Flush()
 }
 
 func (self *FileLogWriter) writef(level Level, format string, args ...interface{}) (err error) {
@@ -149,8 +146,8 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 	// 格式化构造message
 	// 使用 % 作占位符
 
-	self.lock.RLock()
-	defer self.lock.RUnlock()
+	self.lock.Lock()
+	defer self.lock.Unlock()
 
 	if self.closed {
 		return
@@ -223,14 +220,12 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 					return errors.New("Wrong format type.")
 				}
 				tag = false
-
 			//转义符
 			case '\\':
 				if escape {
 					self.writer.WriteString("\\")
 				}
 				escape = !escape
-
 			//默认
 			default:
 
@@ -246,7 +241,6 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 	}
 	self.writer.WriteString(format[last:])
 	self.writer.WriteString("\n")
-	//self.writer.Flush()
 
 	return
 }
@@ -257,4 +251,44 @@ func (self *FileLogWriter) Debug(format string) {
 
 func (self *FileLogWriter) Debugf(format string, args ...interface{}) {
 	self.writef(DEBUG, format, args...)
+}
+
+func (self *FileLogWriter) Trace(format string) {
+	self.write(TRACE, format)
+}
+
+func (self *FileLogWriter) Tracef(format string, args ...interface{}) {
+	self.writef(TRACE, format, args...)
+}
+
+func (self *FileLogWriter) Info(format string) {
+	self.write(INFO, format)
+}
+
+func (self *FileLogWriter) Infof(format string, args ...interface{}) {
+	self.writef(INFO, format, args...)
+}
+
+func (self *FileLogWriter) Warn(format string) {
+	self.write(WARNING, format)
+}
+
+func (self *FileLogWriter) Warnf(format string, args ...interface{}) {
+	self.writef(WARNING, format, args...)
+}
+
+func (self *FileLogWriter) Error(format string) {
+	self.write(ERROR, format)
+}
+
+func (self *FileLogWriter) Errorf(format string, args ...interface{}) {
+	self.writef(ERROR, format, args...)
+}
+
+func (self *FileLogWriter) Critical(format string) {
+	self.write(CRITICAL, format)
+}
+
+func (self *FileLogWriter) Criticalf(format string, args ...interface{}) {
+	self.writef(CRITICAL, format, args...)
 }
