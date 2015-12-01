@@ -105,6 +105,8 @@ func (self *FileLogWriter) GetLevel() Level {
 	return self.level
 }
 
+// 用全局的timeCache好像比较好
+// 实例的timeCache没那么好统一更新
 var timeCache = timeFormatCacheType{}
 
 // 常驻goroutine, 更新格式化的时间及logrotate
@@ -134,9 +136,7 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 	}
 
 	self.writer.WriteString(timeCache.format)
-	self.writer.WriteString(" [")
-	self.writer.WriteString(level.String())
-	self.writer.WriteString("] ")
+	self.writer.WriteString(level.Prefix())
 	self.writer.WriteString(format)
 	self.writer.WriteString("\n")
 }
@@ -156,9 +156,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 	}
 
 	self.writer.WriteString(timeCache.format)
-	self.writer.WriteString(" [")
-	self.writer.WriteString(level.String())
-	self.writer.WriteString("] ")
+	self.writer.WriteString(level.Prefix())
 
 	// 识别占位符标记
 	var tag bool = false
