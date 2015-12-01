@@ -31,6 +31,8 @@ var DefaultFileLogWriter *FileLogWriter = new(FileLogWriter)
 const (
 	// 好像buffer size 调大点benchmark效果更好
 	DefaultBufferSize = 4096
+	// 浮点数默认精确值
+	DefaultPrecise = 2
 )
 
 // 装逼的logger
@@ -202,7 +204,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				}
 				tag = false
 			// 浮点型
-			// 暂时不支持
+			// %.xf
 			case 'f':
 				if escape {
 
@@ -211,8 +213,12 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 
 				if f, ok := args[n].(float64); ok {
 					// 获取精确度
-					prec, _ := strconv.ParseInt(format[i-1:i], 10, 0)
-					// %.xf
+					prec, err := strconv.ParseInt(format[i-1:i], 10, 0)
+					if nil != err {
+						// 如果f前不是数字，是%
+						prec = DefaultPrecise
+					}
+
 					self.writer.WriteString(strconv.FormatFloat(f, 'f', int(prec), 64))
 					n++
 					last = i + 1
