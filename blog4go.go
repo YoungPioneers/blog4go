@@ -6,6 +6,7 @@ package blog4go
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"os"
 	"strconv"
 	"sync"
@@ -19,7 +20,8 @@ type LogWriter interface {
 	Close()
 
 	// 用于内部写log的方法
-	write(level Level, format string, args ...interface{})
+	write(level Level, format string)
+	writef(level Level, format string, args ...interface{})
 
 	// 供用户强制刷日志到输出
 	Flush()
@@ -69,6 +71,8 @@ func NewFileLogWriter(filename string) (fileWriter *FileLogWriter, err error) {
 	fileWriter.lock = new(sync.RWMutex)
 	fileWriter.closed = false
 
+	go fileWriter.daemon()
+
 	return fileWriter, nil
 }
 
@@ -102,17 +106,24 @@ type timeFormatCacheType struct {
 
 var timeCache = timeFormatCacheType{}
 
+// 常驻goroutine, 更新格式化的时间及logrotate
+func (self *FileLogWriter) daemon() {
+	t := time.Tick(1 * time.Second)
+	for {
+		select {
+		case <-t:
+			now := time.Now()
+			timeCache.now = now
+			timeCache.format = now.Format("[2006/01/02:15:04:05]")
+
+		}
+	}
+
+}
+
 func (self *FileLogWriter) write(level Level, format string, args ...interface{}) {
 	if level < self.level {
 		return
-	}
-
-	// 尝试缓存time format, 高并发的时候或许有用
-	// 可以尝试独立goroutine每秒修改timeCache
-	now := time.Now()
-	if now != timeCache.now {
-		timeCache.now = now
-		timeCache.format = now.Format("[2006/01/02:15:04:05]")
 	}
 
 	self.lock.RLock()
@@ -138,14 +149,6 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 	}
 	// 格式化构造message
 	// 使用 % 作占位符
-
-	// 尝试缓存time format, 高并发的时候或许有用
-	// 可以尝试独立goroutine每秒修改timeCache
-	now := time.Now()
-	if now != timeCache.now {
-		timeCache.now = now
-		timeCache.format = now.Format("[2006/01/02:15:04:05]")
-	}
 
 	self.lock.RLock()
 	defer self.lock.RUnlock()
