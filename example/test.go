@@ -63,11 +63,17 @@ func main() {
 
 }
 
+type T struct {
+	A int
+	B string
+}
+
 // blog
 func logging(writer *blog4go.FileLogWriter) {
+	t := T{123, "test"}
 	for {
 		writer.Debug("test")
-		writer.Debugf("haha %s. en\\en, always %d and %.4f, %t", "eddie", 18, 3.1415, true)
+		writer.Debugf("haha %s. en\\en, always %d and %5.4f, %t, %+v", "eddie", 18, 3.14159, true, t)
 	}
 }
 

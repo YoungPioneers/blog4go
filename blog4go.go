@@ -6,6 +6,7 @@ package blog4go
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"os"
 	"strconv"
 	"sync"
@@ -165,6 +166,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 
 	// 识别占位符标记
 	var tag bool = false
+	var tagPos int = 0
 	// 转义字符标记
 	var escape bool = false
 	// 在处理的args 下标
@@ -215,20 +217,39 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 					escape = false
 				}
 
-				if f, ok := args[n].(float64); ok {
-					// 获取精确度
-					prec, err := strconv.ParseInt(format[i-1:i], 10, 0)
-					if nil != err {
-						// 如果f前不是数字，是%
-						prec = DefaultPrecise
-					}
+				// 还没想到好的解决方案，先用fmt自带的
+				self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				n++
+				last = i + 1
+				tag = false
 
-					self.writer.WriteString(strconv.FormatFloat(f, 'f', int(prec), 64))
-					n++
-					last = i + 1
-				} else {
-					return errors.New("Wrong format type.")
+				//if f, ok := args[n].(float64); ok {
+				//// 获取精确度
+				//prec, err := strconv.ParseInt(format[i-1:i], 10, 0)
+				//if nil != err {
+				//// 如果f前不是数字，是%
+				//prec = DefaultPrecise
+				//}
+
+				//self.writer.WriteString(strconv.FormatFloat(f, 'f', int(prec), 64))
+				////self.writer.WriteString(strconv.FormatFloat(f, 'f', -1, 64))
+				//n++
+				//last = i + 1
+				//} else {
+				//return errors.New("Wrong format type.")
+				//}
+			// Value
+			// {xxx:xxx}
+			case 'v':
+				if escape {
+					escape = false
 				}
+
+				// 还没想到好的解决方案，先用fmt自带的
+				fmt.Println(format[tagPos : i+1])
+				self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				n++
+				last = i + 1
 				tag = false
 			// 布尔型
 			// %t
@@ -260,6 +281,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 			// 占位符，百分号
 			if '%' == format[i] && !escape {
 				tag = true
+				tagPos = i
 				self.writer.WriteString(format[last:i])
 				escape = false
 			}
