@@ -34,6 +34,16 @@ const (
 	DefaultBufferSize = 4096
 	// 浮点数默认精确值
 	DefaultPrecise = 2
+
+	// 换行符
+	// End Of Line
+	EOL = "\n"
+
+	// 时间前缀的格式
+	PrefixTimeFormat = "[2006/01/02:15:04:05]"
+
+	// Logrotate 后缀
+	RotatePosfix = "-2006-01-02"
 )
 
 // 装逼的logger
@@ -45,23 +55,29 @@ type FileLogWriter struct {
 	file     *os.File
 	writer   *bufio.Writer
 
-	// TODO logrotate
+	// logrotate暂定一天一文件
 	rotate bool
 
-	lock   *sync.Mutex
+	// 互斥锁，用户互斥调用bufio
+	lock *sync.Mutex
+
+	// writer 关闭标识
 	closed bool
 }
 
 // 时间格式化的cache
 type timeFormatCacheType struct {
-	now    time.Time // 这个字段暂时没什么作用, 好像可以尝试用来做logrotate
+	now time.Time // 这个字段暂时没什么作用, 好像可以尝试用来做logrotate
+	// 日期
+	day int
+	// 时间格式化结果
 	format string
 }
 
 // 包初始化函数
 func init() {
 	timeCache.now = time.Now()
-	timeCache.format = timeCache.now.Format("[2006/01/02:15:04:05]")
+	timeCache.format = timeCache.now.Format(PrefixTimeFormat)
 }
 
 // 创建file writer
@@ -69,7 +85,7 @@ func NewFileLogWriter(filename string) (fileWriter *FileLogWriter, err error) {
 	fileWriter = new(FileLogWriter)
 
 	// 打开文件描述符
-	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
+	file, err := os.OpenFile(filename+time.Now().Format(RotatePosfix), os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 	if nil != err {
 		return nil, err
 	}
@@ -123,8 +139,24 @@ DaemonLoop:
 			}
 
 			now := time.Now()
+			day := now.Day()
 			timeCache.now = now
-			timeCache.format = now.Format("[2006/01/02:15:04:05]")
+			timeCache.day = day
+			timeCache.format = now.Format(PrefixTimeFormat)
+
+			// 判断是否需要logrotate
+			if timeCache.day != day {
+				// 此时需要logrotate, 切换bufio中的文件io.Writer
+				file, err := os.OpenFile(self.filename+now.Format(RotatePosfix), os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
+
+				// TODO 文件打开错误要处理
+				if nil != err {
+					continue
+				}
+
+				self.file = file
+				self.writer.Reset(file)
+			}
 		}
 	}
 }
@@ -144,7 +176,7 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 	self.writer.WriteString(timeCache.format)
 	self.writer.WriteString(level.Prefix())
 	self.writer.WriteString(format)
-	self.writer.WriteString("\n")
+	self.writer.WriteString(EOL)
 }
 
 // 格式化构造message
@@ -246,7 +278,6 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				}
 
 				// 还没想到好的解决方案，先用fmt自带的
-				fmt.Println(format[tagPos : i+1])
 				self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
 				n++
 				last = i + 1
@@ -288,7 +319,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 		}
 	}
 	self.writer.WriteString(format[last:])
-	self.writer.WriteString("\n")
+	self.writer.WriteString(EOL)
 
 	return
 }
