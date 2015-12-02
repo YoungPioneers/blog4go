@@ -178,6 +178,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 			// 类型检查/ 特殊字符处理
 			// 占位符，有意义部分
 			// 字符串
+			// %s
 			case 's':
 				if escape {
 					escape = false
@@ -192,6 +193,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				}
 				tag = false
 			// 整型
+			// %d
 			case 'd':
 				if escape {
 					escape = false
@@ -228,6 +230,21 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 					return errors.New("Wrong format type.")
 				}
 				tag = false
+			// 布尔型
+			// %t
+			case 't':
+				if escape {
+					escape = false
+				}
+
+				if b, ok := args[n].(bool); ok {
+					self.writer.WriteString(strconv.FormatBool(b))
+					n++
+					last = i + 1
+				} else {
+					return errors.New("Wrong format type.")
+				}
+				tag = false
 			//转义符
 			case '\\':
 				if escape {
@@ -244,6 +261,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 			if '%' == format[i] && !escape {
 				tag = true
 				self.writer.WriteString(format[last:i])
+				escape = false
 			}
 		}
 	}

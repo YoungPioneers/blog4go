@@ -67,7 +67,7 @@ func main() {
 func logging(writer *blog4go.FileLogWriter) {
 	for {
 		writer.Debug("test")
-		writer.Debugf("haha %s. en\\en, always %d and %.4f", "eddie", 18, 3.1415)
+		writer.Debugf("haha %s. en\\en, always %d and %.4f, %t", "eddie", 18, 3.1415, true)
 	}
 }
 
