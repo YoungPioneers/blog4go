@@ -154,6 +154,8 @@ DaemonLoop:
 					continue
 				}
 
+				// 关闭旧的文件
+				self.file.Close()
 				self.file = file
 				self.writer.Reset(file)
 			}
