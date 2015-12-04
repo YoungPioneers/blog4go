@@ -46,6 +46,19 @@ const (
 	RotatePosfix = "-2006-01-02"
 )
 
+// 时间格式化的cache
+type timeFormatCacheType struct {
+	now time.Time // 这个字段暂时没什么作用, 好像可以尝试用来做logrotate
+	// 日期
+	day int
+	// 时间格式化结果
+	format string
+}
+
+// 用全局的timeCache好像比较好
+// 实例的timeCache没那么好统一更新
+var timeCache = timeFormatCacheType{}
+
 // 装逼的logger
 type FileLogWriter struct {
 	level Level
@@ -63,15 +76,6 @@ type FileLogWriter struct {
 
 	// writer 关闭标识
 	closed bool
-}
-
-// 时间格式化的cache
-type timeFormatCacheType struct {
-	now time.Time // 这个字段暂时没什么作用, 好像可以尝试用来做logrotate
-	// 日期
-	day int
-	// 时间格式化结果
-	format string
 }
 
 // 包初始化函数
@@ -100,6 +104,24 @@ func NewFileLogWriter(filename string) (fileWriter *FileLogWriter, err error) {
 	return fileWriter, nil
 }
 
+func (self *FileLogWriter) SetLevel(level Level) *FileLogWriter {
+	self.level = level
+	return self
+}
+
+func (self *FileLogWriter) Level() Level {
+	return self.level
+}
+
+func (self *FileLogWriter) SetRotate(rotate bool) *FileLogWriter {
+	self.rotate = rotate
+	return self
+}
+
+func (self *FileLogWriter) Rotate() bool {
+	return self.rotate
+}
+
 func (self *FileLogWriter) Close() {
 	self.lock.Lock()
 	self.writer.Flush()
@@ -112,19 +134,6 @@ func (self *FileLogWriter) Close() {
 func (self *FileLogWriter) Flush() {
 	self.writer.Flush()
 }
-
-func (self *FileLogWriter) SetLevel(level Level) *FileLogWriter {
-	self.level = level
-	return self
-}
-
-func (self *FileLogWriter) GetLevel() Level {
-	return self.level
-}
-
-// 用全局的timeCache好像比较好
-// 实例的timeCache没那么好统一更新
-var timeCache = timeFormatCacheType{}
 
 // 常驻goroutine, 更新格式化的时间及logrotate
 func (self *FileLogWriter) daemon() {
