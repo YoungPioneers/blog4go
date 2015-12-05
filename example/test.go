@@ -71,9 +71,10 @@ type T struct {
 // blog
 func logging(writer *blog4go.FileLogWriter) {
 	t := T{123, "test"}
+	d := int64(18)
 	for {
 		writer.Debug("test")
-		writer.Debugf("haha %s. en\\en, always %d and %5.4f, %t, %+v", "eddie", 18, 3.14159, true, t)
+		writer.Debugf("haha %s. en\\en, always %d and %5.4f, %t, %+v", "eddie", d, 3.14159, true, t)
 	}
 }
 

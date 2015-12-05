@@ -41,16 +41,11 @@ const (
 
 	// 时间前缀的格式
 	PrefixTimeFormat = "[2006/01/02:15:04:05]"
-
-	// Logrotate 后缀
-	RotatePosfix = "-2006-01-02"
 )
 
 // 时间格式化的cache
 type timeFormatCacheType struct {
-	now time.Time // 这个字段暂时没什么作用, 好像可以尝试用来做logrotate
-	// 日期
-	day int
+	now time.Time
 	// 时间格式化结果
 	format string
 }
@@ -68,9 +63,6 @@ type FileLogWriter struct {
 	file     *os.File
 	writer   *bufio.Writer
 
-	// logrotate暂定一天一文件
-	rotate bool
-
 	// 互斥锁，用户互斥调用bufio
 	lock *sync.Mutex
 
@@ -87,13 +79,13 @@ func init() {
 // 创建file writer
 func NewFileLogWriter(filename string) (fileWriter *FileLogWriter, err error) {
 	fileWriter = new(FileLogWriter)
+	fileWriter.filename = filename
 
 	// 打开文件描述符
-	file, err := os.OpenFile(filename+time.Now().Format(RotatePosfix), os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
+	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 	if nil != err {
 		return nil, err
 	}
-	fileWriter.filename = filename
 	fileWriter.file = file
 	fileWriter.writer = bufio.NewWriterSize(file, DefaultBufferSize)
 	fileWriter.lock = new(sync.Mutex)
@@ -111,15 +103,6 @@ func (self *FileLogWriter) SetLevel(level Level) *FileLogWriter {
 
 func (self *FileLogWriter) Level() Level {
 	return self.level
-}
-
-func (self *FileLogWriter) SetRotate(rotate bool) *FileLogWriter {
-	self.rotate = rotate
-	return self
-}
-
-func (self *FileLogWriter) Rotate() bool {
-	return self.rotate
 }
 
 func (self *FileLogWriter) Close() {
@@ -148,26 +131,8 @@ DaemonLoop:
 			}
 
 			now := time.Now()
-			day := now.Day()
 			timeCache.now = now
-			timeCache.day = day
 			timeCache.format = now.Format(PrefixTimeFormat)
-
-			// 判断是否需要logrotate
-			if timeCache.day != day {
-				// 此时需要logrotate, 切换bufio中的文件io.Writer
-				file, err := os.OpenFile(self.filename+now.Format(RotatePosfix), os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
-
-				// TODO 文件打开错误要处理
-				if nil != err {
-					continue
-				}
-
-				// 关闭旧的文件
-				self.file.Close()
-				self.file = file
-				self.writer.Reset(file)
-			}
 		}
 	}
 }
@@ -217,9 +182,9 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 	// 未输出的，第一个普通字符位置
 	var last int = 0 //
 
-	for i := 0; i < len(format); i++ {
+	for i, v := range format {
 		if tag {
-			switch format[i] {
+			switch v {
 			// 类型检查/ 特殊字符处理
 			// 占位符，有意义部分
 			// 字符串
@@ -265,22 +230,6 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				n++
 				last = i + 1
 				tag = false
-
-				//if f, ok := args[n].(float64); ok {
-				//// 获取精确度
-				//prec, err := strconv.ParseInt(format[i-1:i], 10, 0)
-				//if nil != err {
-				//// 如果f前不是数字，是%
-				//prec = DefaultPrecise
-				//}
-
-				//self.writer.WriteString(strconv.FormatFloat(f, 'f', int(prec), 64))
-				////self.writer.WriteString(strconv.FormatFloat(f, 'f', -1, 64))
-				//n++
-				//last = i + 1
-				//} else {
-				//return errors.New("Wrong format type.")
-				//}
 			// Value
 			// {xxx:xxx}
 			case 'v':
