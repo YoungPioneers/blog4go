@@ -24,6 +24,7 @@ func main() {
 	defer writer.Close()
 
 	for i := 1; i < 10; i++ {
+		//logging(writer)
 		go logging(writer)
 	}
 
@@ -60,7 +61,6 @@ func main() {
 			return
 		}
 	}
-
 }
 
 type T struct {
@@ -72,9 +72,11 @@ type T struct {
 func logging(writer *blog4go.FileLogWriter) {
 	t := T{123, "test"}
 	d := int64(18)
+	//LoggingLoop:
 	for {
 		writer.Debug("test")
 		writer.Debugf("haha %s. en\\en, always %d and %5.4f, %t, %+v", "eddie", d, 3.14159, true, t)
+		//break LoggingLoop
 	}
 }
 

@@ -27,8 +27,6 @@ type LogWriter interface {
 	Flush()
 }
 
-var DefaultFileLogWriter *FileLogWriter = new(FileLogWriter)
-
 const (
 	// 好像buffer size 调大点benchmark效果更好
 	DefaultBufferSize = 4096
@@ -41,6 +39,10 @@ const (
 
 	// 时间前缀的格式
 	PrefixTimeFormat = "[2006/01/02:15:04:05]"
+)
+
+var (
+	ErrInvalidFormat = errors.New("Invalid format type.")
 )
 
 // 时间格式化的cache
@@ -157,6 +159,8 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 
 // 格式化构造message
 // 使用 % 作占位符
+// 好像写bytes会比较快，待改进跟测试
+// http://hashrocket.com/blog/posts/go-performance-observations
 func (self *FileLogWriter) writef(level Level, format string, args ...interface{}) (err error) {
 	if level < self.level {
 		return
@@ -199,7 +203,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 					n++
 					last = i + 1
 				} else {
-					return errors.New("Wrong format type.")
+					return ErrInvalidFormat
 				}
 				tag = false
 			// 整型
@@ -215,7 +219,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 					n++
 					last = i + 1
 				} else {
-					return errors.New("Wrong format type.")
+					return ErrInvalidFormat
 				}
 				tag = false
 			// 浮点型
@@ -254,7 +258,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 					n++
 					last = i + 1
 				} else {
-					return errors.New("Wrong format type.")
+					return ErrInvalidFormat
 				}
 				tag = false
 			//转义符
