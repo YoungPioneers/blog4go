@@ -135,7 +135,6 @@ DaemonLoop:
 
 			now := time.Now()
 			timeCache.now = now
-			//timeCache.format = now.Format(PrefixTimeFormat)
 			timeCache.format = []byte(now.Format(PrefixTimeFormat))
 		}
 	}
