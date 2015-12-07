@@ -33,15 +33,16 @@ const (
 	// 浮点数默认精确值
 	DefaultPrecise = 2
 
-	// 换行符
-	// End Of Line
-	EOL = "\n"
-
 	// 时间前缀的格式
 	PrefixTimeFormat = "[2006/01/02:15:04:05]"
 )
 
 var (
+	// 换行符
+	EOL = []byte("\n")
+	// 转移符
+	ESCAPE = []byte("\\")
+
 	ErrInvalidFormat = errors.New("Invalid format type.")
 )
 
@@ -49,7 +50,7 @@ var (
 type timeFormatCacheType struct {
 	now time.Time
 	// 时间格式化结果
-	format string
+	format []byte
 }
 
 // 用全局的timeCache好像比较好
@@ -75,7 +76,7 @@ type FileLogWriter struct {
 // 包初始化函数
 func init() {
 	timeCache.now = time.Now()
-	timeCache.format = timeCache.now.Format(PrefixTimeFormat)
+	timeCache.format = []byte(timeCache.now.Format(PrefixTimeFormat))
 }
 
 // 创建file writer
@@ -134,7 +135,8 @@ DaemonLoop:
 
 			now := time.Now()
 			timeCache.now = now
-			timeCache.format = now.Format(PrefixTimeFormat)
+			//timeCache.format = now.Format(PrefixTimeFormat)
+			timeCache.format = []byte(now.Format(PrefixTimeFormat))
 		}
 	}
 }
@@ -151,10 +153,10 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 		return
 	}
 
-	self.writer.WriteString(timeCache.format)
+	self.writer.Write(timeCache.format)
 	self.writer.WriteString(level.Prefix())
 	self.writer.WriteString(format)
-	self.writer.WriteString(EOL)
+	self.writer.Write(EOL)
 }
 
 // 格式化构造message
@@ -173,7 +175,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 		return
 	}
 
-	self.writer.WriteString(timeCache.format)
+	self.writer.Write(timeCache.format)
 	self.writer.WriteString(level.Prefix())
 
 	// 识别占位符标记
@@ -208,6 +210,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				tag = false
 			// 整型
 			// %d
+			// 还不兼容int, int32, int64等
 			case 'd':
 				if escape {
 					escape = false
@@ -265,6 +268,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 			case '\\':
 				if escape {
 					self.writer.WriteString("\\")
+					//self.writer.Write(ESCAPE)
 				}
 				escape = !escape
 			//默认
@@ -283,7 +287,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 		}
 	}
 	self.writer.WriteString(format[last:])
-	self.writer.WriteString(EOL)
+	self.writer.Write(EOL)
 
 	return
 }

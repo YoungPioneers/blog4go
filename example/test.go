@@ -71,7 +71,7 @@ type T struct {
 // blog
 func logging(writer *blog4go.FileLogWriter) {
 	t := T{123, "test"}
-	d := int64(18)
+	d := 18
 	//LoggingLoop:
 	for {
 		writer.Debug("test")

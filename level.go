@@ -18,6 +18,7 @@ const (
 	CRITICAL
 
 	PrefixFormat = " [%s] "
+	UNKNOWN      = "UNKNOWN"
 )
 
 var (
@@ -46,7 +47,7 @@ func (self Level) valid() bool {
 
 func (self Level) String() string {
 	if !self.valid() {
-		return "UNKNOWN"
+		return UNKNOWN
 	}
 	return LevelStrings[self]
 }
