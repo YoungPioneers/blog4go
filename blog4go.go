@@ -35,11 +35,12 @@ const (
 
 	// 时间前缀的格式
 	PrefixTimeFormat = "[2006/01/02:15:04:05]"
+	DateFormat       = "2006-01-02"
 
 	// 换行符
 	EOL = "\n"
 	// 转移符
-	ESCAPE = "\\"
+	ESCAPE = '\\'
 )
 
 var (
@@ -49,6 +50,8 @@ var (
 // 时间格式化的cache
 type timeFormatCacheType struct {
 	now time.Time
+	// 日期
+	date string
 	// 时间格式化结果
 	format []byte
 }
@@ -71,28 +74,45 @@ type FileLogWriter struct {
 
 	// writer 关闭标识
 	closed bool
+
+	// logrotate
+	rotated bool
+	// size rotate按行数、大小rotate, 后缀 xxx.1, xxx.2
+	rotateSig    chan bool
+	rotates      int // 当前rotate次数
+	maxLines     int
+	currentLines int
+	maxSize      int
+	currentSize  int
 }
 
 // 包初始化函数
 func init() {
 	timeCache.now = time.Now()
+	timeCache.date = timeCache.now.Format(DateFormat)
 	timeCache.format = []byte(timeCache.now.Format(PrefixTimeFormat))
 }
 
 // 创建file writer
-func NewFileLogWriter(filename string) (fileWriter *FileLogWriter, err error) {
+func NewFileLogWriter(filename string, rotated bool) (fileWriter *FileLogWriter, err error) {
 	fileWriter = new(FileLogWriter)
 	fileWriter.filename = filename
 
+	fileWriter.lock = new(sync.Mutex)
+	fileWriter.closed = false
+	fileWriter.rotated = rotated
+
 	// 打开文件描述符
+	if rotated {
+		go fileWriter.rotate()
+		filename = fmt.Sprintf("%s.%s", filename, timeCache.date)
+	}
 	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 	if nil != err {
 		return nil, err
 	}
 	fileWriter.file = file
 	fileWriter.writer = bufio.NewWriterSize(file, DefaultBufferSize)
-	fileWriter.lock = new(sync.Mutex)
-	fileWriter.closed = false
 
 	go fileWriter.daemon()
 
@@ -121,7 +141,7 @@ func (self *FileLogWriter) Flush() {
 	self.writer.Flush()
 }
 
-// 常驻goroutine, 更新格式化的时间及logrotate
+// 常驻goroutine, 更新格式化的时间
 func (self *FileLogWriter) daemon() {
 	t := time.Tick(1 * time.Second)
 
@@ -135,7 +155,55 @@ DaemonLoop:
 
 			now := time.Now()
 			timeCache.now = now
+			timeCache.date = now.Format(DateFormat)
 			timeCache.format = []byte(now.Format(PrefixTimeFormat))
+		}
+	}
+}
+
+func (self *FileLogWriter) rotate() {
+	t := time.Tick(1 * time.Second)
+
+RotateLoop:
+	for {
+		select {
+		// 按size轮询
+		case <-self.rotateSig:
+			if self.closed {
+				break RotateLoop
+			}
+			self.rotates++
+			filename := fmt.Sprintf("%s.%s.%d", self.filename, timeCache.date, self.rotates)
+			file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
+
+			if nil != err {
+				// 如果创建文件失败怎么做？
+			}
+			self.file.Close()
+			self.file = file
+			self.writer.Reset(file)
+
+		// 按日期轮询
+		case <-t:
+			if self.closed {
+				break RotateLoop
+			}
+
+			now := time.Now()
+			date := now.Format(DateFormat)
+			if date != timeCache.date {
+				// 需要rotate
+
+				filename := fmt.Sprintf("%s.%s", self.filename, date)
+				file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
+
+				if nil != err {
+					// 如果创建文件失败怎么做？
+				}
+				self.file.Close()
+				self.file = file
+				self.writer.Reset(file)
+			}
 		}
 	}
 }
@@ -259,9 +327,9 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				}
 				tag = false
 			//转义符
-			case '\\':
+			case ESCAPE:
 				if escape {
-					self.writer.WriteString(ESCAPE)
+					self.writer.WriteByte(ESCAPE)
 				}
 				escape = !escape
 			//默认

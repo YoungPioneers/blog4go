@@ -9,7 +9,7 @@ import (
 
 func BenchmarkFormat(b *testing.B) {
 	b.StopTimer()
-	writer, _ := NewFileLogWriter("output.log")
+	writer, _ := NewFileLogWriter("output.log", false)
 
 	b.StartTimer()
 
