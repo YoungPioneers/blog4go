@@ -35,14 +35,14 @@ const (
 
 	// 时间前缀的格式
 	PrefixTimeFormat = "[2006/01/02:15:04:05]"
+
+	// 换行符
+	EOL = "\n"
+	// 转移符
+	ESCAPE = "\\"
 )
 
 var (
-	// 换行符
-	EOL = []byte("\n")
-	// 转移符
-	ESCAPE = []byte("\\")
-
 	ErrInvalidFormat = errors.New("Invalid format type.")
 )
 
@@ -155,13 +155,12 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 	self.writer.Write(timeCache.format)
 	self.writer.WriteString(level.Prefix())
 	self.writer.WriteString(format)
-	self.writer.Write(EOL)
+	self.writer.WriteString(EOL)
 }
 
 // 格式化构造message
+// 边解析边输出
 // 使用 % 作占位符
-// 好像写bytes会比较快，待改进跟测试
-// http://hashrocket.com/blog/posts/go-performance-observations
 func (self *FileLogWriter) writef(level Level, format string, args ...interface{}) (err error) {
 	if level < self.level {
 		return
@@ -209,20 +208,16 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				tag = false
 			// 整型
 			// %d
-			// 还不兼容int, int32, int64等
+			// 还没想好怎么兼容int, int32, int64
 			case 'd':
 				if escape {
 					escape = false
 				}
 
 				// 判断数据类型
-				if number, ok := args[n].(int); ok {
-					self.writer.WriteString(strconv.Itoa(number))
-					n++
-					last = i + 1
-				} else {
-					return ErrInvalidFormat
-				}
+				self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				n++
+				last = i + 1
 				tag = false
 			// 浮点型
 			// %.xf
@@ -266,8 +261,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 			//转义符
 			case '\\':
 				if escape {
-					self.writer.WriteString("\\")
-					//self.writer.Write(ESCAPE)
+					self.writer.WriteString(ESCAPE)
 				}
 				escape = !escape
 			//默认
@@ -286,7 +280,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 		}
 	}
 	self.writer.WriteString(format[last:])
-	self.writer.Write(EOL)
+	self.writer.WriteString(EOL)
 
 	return
 }
