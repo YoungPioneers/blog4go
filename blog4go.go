@@ -73,13 +73,16 @@ type FileLogWriter struct {
 	lock *sync.Mutex
 
 	// writer 关闭标识
-	closed bool
+	closed    bool
+	closedSig chan bool
 
 	// logrotate
 	rotated bool
 	// size rotate按行数、大小rotate, 后缀 xxx.1, xxx.2
-	rotateSig    chan bool
-	rotates      int // 当前rotate次数
+	timeRotateSig chan bool
+	sizeRotateSig chan bool
+
+	sizeRotates  int // 当前按size rotate次数
 	maxLines     int
 	currentLines int
 	maxSize      int
@@ -132,6 +135,7 @@ func (self *FileLogWriter) Close() {
 	self.lock.Lock()
 	self.writer.Flush()
 	self.file.Close()
+	self.closedSig <- true
 	self.writer = nil
 	self.closed = true
 	self.lock.Unlock()
@@ -157,23 +161,27 @@ DaemonLoop:
 			timeCache.now = now
 			timeCache.date = now.Format(DateFormat)
 			timeCache.format = []byte(now.Format(PrefixTimeFormat))
+
+			date := now.Format(DateFormat)
+			if self.rotated && date != timeCache.date {
+				// 需要rotate
+				self.timeRotateSig <- true
+			}
 		}
 	}
 }
 
 func (self *FileLogWriter) rotate() {
-	t := time.Tick(1 * time.Second)
-
 RotateLoop:
 	for {
 		select {
 		// 按size轮询
-		case <-self.rotateSig:
+		case <-self.sizeRotateSig:
 			if self.closed {
 				break RotateLoop
 			}
-			self.rotates++
-			filename := fmt.Sprintf("%s.%s.%d", self.filename, timeCache.date, self.rotates)
+			self.sizeRotates++
+			filename := fmt.Sprintf("%s.%s.%d", self.filename, timeCache.date, self.sizeRotates)
 			file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 
 			if nil != err {
@@ -184,26 +192,26 @@ RotateLoop:
 			self.writer.Reset(file)
 
 		// 按日期轮询
-		case <-t:
-			if self.closed {
-				break RotateLoop
+		case <-self.timeRotateSig:
+			self.sizeRotates = 0
+
+			filename := fmt.Sprintf("%s.%s", self.filename, timeCache.date)
+			file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
+
+			if nil != err {
+				// 如果创建文件失败怎么做？
+				// 重试？
+				//self.timeRotateSig <- true
+				//continue
 			}
 
-			now := time.Now()
-			date := now.Format(DateFormat)
-			if date != timeCache.date {
-				// 需要rotate
+			self.file.Close()
+			self.file = file
+			self.writer.Reset(file)
+		// 程序退出
+		case <-self.closedSig:
+			break RotateLoop
 
-				filename := fmt.Sprintf("%s.%s", self.filename, date)
-				file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
-
-				if nil != err {
-					// 如果创建文件失败怎么做？
-				}
-				self.file.Close()
-				self.file = file
-				self.writer.Reset(file)
-			}
 		}
 	}
 }
