@@ -87,6 +87,8 @@ type FileLogWriter struct {
 	currentLines int
 	maxSize      int
 	currentSize  int
+	// 记录每次log的size
+	logSizeChan chan int
 }
 
 // 包初始化函数
@@ -104,6 +106,9 @@ func NewFileLogWriter(filename string, rotated bool) (fileWriter *FileLogWriter,
 	fileWriter.lock = new(sync.Mutex)
 	fileWriter.closed = false
 	fileWriter.rotated = rotated
+	fileWriter.timeRotateSig = make(chan bool, 0)
+	fileWriter.sizeRotateSig = make(chan bool, 0)
+	fileWriter.logSizeChan = make(chan int, 0)
 
 	// 打开文件描述符
 	if rotated {
@@ -208,15 +213,17 @@ RotateLoop:
 			self.file.Close()
 			self.file = file
 			self.writer.Reset(file)
+		// 统计log write size
+		case size := <-self.logSizeChan:
+			self.currentSize += size
 		// 程序退出
 		case <-self.closedSig:
 			break RotateLoop
-
 		}
 	}
 }
 
-func (self *FileLogWriter) write(level Level, format string, args ...interface{}) {
+func (self *FileLogWriter) write(level Level, format string, args ...interface{}) (err error) {
 	if level < self.level {
 		return
 	}
@@ -232,6 +239,12 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 	self.writer.WriteString(level.Prefix())
 	self.writer.WriteString(format)
 	self.writer.WriteString(EOL)
+
+	// 不logrotate退出
+	if !self.rotated {
+		return
+	}
+	return
 }
 
 // 格式化构造message
@@ -358,6 +371,10 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 	self.writer.WriteString(format[last:])
 	self.writer.WriteString(EOL)
 
+	// 不logrotate退出
+	if !self.rotated {
+		return
+	}
 	return
 }
 
