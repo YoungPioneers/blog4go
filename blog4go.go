@@ -73,8 +73,7 @@ type FileLogWriter struct {
 	lock *sync.Mutex
 
 	// writer 关闭标识
-	closed    bool
-	closedSig chan bool
+	closed bool
 
 	// logrotate
 	rotated bool
@@ -106,13 +105,16 @@ func NewFileLogWriter(filename string, rotated bool) (fileWriter *FileLogWriter,
 	fileWriter.lock = new(sync.Mutex)
 	fileWriter.closed = false
 	fileWriter.rotated = rotated
-	fileWriter.timeRotateSig = make(chan bool, 0)
-	fileWriter.sizeRotateSig = make(chan bool, 0)
-	fileWriter.logSizeChan = make(chan int, 0)
+	fileWriter.timeRotateSig = make(chan bool)
+	fileWriter.sizeRotateSig = make(chan bool, 1)
+	fileWriter.logSizeChan = make(chan int, 10)
+	fileWriter.maxSize = 5000000
+	fileWriter.maxLines = 10000000
+	fileWriter.currentSize = 0
+	fileWriter.currentLines = 0
 
 	// 打开文件描述符
 	if rotated {
-		go fileWriter.rotate()
 		filename = fmt.Sprintf("%s.%s", filename, timeCache.date)
 	}
 	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
@@ -123,6 +125,7 @@ func NewFileLogWriter(filename string, rotated bool) (fileWriter *FileLogWriter,
 	fileWriter.writer = bufio.NewWriterSize(file, DefaultBufferSize)
 
 	go fileWriter.daemon()
+	go fileWriter.rotate()
 
 	return fileWriter, nil
 }
@@ -140,7 +143,6 @@ func (self *FileLogWriter) Close() {
 	self.lock.Lock()
 	self.writer.Flush()
 	self.file.Close()
-	self.closedSig <- true
 	self.writer = nil
 	self.closed = true
 	self.lock.Unlock()
@@ -172,6 +174,16 @@ DaemonLoop:
 				// 需要rotate
 				self.timeRotateSig <- true
 			}
+		// 统计log write size
+		case size := <-self.logSizeChan:
+			if self.closed {
+				break DaemonLoop
+			}
+			self.currentSize += size
+			self.currentLines += 1
+			if self.currentSize > self.maxSize || self.currentLines > self.maxLines {
+				self.sizeRotateSig <- true
+			}
 		}
 	}
 }
@@ -181,10 +193,7 @@ RotateLoop:
 	for {
 		select {
 		// 按size轮询
-		case <-self.sizeRotateSig:
-			if self.closed {
-				break RotateLoop
-			}
+		case _ = <-self.sizeRotateSig:
 			self.sizeRotates++
 			filename := fmt.Sprintf("%s.%s.%d", self.filename, timeCache.date, self.sizeRotates)
 			file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
@@ -192,12 +201,21 @@ RotateLoop:
 			if nil != err {
 				// 如果创建文件失败怎么做？
 			}
+
+			self.lock.Lock()
+			if self.closed {
+				break RotateLoop
+			}
+
 			self.file.Close()
 			self.file = file
 			self.writer.Reset(file)
+			self.currentSize = 0
+			self.currentLines = 0
+			self.lock.Unlock()
 
 		// 按日期轮询
-		case <-self.timeRotateSig:
+		case _ = <-self.timeRotateSig:
 			self.sizeRotates = 0
 
 			filename := fmt.Sprintf("%s.%s", self.filename, timeCache.date)
@@ -210,26 +228,33 @@ RotateLoop:
 				//continue
 			}
 
+			self.lock.Lock()
+			if self.closed {
+				break RotateLoop
+			}
+
 			self.file.Close()
 			self.file = file
 			self.writer.Reset(file)
-		// 统计log write size
-		case size := <-self.logSizeChan:
-			self.currentSize += size
-		// 程序退出
-		case <-self.closedSig:
-			break RotateLoop
+			self.lock.Unlock()
 		}
 	}
 }
 
-func (self *FileLogWriter) write(level Level, format string, args ...interface{}) (err error) {
+func (self *FileLogWriter) write(level Level, format string, args ...interface{}) {
 	if level < self.level {
 		return
 	}
 
 	self.lock.Lock()
-	defer self.lock.Unlock()
+	//defer self.lock.Unlock()
+	defer func() {
+		self.lock.Unlock()
+		// logrotate
+		if self.rotated {
+			self.logSizeChan <- len(timeCache.format) + len(level.Prefix()) + len(format) + len(EOL)
+		}
+	}()
 
 	if self.closed {
 		return
@@ -240,30 +265,32 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 	self.writer.WriteString(format)
 	self.writer.WriteString(EOL)
 
-	// 不logrotate退出
-	if !self.rotated {
-		return
-	}
-	return
 }
 
 // 格式化构造message
 // 边解析边输出
 // 使用 % 作占位符
-func (self *FileLogWriter) writef(level Level, format string, args ...interface{}) (err error) {
+func (self *FileLogWriter) writef(level Level, format string, args ...interface{}) {
 	if level < self.level {
 		return
 	}
 
 	self.lock.Lock()
-	defer self.lock.Unlock()
+	// 统计日志size
+	var size int = 0
+
+	//defer self.lock.Unlock()
+	defer func() {
+		self.lock.Unlock()
+		// logrotate
+		if self.rotated {
+			self.logSizeChan <- size
+		}
+	}()
 
 	if self.closed {
 		return
 	}
-
-	self.writer.Write(timeCache.format)
-	self.writer.WriteString(level.Prefix())
 
 	// 识别占位符标记
 	var tag bool = false
@@ -273,7 +300,13 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 	// 在处理的args 下标
 	var n int = 0
 	// 未输出的，第一个普通字符位置
-	var last int = 0 //
+	var last int = 0
+	var s int = 0
+
+	self.writer.Write(timeCache.format)
+	self.writer.WriteString(level.Prefix())
+
+	size += len(timeCache.format) + len(level.Prefix())
 
 	for i, v := range format {
 		if tag {
@@ -288,11 +321,12 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				}
 
 				if str, ok := args[n].(string); ok {
-					self.writer.WriteString(str)
+					s, _ = self.writer.WriteString(str)
+					size += s
 					n++
 					last = i + 1
 				} else {
-					return ErrInvalidFormat
+					//return ErrInvalidFormat
 				}
 				tag = false
 			// 整型
@@ -304,7 +338,8 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				}
 
 				// 判断数据类型
-				self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				s, _ = self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				size += s
 				n++
 				last = i + 1
 				tag = false
@@ -316,7 +351,8 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				}
 
 				// 还没想到好的解决方案，先用fmt自带的
-				self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				s, _ = self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				size += s
 				n++
 				last = i + 1
 				tag = false
@@ -328,7 +364,8 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				}
 
 				// 还没想到好的解决方案，先用fmt自带的
-				self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				s, _ = self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				size += s
 				n++
 				last = i + 1
 				tag = false
@@ -340,17 +377,19 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				}
 
 				if b, ok := args[n].(bool); ok {
-					self.writer.WriteString(strconv.FormatBool(b))
+					s, _ = self.writer.WriteString(strconv.FormatBool(b))
+					size += s
 					n++
 					last = i + 1
 				} else {
-					return ErrInvalidFormat
+					//return ErrInvalidFormat
 				}
 				tag = false
 			//转义符
 			case ESCAPE:
 				if escape {
 					self.writer.WriteByte(ESCAPE)
+					size += 1
 				}
 				escape = !escape
 			//默认
@@ -363,19 +402,15 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 			if '%' == format[i] && !escape {
 				tag = true
 				tagPos = i
-				self.writer.WriteString(format[last:i])
+				s, _ = self.writer.WriteString(format[last:i])
+				size += s
 				escape = false
 			}
 		}
 	}
 	self.writer.WriteString(format[last:])
 	self.writer.WriteString(EOL)
-
-	// 不logrotate退出
-	if !self.rotated {
-		return
-	}
-	return
+	size += len(format[last:]) + len(EOL)
 }
 
 func (self *FileLogWriter) Debug(format string) {
