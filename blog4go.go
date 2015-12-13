@@ -81,11 +81,11 @@ type FileLogWriter struct {
 	timeRotateSig chan bool
 	sizeRotateSig chan bool
 
-	sizeRotates  int // 当前按size rotate次数
-	maxLines     int
-	currentLines int
-	maxSize      int
-	currentSize  int
+	sizeRotateTimes int // 当前按size rotate次数
+	rotateLine      int
+	currentLines    int
+	rotateSize      int
+	currentSize     int
 	// 记录每次log的size
 	logSizeChan chan int
 }
@@ -108,8 +108,8 @@ func NewFileLogWriter(filename string, rotated bool) (fileWriter *FileLogWriter,
 	fileWriter.timeRotateSig = make(chan bool)
 	fileWriter.sizeRotateSig = make(chan bool, 1)
 	fileWriter.logSizeChan = make(chan int, 10)
-	fileWriter.maxSize = 5000000
-	fileWriter.maxLines = 10000000
+	fileWriter.rotateSize = 5000000
+	fileWriter.rotateLine = 10000000
 	fileWriter.currentSize = 0
 	fileWriter.currentLines = 0
 
@@ -139,6 +139,22 @@ func (self *FileLogWriter) Level() Level {
 	return self.level
 }
 
+func (self *FileLogWriter) RotateSize() int {
+	return self.rotateSize
+}
+
+func (self *FileLogWriter) SetRotateSize(rotateSize int) {
+	self.rotateSize = rotateSize
+}
+
+func (self *FileLogWriter) RotateLine() int {
+	return self.rotateLine
+}
+
+func (self *FileLogWriter) SetRotateLine(rotateLine int) {
+	self.rotateLine = rotateLine
+}
+
 func (self *FileLogWriter) Close() {
 	self.lock.Lock()
 	self.writer.Flush()
@@ -166,7 +182,6 @@ DaemonLoop:
 
 			now := time.Now()
 			timeCache.now = now
-			timeCache.date = now.Format(DateFormat)
 			timeCache.format = []byte(now.Format(PrefixTimeFormat))
 
 			date := now.Format(DateFormat)
@@ -174,6 +189,7 @@ DaemonLoop:
 				// 需要rotate
 				self.timeRotateSig <- true
 			}
+			timeCache.date = now.Format(DateFormat)
 		// 统计log write size
 		case size := <-self.logSizeChan:
 			if self.closed {
@@ -181,7 +197,7 @@ DaemonLoop:
 			}
 			self.currentSize += size
 			self.currentLines += 1
-			if self.currentSize > self.maxSize || self.currentLines > self.maxLines {
+			if self.currentSize > self.rotateSize || self.currentLines > self.rotateLine {
 				self.sizeRotateSig <- true
 			}
 		}
@@ -194,8 +210,12 @@ RotateLoop:
 		select {
 		// 按size轮询
 		case _ = <-self.sizeRotateSig:
-			self.sizeRotates++
-			filename := fmt.Sprintf("%s.%s.%d", self.filename, timeCache.date, self.sizeRotates)
+			if !self.rotated {
+				break RotateLoop
+			}
+
+			self.sizeRotateTimes++
+			filename := fmt.Sprintf("%s.%s.%d", self.filename, timeCache.date, self.sizeRotateTimes)
 			file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 
 			if nil != err {
@@ -216,7 +236,11 @@ RotateLoop:
 
 		// 按日期轮询
 		case _ = <-self.timeRotateSig:
-			self.sizeRotates = 0
+			if !self.rotated {
+				break RotateLoop
+			}
+
+			self.sizeRotateTimes = 0
 
 			filename := fmt.Sprintf("%s.%s", self.filename, timeCache.date)
 			file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
