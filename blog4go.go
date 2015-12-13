@@ -22,26 +22,14 @@ type LogWriter interface {
 	// 用于内部写log的方法
 	write(level Level, format string)
 	writef(level Level, format string, args ...interface{})
-
-	// 供用户强制刷日志到输出
-	Flush()
 }
 
-const (
-	// 好像buffer size 调大点benchmark效果更好
-	DefaultBufferSize = 4096
-	// 浮点数默认精确值
-	DefaultPrecise = 2
-
-	// 时间前缀的格式
-	PrefixTimeFormat = "[2006/01/02:15:04:05]"
-)
+type ByteSize int
 
 var (
-	// 换行符
-	EOL = []byte("\n")
-	// 转移符
-	ESCAPE = []byte("\\")
+	// 好像buffer size 调大点benchmark效果更好
+	// 默认使用内存页大小
+	DefaultBufferSize = 4096
 
 	ErrInvalidFormat = errors.New("Invalid format type.")
 )
@@ -49,6 +37,8 @@ var (
 // 时间格式化的cache
 type timeFormatCacheType struct {
 	now time.Time
+	// 日期
+	date string
 	// 时间格式化结果
 	format []byte
 }
@@ -71,28 +61,68 @@ type FileLogWriter struct {
 
 	// writer 关闭标识
 	closed bool
+
+	// logrotate
+	rotated bool
+	// size rotate按行数、大小rotate, 后缀 xxx.1, xxx.2
+	timeRotateSig chan bool
+	sizeRotateSig chan bool
+
+	// 按行rotate
+	lineRotated  bool
+	rotateLines  int
+	currentLines int
+
+	// 按大小rotate
+	sizeRotated bool
+	rotateSize  ByteSize
+	currentSize ByteSize
+
+	sizeRotateTimes int // 当前按size,line rotate次数
+
+	// 记录每次log的size
+	logSizeChan chan int
 }
 
 // 包初始化函数
 func init() {
+	DefaultBufferSize = os.Getpagesize()
 	timeCache.now = time.Now()
+	timeCache.date = timeCache.now.Format(DateFormat)
 	timeCache.format = []byte(timeCache.now.Format(PrefixTimeFormat))
 }
 
 // 创建file writer
-func NewFileLogWriter(filename string) (fileWriter *FileLogWriter, err error) {
+func NewFileLogWriter(filename string, rotated bool) (fileWriter *FileLogWriter, err error) {
 	fileWriter = new(FileLogWriter)
 	fileWriter.filename = filename
 
+	fileWriter.lock = new(sync.Mutex)
+	fileWriter.closed = false
+	fileWriter.rotated = rotated
+	fileWriter.timeRotateSig = make(chan bool)
+	fileWriter.sizeRotateSig = make(chan bool)
+	fileWriter.logSizeChan = make(chan int, 10)
+
+	fileWriter.lineRotated = false
+	fileWriter.rotateSize = DefaultRotateSize
+	fileWriter.currentSize = 0
+
+	fileWriter.sizeRotated = false
+	fileWriter.rotateLines = DefaultRotateLines
+	fileWriter.currentLines = 0
+
 	// 打开文件描述符
+	if rotated {
+		filename = fmt.Sprintf("%s.%s", filename, timeCache.date)
+		go fileWriter.rotate()
+	}
 	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 	if nil != err {
 		return nil, err
 	}
 	fileWriter.file = file
 	fileWriter.writer = bufio.NewWriterSize(file, DefaultBufferSize)
-	fileWriter.lock = new(sync.Mutex)
-	fileWriter.closed = false
 
 	go fileWriter.daemon()
 
@@ -108,20 +138,36 @@ func (self *FileLogWriter) Level() Level {
 	return self.level
 }
 
+func (self *FileLogWriter) RotateSize() ByteSize {
+	return self.rotateSize
+}
+
+func (self *FileLogWriter) SetRotateSize(rotateSize ByteSize) {
+	self.rotateSize = rotateSize
+}
+
+func (self *FileLogWriter) RotateLine() int {
+	return self.rotateLines
+}
+
+func (self *FileLogWriter) SetRotateLine(rotateLine int) {
+	self.rotateLines = rotateLine
+}
+
 func (self *FileLogWriter) Close() {
 	self.lock.Lock()
-	self.writer.Flush()
+	self.flush()
 	self.file.Close()
 	self.writer = nil
 	self.closed = true
 	self.lock.Unlock()
 }
 
-func (self *FileLogWriter) Flush() {
+func (self *FileLogWriter) flush() {
 	self.writer.Flush()
 }
 
-// 常驻goroutine, 更新格式化的时间及logrotate
+// 常驻goroutine, 更新格式化的时间
 func (self *FileLogWriter) daemon() {
 	t := time.Tick(1 * time.Second)
 
@@ -136,8 +182,79 @@ DaemonLoop:
 			now := time.Now()
 			timeCache.now = now
 			timeCache.format = []byte(now.Format(PrefixTimeFormat))
+
+			date := now.Format(DateFormat)
+			if self.rotated && date != timeCache.date {
+				// 需要rotate
+				self.timeRotateSig <- true
+			}
+			timeCache.date = now.Format(DateFormat)
+		// 统计log write size
+		case size := <-self.logSizeChan:
+			if self.closed {
+				break DaemonLoop
+			}
+
+			if !self.sizeRotated && !self.lineRotated {
+				continue
+			}
+
+			self.currentSize += ByteSize(size)
+			self.currentLines++
+			if self.currentSize > self.rotateSize || self.currentLines > self.rotateLines {
+				self.sizeRotateSig <- true
+			}
 		}
 	}
+}
+
+func (self *FileLogWriter) rotate() {
+RotateLoop:
+	for {
+		select {
+		// 按size轮询
+		case _ = <-self.sizeRotateSig:
+			self.lock.Lock()
+			if self.closed {
+				break RotateLoop
+			}
+
+			self.sizeRotateTimes++
+			fileName := fmt.Sprintf("%s.%s.%d", self.filename, timeCache.date, self.sizeRotateTimes)
+			self.resetFile(fileName)
+			self.currentSize = 0
+			self.currentLines = 0
+			self.lock.Unlock()
+
+		// 按日期轮询
+		case _ = <-self.timeRotateSig:
+			self.lock.Lock()
+			if self.closed {
+				break RotateLoop
+			}
+
+			self.sizeRotateTimes = 0
+
+			fileName := fmt.Sprintf("%s.%s", self.filename, timeCache.date)
+			self.resetFile(fileName)
+			self.lock.Unlock()
+		}
+	}
+}
+
+func (self *FileLogWriter) resetFile(fileName string) {
+	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
+
+	if nil != err {
+		// 如果创建文件失败怎么做？
+		// 重试？
+		//self.timeRotateSig <- true
+	}
+
+	self.file.Close()
+	self.file = file
+	self.writer.Reset(file)
+
 }
 
 func (self *FileLogWriter) write(level Level, format string, args ...interface{}) {
@@ -146,7 +263,13 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 	}
 
 	self.lock.Lock()
-	defer self.lock.Unlock()
+	defer func() {
+		self.lock.Unlock()
+		// logrotate
+		if self.rotated {
+			self.logSizeChan <- len(timeCache.format) + len(level.Prefix()) + len(format) + len(EOL)
+		}
+	}()
 
 	if self.closed {
 		return
@@ -155,27 +278,33 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 	self.writer.Write(timeCache.format)
 	self.writer.WriteString(level.Prefix())
 	self.writer.WriteString(format)
-	self.writer.Write(EOL)
+	self.writer.WriteString(EOL)
+
 }
 
 // 格式化构造message
+// 边解析边输出
 // 使用 % 作占位符
-// 好像写bytes会比较快，待改进跟测试
-// http://hashrocket.com/blog/posts/go-performance-observations
-func (self *FileLogWriter) writef(level Level, format string, args ...interface{}) (err error) {
+func (self *FileLogWriter) writef(level Level, format string, args ...interface{}) {
 	if level < self.level {
 		return
 	}
 
 	self.lock.Lock()
-	defer self.lock.Unlock()
+	// 统计日志size
+	var size int = 0
+
+	defer func() {
+		self.lock.Unlock()
+		// logrotate
+		if self.rotated {
+			self.logSizeChan <- size
+		}
+	}()
 
 	if self.closed {
 		return
 	}
-
-	self.writer.Write(timeCache.format)
-	self.writer.WriteString(level.Prefix())
 
 	// 识别占位符标记
 	var tag bool = false
@@ -185,7 +314,13 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 	// 在处理的args 下标
 	var n int = 0
 	// 未输出的，第一个普通字符位置
-	var last int = 0 //
+	var last int = 0
+	var s int = 0
+
+	self.writer.Write(timeCache.format)
+	self.writer.WriteString(level.Prefix())
+
+	size += len(timeCache.format) + len(level.Prefix())
 
 	for i, v := range format {
 		if tag {
@@ -200,29 +335,27 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				}
 
 				if str, ok := args[n].(string); ok {
-					self.writer.WriteString(str)
+					s, _ = self.writer.WriteString(str)
+					size += s
 					n++
 					last = i + 1
 				} else {
-					return ErrInvalidFormat
+					//return ErrInvalidFormat
 				}
 				tag = false
 			// 整型
 			// %d
-			// 还不兼容int, int32, int64等
+			// 还没想好怎么兼容int, int32, int64
 			case 'd':
 				if escape {
 					escape = false
 				}
 
 				// 判断数据类型
-				if number, ok := args[n].(int); ok {
-					self.writer.WriteString(strconv.Itoa(number))
-					n++
-					last = i + 1
-				} else {
-					return ErrInvalidFormat
-				}
+				s, _ = self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				size += s
+				n++
+				last = i + 1
 				tag = false
 			// 浮点型
 			// %.xf
@@ -232,7 +365,8 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				}
 
 				// 还没想到好的解决方案，先用fmt自带的
-				self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				s, _ = self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				size += s
 				n++
 				last = i + 1
 				tag = false
@@ -244,7 +378,8 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				}
 
 				// 还没想到好的解决方案，先用fmt自带的
-				self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				s, _ = self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				size += s
 				n++
 				last = i + 1
 				tag = false
@@ -256,18 +391,19 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				}
 
 				if b, ok := args[n].(bool); ok {
-					self.writer.WriteString(strconv.FormatBool(b))
+					s, _ = self.writer.WriteString(strconv.FormatBool(b))
+					size += s
 					n++
 					last = i + 1
 				} else {
-					return ErrInvalidFormat
+					//return ErrInvalidFormat
 				}
 				tag = false
 			//转义符
-			case '\\':
+			case ESCAPE:
 				if escape {
-					self.writer.WriteString("\\")
-					//self.writer.Write(ESCAPE)
+					self.writer.WriteByte(ESCAPE)
+					size += 1
 				}
 				escape = !escape
 			//默认
@@ -280,15 +416,15 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 			if '%' == format[i] && !escape {
 				tag = true
 				tagPos = i
-				self.writer.WriteString(format[last:i])
+				s, _ = self.writer.WriteString(format[last:i])
+				size += s
 				escape = false
 			}
 		}
 	}
 	self.writer.WriteString(format[last:])
-	self.writer.Write(EOL)
-
-	return
+	self.writer.WriteString(EOL)
+	size += len(format[last:]) + len(EOL)
 }
 
 func (self *FileLogWriter) Debug(format string) {
