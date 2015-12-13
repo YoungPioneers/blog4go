@@ -143,15 +143,21 @@ func (self *FileLogWriter) RotateSize() ByteSize {
 }
 
 func (self *FileLogWriter) SetRotateSize(rotateSize ByteSize) {
-	self.rotateSize = rotateSize
+	if rotateSize > ByteSize(0) {
+		self.sizeRotated = true
+		self.rotateSize = rotateSize
+	}
 }
 
 func (self *FileLogWriter) RotateLine() int {
 	return self.rotateLines
 }
 
-func (self *FileLogWriter) SetRotateLine(rotateLine int) {
-	self.rotateLines = rotateLine
+func (self *FileLogWriter) SetRotateLines(rotateLines int) {
+	if rotateLines > 0 {
+		self.lineRotated = true
+		self.rotateLines = rotateLines
+	}
 }
 
 func (self *FileLogWriter) Close() {
