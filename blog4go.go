@@ -24,8 +24,6 @@ type LogWriter interface {
 	writef(level Level, format string, args ...interface{})
 }
 
-type ByteSize int
-
 var (
 	// 好像buffer size 调大点benchmark效果更好
 	// 默认使用内存页大小
@@ -277,7 +275,7 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 		self.lock.Unlock()
 		// logrotate
 		if self.rotated {
-			self.logSizeChan <- len(timeCache.format) + len(level.Prefix()) + len(format) + len(EOL)
+			self.logSizeChan <- len(timeCache.format) + len(level.Prefix()) + len(format) + 1
 		}
 	}()
 
@@ -288,7 +286,7 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 	self.writer.Write(timeCache.format)
 	self.writer.WriteString(level.Prefix())
 	self.writer.WriteString(format)
-	self.writer.WriteString(EOL)
+	self.writer.WriteByte(EOL)
 
 }
 
@@ -433,8 +431,8 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 		}
 	}
 	self.writer.WriteString(format[last:])
-	self.writer.WriteString(EOL)
-	size += len(format[last:]) + len(EOL)
+	self.writer.WriteByte(EOL)
+	size += len(format[last:]) + 1
 }
 
 func (self *FileLogWriter) Debug(format string) {

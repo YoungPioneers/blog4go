@@ -3,6 +3,8 @@
 
 package blog4go
 
+type ByteSize int
+
 const (
 	// 大小单位
 	_           = iota // ignore first value by assigning to blank identifier
@@ -19,7 +21,7 @@ const (
 	DateFormat       = "2006-01-02"
 
 	// 换行符
-	EOL = "\n"
+	EOL = '\n'
 	// 转移符
 	ESCAPE = '\\'
 )
