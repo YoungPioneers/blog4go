@@ -10,7 +10,8 @@ import (
 
 func BenchmarkFormat(b *testing.B) {
 	b.StopTimer()
-	writer, err := NewFileLogWriter("output.log", false)
+	//writer, err := NewFileLogWriter("output.log", false)
+	writer, err := NewFileLogWriter("output.log", true)
 	defer writer.Close()
 	if nil != err {
 		fmt.Println(err.Error())
