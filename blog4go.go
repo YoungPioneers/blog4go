@@ -162,6 +162,10 @@ func (self *FileLogWriter) SetRotateLines(rotateLines int) {
 
 func (self *FileLogWriter) Close() {
 	self.lock.Lock()
+	if self.closed {
+		return
+	}
+
 	self.flush()
 	self.file.Close()
 	self.writer = nil
@@ -219,7 +223,7 @@ RotateLoop:
 	for {
 		select {
 		// 按size轮询
-		case _ = <-self.sizeRotateSig:
+		case <-self.sizeRotateSig:
 			self.lock.Lock()
 			if self.closed {
 				break RotateLoop
@@ -233,7 +237,7 @@ RotateLoop:
 			self.lock.Unlock()
 
 		// 按日期轮询
-		case _ = <-self.timeRotateSig:
+		case <-self.timeRotateSig:
 			self.lock.Lock()
 			if self.closed {
 				break RotateLoop
