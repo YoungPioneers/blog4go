@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -111,6 +112,7 @@ func NewFileLogWriter(filename string, rotated bool) (fileWriter *FileLogWriter,
 	fileWriter.currentLines = 0
 
 	// 打开文件描述符
+	// TODO 文件名或许可以改成rotate之后才加后缀
 	if rotated {
 		filename = fmt.Sprintf("%s.%s", filename, timeCache.date)
 		go fileWriter.rotate()
@@ -285,6 +287,15 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 
 	self.writer.Write(timeCache.format)
 	self.writer.WriteString(level.Prefix())
+
+	// 获取log函数调用者
+	// TODO 亟待优化，这个操作很慢
+	//pc, _, lineno, ok := runtime.Caller(2)
+	//if ok {
+	//self.writer.WriteString(fmt.Sprintf("%s:%d ", runtime.FuncForPC(pc).Name(), lineno))
+	//self.writer.WriteString(fmt.Sprintf("%d:%d ", pc, lineno))
+	//}
+
 	self.writer.WriteString(format)
 	self.writer.WriteByte(EOL)
 
@@ -327,6 +338,14 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 
 	self.writer.Write(timeCache.format)
 	self.writer.WriteString(level.Prefix())
+
+	// 获取log函数调用者
+	// TODO 亟待优化，这个操作很慢
+	//pc, _, lineno, ok := runtime.Caller(2)
+	//if ok {
+	//self.writer.WriteString(fmt.Sprintf("%s:%d ", runtime.FuncForPC(pc).Name(), lineno))
+	//self.writer.WriteString(fmt.Sprintf("%d:%d ", pc, lineno))
+	//}
 
 	size += len(timeCache.format) + len(level.Prefix())
 
