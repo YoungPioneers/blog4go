@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -81,6 +80,9 @@ type FileLogWriter struct {
 
 	// 记录每次log的size
 	logSizeChan chan int
+
+	// 日志等级是否带颜色输出
+	colored bool
 }
 
 // 包初始化函数
@@ -98,6 +100,8 @@ func NewFileLogWriter(filename string, rotated bool) (fileWriter *FileLogWriter,
 
 	fileWriter.lock = new(sync.Mutex)
 	fileWriter.closed = false
+
+	// 日志轮询
 	fileWriter.rotated = rotated
 	fileWriter.timeRotateSig = make(chan bool)
 	fileWriter.sizeRotateSig = make(chan bool)
@@ -110,6 +114,9 @@ func NewFileLogWriter(filename string, rotated bool) (fileWriter *FileLogWriter,
 	fileWriter.sizeRotated = false
 	fileWriter.rotateLines = DefaultRotateLines
 	fileWriter.currentLines = 0
+
+	// 日志等级颜色输出
+	fileWriter.colored = true
 
 	// 打开文件描述符
 	// TODO 文件名或许可以改成rotate之后才加后缀
@@ -147,6 +154,22 @@ func (self *FileLogWriter) SetRotateSize(rotateSize ByteSize) {
 		self.sizeRotated = true
 		self.rotateSize = rotateSize
 	}
+}
+
+func (self *FileLogWriter) Colored() bool {
+	return self.colored
+}
+
+func (self *FileLogWriter) SetColored(colored bool) {
+	if colored == self.colored {
+		return
+	}
+
+	self.colored = colored
+	self.lock.Lock()
+	defer self.lock.Unlock()
+
+	initPrefix(colored)
 }
 
 func (self *FileLogWriter) RotateLine() int {
@@ -287,15 +310,6 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 
 	self.writer.Write(timeCache.format)
 	self.writer.WriteString(level.Prefix())
-
-	// 获取log函数调用者
-	// TODO 亟待优化，这个操作很慢
-	//pc, _, lineno, ok := runtime.Caller(2)
-	//if ok {
-	//self.writer.WriteString(fmt.Sprintf("%s:%d ", runtime.FuncForPC(pc).Name(), lineno))
-	//self.writer.WriteString(fmt.Sprintf("%d:%d ", pc, lineno))
-	//}
-
 	self.writer.WriteString(format)
 	self.writer.WriteByte(EOL)
 
@@ -338,15 +352,6 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 
 	self.writer.Write(timeCache.format)
 	self.writer.WriteString(level.Prefix())
-
-	// 获取log函数调用者
-	// TODO 亟待优化，这个操作很慢
-	//pc, _, lineno, ok := runtime.Caller(2)
-	//if ok {
-	//self.writer.WriteString(fmt.Sprintf("%s:%d ", runtime.FuncForPC(pc).Name(), lineno))
-	//self.writer.WriteString(fmt.Sprintf("%d:%d ", pc, lineno))
-	//}
-
 	size += len(timeCache.format) + len(level.Prefix())
 
 	for i, v := range format {
@@ -378,7 +383,6 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 					escape = false
 				}
 
-				// 判断数据类型
 				s, _ = self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
 				size += s
 				n++

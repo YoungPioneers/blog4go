@@ -72,11 +72,15 @@ type T struct {
 func logging(writer *blog4go.FileLogWriter) {
 	t := T{123, "test"}
 	d := int64(18)
-	//LoggingLoop:
 	for {
-		writer.Debug("test")
+		writer.Debug("test_debug")
+		writer.Trace("test_trace")
+		writer.Info("test_info")
+		writer.Warn("test_warn")
+		writer.Error("test_error")
+		writer.Critical("test_critical")
 		writer.Debugf("haha %s. en\\en, always %d and %5.4f, %t, %+v", "eddie", d, 3.14159, true, t)
-		//break LoggingLoop
+		time.Sleep(2 * time.Second)
 	}
 }
 
