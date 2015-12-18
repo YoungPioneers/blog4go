@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -23,8 +24,6 @@ type LogWriter interface {
 	write(level Level, format string)
 	writef(level Level, format string, args ...interface{})
 }
-
-type ByteSize int
 
 var (
 	// 好像buffer size 调大点benchmark效果更好
@@ -82,6 +81,9 @@ type FileLogWriter struct {
 
 	// 记录每次log的size
 	logSizeChan chan int
+
+	// 日志等级是否带颜色输出
+	colored bool
 }
 
 // 包初始化函数
@@ -99,6 +101,8 @@ func NewFileLogWriter(filename string, rotated bool) (fileWriter *FileLogWriter,
 
 	fileWriter.lock = new(sync.Mutex)
 	fileWriter.closed = false
+
+	// 日志轮询
 	fileWriter.rotated = rotated
 	fileWriter.timeRotateSig = make(chan bool)
 	fileWriter.sizeRotateSig = make(chan bool)
@@ -112,7 +116,11 @@ func NewFileLogWriter(filename string, rotated bool) (fileWriter *FileLogWriter,
 	fileWriter.rotateLines = DefaultRotateLines
 	fileWriter.currentLines = 0
 
+	// 日志等级颜色输出
+	fileWriter.colored = true
+
 	// 打开文件描述符
+	// TODO 文件名或许可以改成rotate之后才加后缀
 	if rotated {
 		filename = fmt.Sprintf("%s.%s", filename, timeCache.date)
 		go fileWriter.rotate()
@@ -149,6 +157,22 @@ func (self *FileLogWriter) SetRotateSize(rotateSize ByteSize) {
 	}
 }
 
+func (self *FileLogWriter) Colored() bool {
+	return self.colored
+}
+
+func (self *FileLogWriter) SetColored(colored bool) {
+	if colored == self.colored {
+		return
+	}
+
+	self.colored = colored
+	self.lock.Lock()
+	defer self.lock.Unlock()
+
+	initPrefix(colored)
+}
+
 func (self *FileLogWriter) RotateLine() int {
 	return self.rotateLines
 }
@@ -162,6 +186,10 @@ func (self *FileLogWriter) SetRotateLines(rotateLines int) {
 
 func (self *FileLogWriter) Close() {
 	self.lock.Lock()
+	if self.closed {
+		return
+	}
+
 	self.flush()
 	self.file.Close()
 	self.writer = nil
@@ -219,7 +247,7 @@ RotateLoop:
 	for {
 		select {
 		// 按size轮询
-		case _ = <-self.sizeRotateSig:
+		case <-self.sizeRotateSig:
 			self.lock.Lock()
 			if self.closed {
 				break RotateLoop
@@ -233,7 +261,7 @@ RotateLoop:
 			self.lock.Unlock()
 
 		// 按日期轮询
-		case _ = <-self.timeRotateSig:
+		case <-self.timeRotateSig:
 			self.lock.Lock()
 			if self.closed {
 				break RotateLoop
@@ -273,7 +301,7 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 		self.lock.Unlock()
 		// logrotate
 		if self.rotated {
-			self.logSizeChan <- len(timeCache.format) + len(level.Prefix()) + len(format) + len(EOL)
+			self.logSizeChan <- len(timeCache.format) + len(level.Prefix()) + len(format) + 1
 		}
 	}()
 
@@ -283,8 +311,14 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 
 	self.writer.Write(timeCache.format)
 	self.writer.WriteString(level.Prefix())
+
+	pc, _, lineno, ok := runtime.Caller(2)
+	if ok {
+		self.writer.WriteString(fmt.Sprintf("%s:%d ", runtime.FuncForPC(pc).Name(), lineno))
+	}
+
 	self.writer.WriteString(format)
-	self.writer.WriteString(EOL)
+	self.writer.WriteByte(EOL)
 
 }
 
@@ -326,6 +360,11 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 	self.writer.Write(timeCache.format)
 	self.writer.WriteString(level.Prefix())
 
+	pc, _, lineno, ok := runtime.Caller(2)
+	if ok {
+		self.writer.WriteString(fmt.Sprintf("%s:%d ", runtime.FuncForPC(pc).Name(), lineno))
+	}
+
 	size += len(timeCache.format) + len(level.Prefix())
 
 	for i, v := range format {
@@ -357,7 +396,6 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 					escape = false
 				}
 
-				// 判断数据类型
 				s, _ = self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
 				size += s
 				n++
@@ -429,8 +467,8 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 		}
 	}
 	self.writer.WriteString(format[last:])
-	self.writer.WriteString(EOL)
-	size += len(format[last:]) + len(EOL)
+	self.writer.WriteByte(EOL)
+	size += len(format[last:]) + 1
 }
 
 func (self *FileLogWriter) Debug(format string) {
