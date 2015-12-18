@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -310,6 +311,12 @@ func (self *FileLogWriter) write(level Level, format string, args ...interface{}
 
 	self.writer.Write(timeCache.format)
 	self.writer.WriteString(level.Prefix())
+
+	pc, _, lineno, ok := runtime.Caller(2)
+	if ok {
+		self.writer.WriteString(fmt.Sprintf("%s:%d ", runtime.FuncForPC(pc).Name(), lineno))
+	}
+
 	self.writer.WriteString(format)
 	self.writer.WriteByte(EOL)
 
@@ -352,6 +359,12 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 
 	self.writer.Write(timeCache.format)
 	self.writer.WriteString(level.Prefix())
+
+	pc, _, lineno, ok := runtime.Caller(2)
+	if ok {
+		self.writer.WriteString(fmt.Sprintf("%s:%d ", runtime.FuncForPC(pc).Name(), lineno))
+	}
+
 	size += len(timeCache.format) + len(level.Prefix())
 
 	for i, v := range format {
