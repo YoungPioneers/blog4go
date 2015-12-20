@@ -12,6 +12,16 @@ import (
 	"time"
 )
 
+type MyHook struct {
+	something string
+}
+
+func (self *MyHook) Fire(level blog4go.Level, message string) {
+	if level >= blog4go.ERROR {
+		fmt.Println(message)
+	}
+}
+
 func main() {
 	runtime.GOMAXPROCS(4)
 
@@ -23,7 +33,10 @@ func main() {
 	}
 	defer writer.Close()
 
-	for i := 1; i < 10; i++ {
+	hook := new(MyHook)
+	writer.SetHook(hook)
+
+	for i := 1; i < 5; i++ {
 		//logging(writer)
 		go logging(writer)
 	}
@@ -79,8 +92,8 @@ func logging(writer *blog4go.FileLogWriter) {
 		writer.Warn("test_warn")
 		writer.Error("test_error")
 		writer.Critical("test_critical")
-		writer.Debugf("haha %s. en\\en, always %d and %5.4f, %t, %+v", "eddie", d, 3.14159, true, t)
-		time.Sleep(2 * time.Second)
+		writer.Criticalf("haha %s. en\\en, always %d and %5.4f, %t, %+v", "eddie", d, 3.14159, true, t)
+		time.Sleep(5 * time.Second)
 	}
 }
 
