@@ -51,6 +51,7 @@ var timeCache = timeFormatCacheType{}
 
 // 装逼的logger
 type FileLogWriter struct {
+	// 日志等级
 	level Level
 
 	// log文件
@@ -67,7 +68,9 @@ type FileLogWriter struct {
 	// logrotate
 	// 互斥锁，用于互斥logrotate
 	rotateLock *sync.Mutex
+
 	// 按时间rotate
+	// 默认关闭
 	timeRotated   bool
 	timeRotateSig chan bool
 
@@ -75,11 +78,13 @@ type FileLogWriter struct {
 	sizeRotateSig chan bool
 
 	// 按行rotate
+	// 默认关闭
 	lineRotated  bool
 	rotateLines  int
 	currentLines int
 
 	// 按大小rotate
+	// 默认关闭
 	sizeRotated bool
 	rotateSize  ByteSize
 	currentSize ByteSize
@@ -90,10 +95,12 @@ type FileLogWriter struct {
 	logSizeChan chan int
 
 	// 日志等级是否带颜色输出
+	// 默认true
 	colored bool
 
 	// log hook
-	hook Hook
+	hook      Hook
+	hookLevel Level
 }
 
 // 包初始化函数
@@ -108,6 +115,7 @@ func init() {
 // 创建file writer
 func NewFileLogWriter(fileName string) (fileWriter *FileLogWriter, err error) {
 	fileWriter = new(FileLogWriter)
+	fileWriter.level = DEBUG
 	fileWriter.fileName = fileName
 
 	fileWriter.lock = new(sync.Mutex)
@@ -130,6 +138,10 @@ func NewFileLogWriter(fileName string) (fileWriter *FileLogWriter, err error) {
 
 	// 日志等级颜色输出
 	fileWriter.colored = true
+
+	// log hook
+	fileWriter.hook = nil
+	fileWriter.hookLevel = DEBUG
 
 	// 打开文件描述符
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
@@ -201,6 +213,10 @@ func (self *FileLogWriter) SetColored(colored bool) {
 
 func (self *FileLogWriter) SetHook(hook Hook) {
 	self.hook = hook
+}
+
+func (self *FileLogWriter) SetHookLevel(level Level) {
+	self.hookLevel = level
 }
 
 func (self *FileLogWriter) Close() {
@@ -328,7 +344,7 @@ func (self *FileLogWriter) write(level Level, format string) {
 		}
 
 		// 异步调用log hook
-		if nil != self.hook {
+		if nil != self.hook && !(level < self.hookLevel) {
 			go func(level Level, format string) {
 				self.hook.Fire(level, format)
 			}(level, format)
@@ -371,7 +387,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 		}
 
 		// 异步调用log hook
-		if nil != self.hook {
+		if nil != self.hook && !(level < self.hookLevel) {
 			go func(level Level, format string, args ...interface{}) {
 				self.hook.Fire(level, fmt.Sprintf(format, args...))
 			}(level, format, args...)
