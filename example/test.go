@@ -12,18 +12,35 @@ import (
 	"time"
 )
 
+type MyHook struct {
+	something string
+}
+
+func (self *MyHook) Fire(level blog4go.Level, message string) {
+	if level > blog4go.ERROR {
+		fmt.Println(message)
+	}
+}
+
 func main() {
 	runtime.GOMAXPROCS(4)
 
 	// blog
-	writer, err := blog4go.NewFileLogWriter("output.log", true)
+	writer, err := blog4go.NewFileLogWriter("output.log")
 	if nil != err {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 	defer writer.Close()
 
-	for i := 1; i < 10; i++ {
+	// test rotate line
+	writer.SetRotateLines(100)
+
+	// test hook
+	hook := new(MyHook)
+	writer.SetHook(hook)
+
+	for i := 1; i < 5; i++ {
 		//logging(writer)
 		go logging(writer)
 	}

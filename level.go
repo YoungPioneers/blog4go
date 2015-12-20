@@ -21,16 +21,16 @@ const (
 	ColoredPrefixFormat = " [\x1b[%dm%s\x1b[0m] "
 	UNKNOWN             = "UNKNOWN"
 
-	nocolor = 0
-	red     = 31
-	green   = 32
-	yellow  = 33
-	blue    = 34
-	gray    = 37
+	NOCOLOR = 0
+	RED     = 31
+	GREEN   = 32
+	YELLOW  = 33
+	BLUE    = 34
+	GRAY    = 37
 )
 
 var (
-	LevelStrings = [...]string{"DEBUG", "TRAC", "INFO", "WARN", "ERROR", "CRITAL"}
+	LevelStrings = [...]string{"DEBUG", "TRACE", "INFO", "WARN", "ERROR", "CRITAL"}
 
 	// 定义一些日志格式的前缀，减少字符串拼接操作
 	Prefix map[Level]string = make(map[Level]string)
@@ -42,12 +42,12 @@ func init() {
 
 func initPrefix(colored bool) {
 	if colored {
-		Prefix[DEBUG] = fmt.Sprintf(ColoredPrefixFormat, gray, DEBUG.String())
-		Prefix[TRACE] = fmt.Sprintf(ColoredPrefixFormat, green, TRACE.String())
-		Prefix[INFO] = fmt.Sprintf(ColoredPrefixFormat, blue, INFO.String())
-		Prefix[WARNING] = fmt.Sprintf(ColoredPrefixFormat, yellow, WARNING.String())
-		Prefix[ERROR] = fmt.Sprintf(ColoredPrefixFormat, red, ERROR.String())
-		Prefix[CRITICAL] = fmt.Sprintf(ColoredPrefixFormat, red, CRITICAL.String())
+		Prefix[DEBUG] = fmt.Sprintf(ColoredPrefixFormat, GRAY, DEBUG.String())
+		Prefix[TRACE] = fmt.Sprintf(ColoredPrefixFormat, GREEN, TRACE.String())
+		Prefix[INFO] = fmt.Sprintf(ColoredPrefixFormat, BLUE, INFO.String())
+		Prefix[WARNING] = fmt.Sprintf(ColoredPrefixFormat, YELLOW, WARNING.String())
+		Prefix[ERROR] = fmt.Sprintf(ColoredPrefixFormat, RED, ERROR.String())
+		Prefix[CRITICAL] = fmt.Sprintf(ColoredPrefixFormat, RED, CRITICAL.String())
 
 	} else {
 		Prefix[DEBUG] = fmt.Sprintf(PrefixFormat, DEBUG.String())
