@@ -17,7 +17,7 @@ type MyHook struct {
 }
 
 func (self *MyHook) Fire(level blog4go.Level, message string) {
-	if level >= blog4go.ERROR {
+	if level > blog4go.ERROR {
 		fmt.Println(message)
 	}
 }
@@ -26,13 +26,17 @@ func main() {
 	runtime.GOMAXPROCS(4)
 
 	// blog
-	writer, err := blog4go.NewFileLogWriter("output.log", true)
+	writer, err := blog4go.NewFileLogWriter("output.log")
 	if nil != err {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 	defer writer.Close()
 
+	// test rotate line
+	writer.SetRotateLines(100)
+
+	// test hook
 	hook := new(MyHook)
 	writer.SetHook(hook)
 
@@ -92,8 +96,8 @@ func logging(writer *blog4go.FileLogWriter) {
 		writer.Warn("test_warn")
 		writer.Error("test_error")
 		writer.Critical("test_critical")
-		writer.Criticalf("haha %s. en\\en, always %d and %5.4f, %t, %+v", "eddie", d, 3.14159, true, t)
-		time.Sleep(5 * time.Second)
+		writer.Debugf("haha %s. en\\en, always %d and %5.4f, %t, %+v", "eddie", d, 3.14159, true, t)
+		time.Sleep(2 * time.Second)
 	}
 }
 
