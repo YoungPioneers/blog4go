@@ -1,6 +1,10 @@
 // Copyright 2015
 // Author: huangjunwei@youmi.net
 
+// TODO 支持JSON, CSV等不同格式输出
+// TODO 分离下代码文件
+// TODO 不同日志等级的日志可区分文件
+
 package blog4go
 
 import (
