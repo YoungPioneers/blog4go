@@ -3,7 +3,6 @@
 
 // TODO 支持JSON, CSV等不同格式输出
 // TODO 分离下代码文件
-// TODO 不同日志等级的日志可区分文件
 
 package blog4go
 
@@ -28,30 +27,6 @@ type LogWriter interface {
 	write(level Level, format string)
 	writef(level Level, format string, args ...interface{})
 }
-
-var (
-	// 好像buffer size 调大点benchmark效果更好
-	// 默认使用内存页大小
-	DefaultBufferSize = 4096
-
-	ErrInvalidFormat = errors.New("Invalid format type.")
-)
-
-// 时间格式化的cache
-type timeFormatCacheType struct {
-	// 当前
-	now time.Time
-	// 当前日期
-	date string
-	// 当前时间格式化结果
-	format []byte
-	// 昨日日期
-	date_yesterday string
-}
-
-// 用全局的timeCache好像比较好
-// 实例的timeCache没那么好统一更新
-var timeCache = timeFormatCacheType{}
 
 // 装逼的logger
 type FileLogWriter struct {
@@ -99,7 +74,7 @@ type FileLogWriter struct {
 	logSizeChan chan int
 
 	// 日志等级是否带颜色输出
-	// 默认true
+	// 默认false
 	colored bool
 
 	// log hook
@@ -110,10 +85,6 @@ type FileLogWriter struct {
 // 包初始化函数
 func init() {
 	DefaultBufferSize = os.Getpagesize()
-	timeCache.now = time.Now()
-	timeCache.date = timeCache.now.Format(DateFormat)
-	timeCache.format = []byte(timeCache.now.Format(PrefixTimeFormat))
-	timeCache.date_yesterday = timeCache.now.Add(-24 * time.Hour).Format(DateFormat)
 }
 
 // 创建file writer
@@ -141,7 +112,7 @@ func NewFileLogWriter(fileName string) (fileWriter *FileLogWriter, err error) {
 	fileWriter.currentLines = 0
 
 	// 日志等级颜色输出
-	fileWriter.colored = true
+	fileWriter.colored = false
 
 	// log hook
 	fileWriter.hook = nil
@@ -225,28 +196,39 @@ func (self *FileLogWriter) SetHookLevel(level Level) {
 
 func (self *FileLogWriter) Close() {
 	self.lock.Lock()
+	defer self.lock.Unlock()
 	if self.closed {
 		return
 	}
 
-	self.flush()
+	self.writer.Flush()
 	self.file.Close()
 	self.writer = nil
 	self.closed = true
-	self.lock.Unlock()
 }
 
 func (self *FileLogWriter) flush() {
+	self.lock.Lock()
+	defer self.lock.Unlock()
 	self.writer.Flush()
 }
 
 // 常驻goroutine, 更新格式化的时间
 func (self *FileLogWriter) daemon() {
+	// 每秒刷新时间缓存，并判断是否需要logrotate
 	t := time.Tick(1 * time.Second)
+	// 10秒钟自动flush一次bufio
+	f := time.Tick(10 * time.Second)
 
 DaemonLoop:
 	for {
 		select {
+		case <-f:
+			if self.closed {
+				break DaemonLoop
+			}
+
+			self.flush()
 		case <-t:
 			if self.closed {
 				break DaemonLoop
@@ -440,44 +422,16 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 					size += s
 					n++
 					last = i + 1
-				} else {
-					//return ErrInvalidFormat
 				}
 				tag = false
-			// 整型
-			// %d
-			// 还没想好怎么兼容int, int32, int64
-			case 'd':
+			// 整型 %d
+			// 浮点型 %.xf
+			// 数据结构
+			case 'd', 'f', 'v', 'b', 'o', 'x', 'X', 'c', 'p':
 				if escape {
 					escape = false
 				}
 
-				s, _ = self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
-				size += s
-				n++
-				last = i + 1
-				tag = false
-			// 浮点型
-			// %.xf
-			case 'f':
-				if escape {
-					escape = false
-				}
-
-				// 还没想到好的解决方案，先用fmt自带的
-				s, _ = self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
-				size += s
-				n++
-				last = i + 1
-				tag = false
-			// Value
-			// {xxx:xxx}
-			case 'v':
-				if escape {
-					escape = false
-				}
-
-				// 还没想到好的解决方案，先用fmt自带的
 				s, _ = self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
 				size += s
 				n++
@@ -495,8 +449,6 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 					size += s
 					n++
 					last = i + 1
-				} else {
-					//return ErrInvalidFormat
 				}
 				tag = false
 			//转义符

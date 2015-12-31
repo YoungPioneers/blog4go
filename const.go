@@ -18,10 +18,20 @@ const (
 
 	// 时间前缀的格式
 	PrefixTimeFormat = "[2006/01/02:15:04:05]"
-	DateFormat       = "2006-01-02"
+	// 日期格式
+	DateFormat = "2006-01-02"
 
 	// 换行符
 	EOL = '\n'
 	// 转移符
 	ESCAPE = '\\'
+)
+
+var (
+	// bufio buffer size
+	// 好像buffer size 调大点benchmark效果更好
+	// 默认使用内存页大小
+	DefaultBufferSize = 4096
+
+	ErrInvalidFormat = errors.New("Invalid format type.")
 )
