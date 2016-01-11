@@ -3,16 +3,15 @@
 
 // TODO 支持JSON, CSV等不同格式输出
 // TODO 分离下代码文件
+// TODO 支持多种输出方式, console, file, socket
 
 package blog4go
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"runtime"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -408,26 +407,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 	for i, v := range format {
 		if tag {
 			switch v {
-			// 类型检查/ 特殊字符处理
-			// 占位符，有意义部分
-			// 字符串
-			// %s
-			case 's':
-				if escape {
-					escape = false
-				}
-
-				if str, ok := args[n].(string); ok {
-					s, _ = self.writer.WriteString(str)
-					size += s
-					n++
-					last = i + 1
-				}
-				tag = false
-			// 整型 %d
-			// 浮点型 %.xf
-			// 数据结构
-			case 'd', 'f', 'v', 'b', 'o', 'x', 'X', 'c', 'p':
+			case 'd', 'f', 'v', 'b', 'o', 'x', 'X', 'c', 'p', 't', 's', 'T', 'q', 'U', 'e', 'E', 'g', 'G':
 				if escape {
 					escape = false
 				}
@@ -436,20 +416,6 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				size += s
 				n++
 				last = i + 1
-				tag = false
-			// 布尔型
-			// %t
-			case 't':
-				if escape {
-					escape = false
-				}
-
-				if b, ok := args[n].(bool); ok {
-					s, _ = self.writer.WriteString(strconv.FormatBool(b))
-					size += s
-					n++
-					last = i + 1
-				}
 				tag = false
 			//转义符
 			case ESCAPE:

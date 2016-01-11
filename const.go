@@ -3,6 +3,10 @@
 
 package blog4go
 
+import (
+	"errors"
+)
+
 type ByteSize int
 
 const (
