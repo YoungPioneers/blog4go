@@ -37,7 +37,7 @@ var (
 )
 
 func init() {
-	initPrefix(true)
+	initPrefix(false)
 }
 
 func initPrefix(colored bool) {

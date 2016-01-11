@@ -1,15 +1,17 @@
 // Copyright 2015
 // Author: huangjunwei@youmi.net
 
+// TODO 支持JSON, CSV等不同格式输出
+// TODO 分离下代码文件
+// TODO 支持多种输出方式, console, file, socket
+
 package blog4go
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"os"
 	"runtime"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -25,32 +27,9 @@ type LogWriter interface {
 	writef(level Level, format string, args ...interface{})
 }
 
-var (
-	// 好像buffer size 调大点benchmark效果更好
-	// 默认使用内存页大小
-	DefaultBufferSize = 4096
-
-	ErrInvalidFormat = errors.New("Invalid format type.")
-)
-
-// 时间格式化的cache
-type timeFormatCacheType struct {
-	// 当前
-	now time.Time
-	// 当前日期
-	date string
-	// 当前时间格式化结果
-	format []byte
-	// 昨日日期
-	date_yesterday string
-}
-
-// 用全局的timeCache好像比较好
-// 实例的timeCache没那么好统一更新
-var timeCache = timeFormatCacheType{}
-
 // 装逼的logger
 type FileLogWriter struct {
+	// 日志等级
 	level Level
 
 	// log文件
@@ -67,7 +46,9 @@ type FileLogWriter struct {
 	// logrotate
 	// 互斥锁，用于互斥logrotate
 	rotateLock *sync.Mutex
+
 	// 按时间rotate
+	// 默认关闭
 	timeRotated   bool
 	timeRotateSig chan bool
 
@@ -75,11 +56,13 @@ type FileLogWriter struct {
 	sizeRotateSig chan bool
 
 	// 按行rotate
+	// 默认关闭
 	lineRotated  bool
 	rotateLines  int
 	currentLines int
 
 	// 按大小rotate
+	// 默认关闭
 	sizeRotated bool
 	rotateSize  ByteSize
 	currentSize ByteSize
@@ -90,24 +73,23 @@ type FileLogWriter struct {
 	logSizeChan chan int
 
 	// 日志等级是否带颜色输出
+	// 默认false
 	colored bool
 
 	// log hook
-	hook Hook
+	hook      Hook
+	hookLevel Level
 }
 
 // 包初始化函数
 func init() {
 	DefaultBufferSize = os.Getpagesize()
-	timeCache.now = time.Now()
-	timeCache.date = timeCache.now.Format(DateFormat)
-	timeCache.format = []byte(timeCache.now.Format(PrefixTimeFormat))
-	timeCache.date_yesterday = timeCache.now.Add(-24 * time.Hour).Format(DateFormat)
 }
 
 // 创建file writer
 func NewFileLogWriter(fileName string) (fileWriter *FileLogWriter, err error) {
 	fileWriter = new(FileLogWriter)
+	fileWriter.level = DEBUG
 	fileWriter.fileName = fileName
 
 	fileWriter.lock = new(sync.Mutex)
@@ -129,7 +111,11 @@ func NewFileLogWriter(fileName string) (fileWriter *FileLogWriter, err error) {
 	fileWriter.currentLines = 0
 
 	// 日志等级颜色输出
-	fileWriter.colored = true
+	fileWriter.colored = false
+
+	// log hook
+	fileWriter.hook = nil
+	fileWriter.hookLevel = DEBUG
 
 	// 打开文件描述符
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
@@ -203,30 +189,45 @@ func (self *FileLogWriter) SetHook(hook Hook) {
 	self.hook = hook
 }
 
+func (self *FileLogWriter) SetHookLevel(level Level) {
+	self.hookLevel = level
+}
+
 func (self *FileLogWriter) Close() {
 	self.lock.Lock()
+	defer self.lock.Unlock()
 	if self.closed {
 		return
 	}
 
-	self.flush()
+	self.writer.Flush()
 	self.file.Close()
 	self.writer = nil
 	self.closed = true
-	self.lock.Unlock()
 }
 
 func (self *FileLogWriter) flush() {
+	self.lock.Lock()
+	defer self.lock.Unlock()
 	self.writer.Flush()
 }
 
 // 常驻goroutine, 更新格式化的时间
 func (self *FileLogWriter) daemon() {
+	// 每秒刷新时间缓存，并判断是否需要logrotate
 	t := time.Tick(1 * time.Second)
+	// 10秒钟自动flush一次bufio
+	f := time.Tick(10 * time.Second)
 
 DaemonLoop:
 	for {
 		select {
+		case <-f:
+			if self.closed {
+				break DaemonLoop
+			}
+
+			self.flush()
 		case <-t:
 			if self.closed {
 				break DaemonLoop
@@ -328,7 +329,7 @@ func (self *FileLogWriter) write(level Level, format string) {
 		}
 
 		// 异步调用log hook
-		if nil != self.hook {
+		if nil != self.hook && !(level < self.hookLevel) {
 			go func(level Level, format string) {
 				self.hook.Fire(level, format)
 			}(level, format)
@@ -371,7 +372,7 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 		}
 
 		// 异步调用log hook
-		if nil != self.hook {
+		if nil != self.hook && !(level < self.hookLevel) {
 			go func(level Level, format string, args ...interface{}) {
 				self.hook.Fire(level, fmt.Sprintf(format, args...))
 			}(level, format, args...)
@@ -401,89 +402,35 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 		self.writer.WriteString(fmt.Sprintf("%s:%d ", runtime.FuncForPC(pc).Name(), lineno))
 	}
 
-	size += len(timeCache.format) + len(level.Prefix())
+	// logrotate
+	if self.sizeRotated || self.lineRotated {
+		size += len(timeCache.format) + len(level.Prefix())
+	}
 
 	for i, v := range format {
 		if tag {
 			switch v {
-			// 类型检查/ 特殊字符处理
-			// 占位符，有意义部分
-			// 字符串
-			// %s
-			case 's':
+			case 'd', 'f', 'v', 'b', 'o', 'x', 'X', 'c', 'p', 't', 's', 'T', 'q', 'U', 'e', 'E', 'g', 'G':
 				if escape {
 					escape = false
 				}
 
-				if str, ok := args[n].(string); ok {
-					s, _ = self.writer.WriteString(str)
+				s, _ = self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				// logrotate
+				if self.sizeRotated || self.lineRotated {
 					size += s
-					n++
-					last = i + 1
-				} else {
-					//return ErrInvalidFormat
 				}
-				tag = false
-			// 整型
-			// %d
-			// 还没想好怎么兼容int, int32, int64
-			case 'd':
-				if escape {
-					escape = false
-				}
-
-				s, _ = self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
-				size += s
 				n++
 				last = i + 1
-				tag = false
-			// 浮点型
-			// %.xf
-			case 'f':
-				if escape {
-					escape = false
-				}
-
-				// 还没想到好的解决方案，先用fmt自带的
-				s, _ = self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
-				size += s
-				n++
-				last = i + 1
-				tag = false
-			// Value
-			// {xxx:xxx}
-			case 'v':
-				if escape {
-					escape = false
-				}
-
-				// 还没想到好的解决方案，先用fmt自带的
-				s, _ = self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
-				size += s
-				n++
-				last = i + 1
-				tag = false
-			// 布尔型
-			// %t
-			case 't':
-				if escape {
-					escape = false
-				}
-
-				if b, ok := args[n].(bool); ok {
-					s, _ = self.writer.WriteString(strconv.FormatBool(b))
-					size += s
-					n++
-					last = i + 1
-				} else {
-					//return ErrInvalidFormat
-				}
 				tag = false
 			//转义符
 			case ESCAPE:
 				if escape {
 					self.writer.WriteByte(ESCAPE)
-					size += 1
+					// logrotate
+					if self.sizeRotated || self.lineRotated {
+						size += 1
+					}
 				}
 				escape = !escape
 			//默认
@@ -504,7 +451,10 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 	}
 	self.writer.WriteString(format[last:])
 	self.writer.WriteByte(EOL)
-	size += len(format[last:]) + 1
+
+	if self.sizeRotated || self.lineRotated {
+		size += len(format[last:]) + 1
+	}
 }
 
 func (self *FileLogWriter) Debug(format string) {
