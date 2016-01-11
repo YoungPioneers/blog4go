@@ -402,7 +402,10 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 		self.writer.WriteString(fmt.Sprintf("%s:%d ", runtime.FuncForPC(pc).Name(), lineno))
 	}
 
-	size += len(timeCache.format) + len(level.Prefix())
+	// logrotate
+	if self.sizeRotated || self.lineRotated {
+		size += len(timeCache.format) + len(level.Prefix())
+	}
 
 	for i, v := range format {
 		if tag {
@@ -413,7 +416,10 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 				}
 
 				s, _ = self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
-				size += s
+				// logrotate
+				if self.sizeRotated || self.lineRotated {
+					size += s
+				}
 				n++
 				last = i + 1
 				tag = false
@@ -421,7 +427,10 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 			case ESCAPE:
 				if escape {
 					self.writer.WriteByte(ESCAPE)
-					size += 1
+					// logrotate
+					if self.sizeRotated || self.lineRotated {
+						size += 1
+					}
 				}
 				escape = !escape
 			//默认
@@ -442,7 +451,10 @@ func (self *FileLogWriter) writef(level Level, format string, args ...interface{
 	}
 	self.writer.WriteString(format[last:])
 	self.writer.WriteByte(EOL)
-	size += len(format[last:]) + 1
+
+	if self.sizeRotated || self.lineRotated {
+		size += len(format[last:]) + 1
+	}
 }
 
 func (self *FileLogWriter) Debug(format string) {
