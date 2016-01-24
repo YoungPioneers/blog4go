@@ -3,7 +3,6 @@
 
 // TODO 支持JSON, CSV等不同格式输出
 // TODO 分离下代码文件
-// TODO 支持多种输出方式, console, file, socket
 package blog4go
 
 type BLog4go struct {

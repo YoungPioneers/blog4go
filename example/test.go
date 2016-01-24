@@ -57,6 +57,12 @@ func main() {
 	writers.Error("Error")
 	writers.Critical("Critical")
 
+	// socket writer
+	// nc -u -l 12124
+	socketWriter, err := blog4go.NewSocketWriter("udp", "127.0.0.1:12124")
+	defer socketWriter.Close()
+	socketWriter.Debug("debug")
+
 	// seelog
 	//logger, err := log.LoggerFromConfigAsFile("log_config.xml")
 	//if nil != err {

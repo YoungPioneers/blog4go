@@ -9,7 +9,7 @@ import (
 )
 
 type FileWriters struct {
-	// 日志登记
+	// 日志等级
 	level Level
 
 	// file writers

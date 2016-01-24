@@ -13,7 +13,7 @@ import (
 
 // file logger
 type FileWriter struct {
-	// 日志登记
+	// 日志等级
 	level Level
 
 	// log文件

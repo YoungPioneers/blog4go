@@ -39,6 +39,7 @@ All notable changes to this project will be documented in this file.
 - 增加ConsoleWriter, FileWriters对应的Benmark测试。
 - level_test.go测试用例
 - travis ci
+- 支持socket
 
 ### Changed
 - 原BLog4go结构体改名为FileWriter.
