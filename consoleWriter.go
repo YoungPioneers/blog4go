@@ -13,6 +13,9 @@ import (
 
 // console logger
 type ConsoleWriter struct {
+	// 日志登记
+	level Level
+
 	// log文件
 	writer *bufio.Writer
 
@@ -34,6 +37,7 @@ type ConsoleWriter struct {
 // 创建console writer
 func NewConsoleWriter() (consoleWriter *ConsoleWriter, err error) {
 	consoleWriter = new(ConsoleWriter)
+	consoleWriter.level = DEBUG
 
 	consoleWriter.lock = new(sync.Mutex)
 	consoleWriter.closed = false
@@ -76,11 +80,7 @@ DaemonLoop:
 			now := time.Now()
 			timeCache.now = now
 			timeCache.format = []byte(now.Format(PrefixTimeFormat))
-			date := now.Format(DateFormat)
-			if date != timeCache.date {
-				timeCache.date_yesterday = timeCache.date
-				timeCache.date = now.Format(DateFormat)
-			}
+
 		}
 	}
 }
@@ -179,6 +179,15 @@ func (self *ConsoleWriter) writef(level Level, format string, args ...interface{
 	self.writer.WriteByte(EOL)
 }
 
+func (self *ConsoleWriter) Level() Level {
+	return self.level
+}
+
+func (self *ConsoleWriter) SetLevel(level Level) *ConsoleWriter {
+	self.level = level
+	return self
+}
+
 func (self *ConsoleWriter) Colored() bool {
 	return self.colored
 }
@@ -219,4 +228,100 @@ func (self *ConsoleWriter) flush() {
 	self.lock.Lock()
 	defer self.lock.Unlock()
 	self.writer.Flush()
+}
+
+func (self *ConsoleWriter) Debug(format string) {
+	if DEBUG < self.level {
+		return
+	}
+
+	self.write(DEBUG, format)
+}
+
+func (self *ConsoleWriter) Debugf(format string, args ...interface{}) {
+	if DEBUG < self.level {
+		return
+	}
+
+	self.writef(DEBUG, format, args...)
+}
+
+func (self *ConsoleWriter) Trace(format string) {
+	if TRACE < self.level {
+		return
+	}
+
+	self.write(TRACE, format)
+}
+
+func (self *ConsoleWriter) Tracef(format string, args ...interface{}) {
+	if TRACE < self.level {
+		return
+	}
+
+	self.writef(TRACE, format, args...)
+}
+
+func (self *ConsoleWriter) Info(format string) {
+	if INFO < self.level {
+		return
+	}
+
+	self.write(INFO, format)
+}
+
+func (self *ConsoleWriter) Infof(format string, args ...interface{}) {
+	if INFO < self.level {
+		return
+	}
+
+	self.writef(INFO, format, args...)
+}
+
+func (self *ConsoleWriter) Error(format string) {
+	if ERROR < self.level {
+		return
+	}
+
+	self.write(ERROR, format)
+}
+
+func (self *ConsoleWriter) Errorf(format string, args ...interface{}) {
+	if ERROR < self.level {
+		return
+	}
+
+	self.writef(ERROR, format, args...)
+}
+
+func (self *ConsoleWriter) Warn(format string) {
+	if WARNING < self.level {
+		return
+	}
+
+	self.write(WARNING, format)
+}
+
+func (self *ConsoleWriter) Warnf(format string, args ...interface{}) {
+	if WARNING < self.level {
+		return
+	}
+
+	self.writef(WARNING, format, args...)
+}
+
+func (self *ConsoleWriter) Critical(format string) {
+	if CRITICAL < self.level {
+		return
+	}
+
+	self.write(CRITICAL, format)
+}
+
+func (self *ConsoleWriter) Criticalf(format string, args ...interface{}) {
+	if CRITICAL < self.level {
+		return
+	}
+
+	self.writef(CRITICAL, format, args...)
 }

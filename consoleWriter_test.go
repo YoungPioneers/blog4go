@@ -8,9 +8,9 @@ import (
 	"testing"
 )
 
-func BenchmarkFileWriters(b *testing.B) {
+func BenchmarkConsoleWriter(b *testing.B) {
 	b.StopTimer()
-	writer, err := NewFileWriters("/tmp")
+	writer, err := NewConsoleWriter()
 	defer writer.Close()
 	if nil != err {
 		fmt.Println(err.Error())

@@ -4,6 +4,7 @@ package blog4go
 
 import (
 	"fmt"
+	"path"
 	"strings"
 )
 
@@ -26,7 +27,7 @@ func NewFileWriters(baseDir string) (fileWriters *FileWriters, err error) {
 	fileWriters.writers = make(map[Level]*FileWriter)
 	for _, level := range Levels {
 		fileName := fmt.Sprintf("%s.log", strings.ToLower(level.String()))
-		writer, err := NewFileWriter(fileName)
+		writer, err := NewFileWriter(path.Join(baseDir, fileName))
 		if nil != err {
 			return nil, err
 		}
