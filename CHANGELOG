@@ -29,5 +29,22 @@ All notable changes to this project will be documented in this file.
 ## [0.2.1] - 2016-01-11
 ### Changed
 - 使用fmt支持所有占位符。
-- size 统计在rotate模式下才累加
-- 聚合0.1.0版本前的changelog
+- size 统计在rotate模式下才累加。
+- 聚合0.1.0版本前的changelog.
+
+## [0.3.0] - 2016-01-24
+### Added
+- 增加ConsoleWriter，更直接支持控制台输出。
+- 文件输出支持不同日志等级区分文件输出。对应于FileWriters。
+- 增加ConsoleWriter, FileWriters对应的Benmark测试。
+- level_test.go测试用例
+- travis ci
+
+### Changed
+- 原BLog4go结构体改名为FileWriter.
+- 比较通用的方法及定义放在blog4go.go.
+- 日志等级判断从writer, writerf函数中分离，放到上一层函数调用。
+- 去除function handler信息获取。
+
+### Fixed
+- 部分有误注释。

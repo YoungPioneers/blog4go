@@ -32,7 +32,7 @@ const (
 )
 
 var (
-	LevelStrings = [...]string{"DEBUG", "TRACE", "INFO", "WARN", "ERROR", "CRITAL"}
+	LevelStrings = [...]string{"DEBUG", "TRACE", "INFO", "WARN", "ERROR", "CRITICAL"}
 	Levels       = [...]Level{DEBUG, TRACE, INFO, WARNING, ERROR, CRITICAL}
 
 	// 定义一些日志格式的前缀，减少字符串拼接操作
