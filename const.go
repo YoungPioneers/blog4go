@@ -5,6 +5,7 @@ package blog4go
 
 import (
 	"errors"
+	"os"
 )
 
 type ByteSize int
@@ -29,6 +30,8 @@ const (
 	EOL = '\n'
 	// 转移符
 	ESCAPE = '\\'
+	// 占位符
+	PLACEHOLDER = '%'
 )
 
 var (
@@ -39,3 +42,8 @@ var (
 
 	ErrInvalidFormat = errors.New("Invalid format type.")
 )
+
+// 包初始化函数
+func init() {
+	DefaultBufferSize = os.Getpagesize()
+}

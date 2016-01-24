@@ -26,7 +26,7 @@ func main() {
 	runtime.GOMAXPROCS(4)
 
 	// blog
-	writer, err := blog4go.NewFileLogWriter("output.log")
+	writer, err := blog4go.NewFileWriter("output.log")
 	if nil != err {
 		fmt.Println(err.Error())
 		os.Exit(1)
@@ -44,6 +44,20 @@ func main() {
 		//logging(writer)
 		go logging(writer)
 	}
+
+	// blog writers
+	writers, err := blog4go.NewFileWriters("./:")
+	if nil != err {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+	defer writers.Close()
+	writers.Debug("Debug")
+	writers.Trace("Trace")
+	writers.Info("Info")
+	writers.Warn("Warn")
+	writers.Error("Error")
+	writers.Critical("Critical")
 
 	// seelog
 	//logger, err := log.LoggerFromConfigAsFile("log_config.xml")
@@ -86,7 +100,7 @@ type T struct {
 }
 
 // blog
-func logging(writer *blog4go.FileLogWriter) {
+func logging(writer *blog4go.FileWriter) {
 	t := T{123, "test"}
 	d := int64(18)
 	for {

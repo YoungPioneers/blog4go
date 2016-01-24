@@ -17,6 +17,8 @@ const (
 	ERROR
 	CRITICAL
 
+	DefaultLevel = DEBUG
+
 	PrefixFormat        = " [%s] "
 	ColoredPrefixFormat = " [\x1b[%dm%s\x1b[0m] "
 	UNKNOWN             = "UNKNOWN"
@@ -31,6 +33,7 @@ const (
 
 var (
 	LevelStrings = [...]string{"DEBUG", "TRACE", "INFO", "WARN", "ERROR", "CRITAL"}
+	Levels       = [...]Level{DEBUG, TRACE, INFO, WARNING, ERROR, CRITICAL}
 
 	// 定义一些日志格式的前缀，减少字符串拼接操作
 	Prefix map[Level]string = make(map[Level]string)

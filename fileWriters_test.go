@@ -8,10 +8,9 @@ import (
 	"testing"
 )
 
-func BenchmarkFormat(b *testing.B) {
+func BenchmarkFileWriters(b *testing.B) {
 	b.StopTimer()
-	//writer, err := NewFileLogWriter("output.log", false)
-	writer, err := NewFileLogWriter("output.log")
+	writer, err := NewFileWriters("./")
 	defer writer.Close()
 	if nil != err {
 		fmt.Println(err.Error())
