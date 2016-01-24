@@ -2,7 +2,6 @@ language: go
 
 go:
         - 1.5
-        - tip
 
 env:
         - GIMME_OS=linux GIMME_ARCH=amd64

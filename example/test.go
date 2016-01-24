@@ -1,10 +1,8 @@
 package main
 
 import (
-	"blog4go"
 	"fmt"
-	//log "github.com/cihub/seelog"
-	//log "github.com/Sirupsen/logrus"
+	"github.com/YoungPioneers/blog4go"
 	"os"
 	"os/signal"
 	"runtime"
@@ -46,7 +44,7 @@ func main() {
 	}
 
 	// blog writers
-	writers, err := blog4go.NewFileWriters("./:")
+	writers, err := blog4go.NewFileWriters("./")
 	if nil != err {
 		fmt.Println(err.Error())
 		os.Exit(1)
