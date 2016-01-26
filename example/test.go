@@ -24,7 +24,7 @@ func main() {
 	runtime.GOMAXPROCS(4)
 
 	// blog
-	writer, err := blog4go.NewFileWriter("output.log")
+	writer, err := blog4go.NewBaseFileWriter("output.log")
 	if nil != err {
 		fmt.Println(err.Error())
 		os.Exit(1)
@@ -44,7 +44,7 @@ func main() {
 	}
 
 	// blog writers
-	writers, err := blog4go.NewFileWriters("./")
+	writers, err := blog4go.NewFileWriter("./")
 	if nil != err {
 		fmt.Println(err.Error())
 		os.Exit(1)
@@ -104,7 +104,7 @@ type T struct {
 }
 
 // blog
-func logging(writer *blog4go.FileWriter) {
+func logging(writer *blog4go.BaseFileWriter) {
 	t := T{123, "test"}
 	d := int64(18)
 	for {

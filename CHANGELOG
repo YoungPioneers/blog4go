@@ -35,8 +35,8 @@ All notable changes to this project will be documented in this file.
 ## [0.3.0] - 2016-01-24
 ### Added
 - 增加ConsoleWriter，更直接支持控制台输出。
-- 文件输出支持不同日志等级区分文件输出。对应于FileWriters。
-- 增加ConsoleWriter, FileWriters对应的Benmark测试。
+- 文件输出支持不同日志等级区分文件输出。对应于FileWriter。
+- 增加ConsoleWriter, FileWriter对应的Benmark测试。
 - level_test.go测试用例
 - travis ci
 - 支持socket
