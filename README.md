@@ -8,7 +8,7 @@ BLog4go is authorized by [YOUMI](https://www.youmi.net/). It is an efficient log
 
 Features
 ------------------
-* Partially write to the [bufio.Writer](https://golang.org/pkg/bufio/#Writer) as soon as posible while formatting message to improve performance
+* *Partially write* to the [bufio.Writer](https://golang.org/pkg/bufio/#Writer) as soon as posible while formatting message to improve performance
 * Support different logging output file for different logging level
 * Configurable logrotate strategy
 * Call user defined hook in asynchronous mode for every logging action
@@ -66,7 +66,6 @@ func main() {
 Installation
 ------------------
 
-
 If you don't have the Go development environment installed, visit the 
 [Getting Started](http://golang.org/doc/install.html) document and follow the instructions. Once you're ready, execute the following command:
 
@@ -84,9 +83,10 @@ TODO
 Examples
 ---------------
 
-[CHANGELOG](https://github.com/YoungPioneers/blog4go/tree/master/example)
+[EXAMPLES](https://github.com/YoungPioneers/blog4go/tree/master/example)
 
 
 Changelog
 ------------------
+
 [CHANGELOG](https://raw.githubusercontent.com/YoungPioneers/blog4go/master/CHANGELOG)
