@@ -14,6 +14,7 @@ type timeFormatCacheType struct {
 	// 当前日期
 	date string
 	// 当前时间格式化结果
+	// bufio write bytes会比write string效率高
 	format []byte
 	// 昨日日期
 	date_yesterday string

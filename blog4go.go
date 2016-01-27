@@ -1,7 +1,6 @@
 // Copyright 2015
 // Author: huangjunwei@youmi.net
 
-// TODO 支持JSON, CSV等不同格式输出
 // TODO 分离下代码文件
 package blog4go
 

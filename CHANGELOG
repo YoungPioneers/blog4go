@@ -32,7 +32,7 @@ All notable changes to this project will be documented in this file.
 - size 统计在rotate模式下才累加。
 - 聚合0.1.0版本前的changelog.
 
-## [0.3.0] - 2016-01-24
+## [0.3.0] - 2016-01-26
 ### Added
 - 增加ConsoleWriter，更直接支持控制台输出。
 - 文件输出支持不同日志等级区分文件输出。对应于FileWriter。

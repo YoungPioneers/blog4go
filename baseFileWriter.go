@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// file logger
+// BaseFileWriter基本的单文件处理结构
 type BaseFileWriter struct {
 	// 日志等级
 	level Level
@@ -51,7 +51,8 @@ type BaseFileWriter struct {
 	rotateSize  ByteSize
 	currentSize ByteSize
 
-	sizeRotateTimes int // 当前按size,line rotate次数
+	// 当前按size,line rotate次数
+	sizeRotateTimes int
 
 	// 记录每次log的size
 	logSizeChan chan int
@@ -61,6 +62,7 @@ type BaseFileWriter struct {
 	colored bool
 
 	// log hook
+	// 自定义log回调函数
 	hook      Hook
 	hookLevel Level
 }
