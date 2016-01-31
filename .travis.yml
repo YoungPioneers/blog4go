@@ -10,6 +10,7 @@ env:
         - GIMME_OS=linux GIMME_ARCH=amd64
 
 install:
+        - export PATH=$PATH:$HOME/gopath/bin
         - go get github.com/tools/godep
         - godep restore
 
