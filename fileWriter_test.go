@@ -1,5 +1,4 @@
-// Copyright 2015
-// Author: huangjunwei@youmi.net
+// Copyright (c) 2015, huangjunwei <huangjunwei@youmi.net>. All rights reserved.
 
 package blog4go
 

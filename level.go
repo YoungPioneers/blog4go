@@ -1,5 +1,4 @@
-// Copyright 2015
-// Author: huangjunwei@youmi.net
+// Copyright (c) 2015, huangjunwei <huangjunwei@youmi.net>. All rights reserved.
 
 package blog4go
 
@@ -7,22 +6,27 @@ import (
 	"fmt"
 )
 
+// type defined for logging level
+// just use int
 type Level int
 
 const (
+	// level enum
 	DEBUG Level = iota
 	TRACE
 	INFO
 	WARNING
 	ERROR
 	CRITICAL
+	UNKNOWN = "UNKNOWN"
 
-	DefaultLevel = DEBUG
+	DefaultLevel = DEBUG // default level for writers
 
-	PrefixFormat        = " [%s] "
-	ColoredPrefixFormat = " [\x1b[%dm%s\x1b[0m] "
-	UNKNOWN             = "UNKNOWN"
+	// level format ahead every message
+	PrefixFormat        = " [%s] "                // pure format
+	ColoredPrefixFormat = " [\x1b[%dm%s\x1b[0m] " // colored format
 
+	// color enum used in formating color bytes
 	NOCOLOR = 0
 	RED     = 31
 	GREEN   = 32
@@ -32,17 +36,24 @@ const (
 )
 
 var (
+	// string present for each level
 	LevelStrings = [...]string{"DEBUG", "TRACE", "INFO", "WARN", "ERROR", "CRITICAL"}
-	Levels       = [...]Level{DEBUG, TRACE, INFO, WARNING, ERROR, CRITICAL}
 
-	// 定义一些日志格式的前缀，减少字符串拼接操作
+	// a slice consist of all levels
+	Levels = [...]Level{DEBUG, TRACE, INFO, WARNING, ERROR, CRITICAL}
+
+	// preformatted level prefix string
+	// help reduce string formatted burden in realtime logging
 	Prefix map[Level]string = make(map[Level]string)
 )
 
 func init() {
-	initPrefix(false)
+	initPrefix(false) // preformat level prefix string
 }
 
+// initPrefix is designed to preformat level prefix string for each level.
+// colored decide whether preformat in colored format or not.
+// if colored is true, preformat level prefix string in colored format
 func initPrefix(colored bool) {
 	if colored {
 		Prefix[DEBUG] = fmt.Sprintf(ColoredPrefixFormat, GRAY, DEBUG.String())
@@ -51,7 +62,6 @@ func initPrefix(colored bool) {
 		Prefix[WARNING] = fmt.Sprintf(ColoredPrefixFormat, YELLOW, WARNING.String())
 		Prefix[ERROR] = fmt.Sprintf(ColoredPrefixFormat, RED, ERROR.String())
 		Prefix[CRITICAL] = fmt.Sprintf(ColoredPrefixFormat, RED, CRITICAL.String())
-
 	} else {
 		Prefix[DEBUG] = fmt.Sprintf(PrefixFormat, DEBUG.String())
 		Prefix[TRACE] = fmt.Sprintf(PrefixFormat, TRACE.String())
@@ -59,12 +69,10 @@ func initPrefix(colored bool) {
 		Prefix[WARNING] = fmt.Sprintf(PrefixFormat, WARNING.String())
 		Prefix[ERROR] = fmt.Sprintf(PrefixFormat, ERROR.String())
 		Prefix[CRITICAL] = fmt.Sprintf(PrefixFormat, CRITICAL.String())
-
 	}
-
 }
 
-// 有效性判断好像必要性不大
+// valid determines whether a Level instance is valid or not
 func (self Level) valid() bool {
 	if DEBUG > self || CRITICAL < self {
 		return false
@@ -72,6 +80,7 @@ func (self Level) valid() bool {
 	return true
 }
 
+// String return string format associate with a Level instance
 func (self Level) String() string {
 	if !self.valid() {
 		return UNKNOWN
@@ -79,6 +88,7 @@ func (self Level) String() string {
 	return LevelStrings[self]
 }
 
+// Prefix return formatted prefix string associate with a Level instance
 func (self Level) Prefix() string {
 	return Prefix[self]
 }

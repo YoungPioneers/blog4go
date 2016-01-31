@@ -40,6 +40,7 @@ All notable changes to this project will be documented in this file.
 - level_test.go测试用例
 - travis ci
 - 支持socket
+- 现有文件增加详细的注释
 
 ### Changed
 - 原BLog4go结构体改名为FileWriter.

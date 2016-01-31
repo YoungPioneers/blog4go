@@ -1,5 +1,4 @@
-// Copyright 2015
-// Author: huangjunwei@youmi.net
+// Copyright (c) 2015, huangjunwei <huangjunwei@youmi.net>. All rights reserved.
 
 package blog4go
 
@@ -11,72 +10,86 @@ import (
 	"time"
 )
 
-// BaseFileWriter基本的单文件处理结构
+// struct BaseFileWriter defines a writer for single file.
+// It suppurts partially write while formatting message, logging level filtering,
+// logrotate, user defined hook for every logging action, change configuration
+// on the fly and logging with colors.
 type BaseFileWriter struct {
-	// 日志等级
+	// logging level
+	// every message level exceed this level will be written
 	level Level
 
-	// log文件
+	// configuration about file
+	// full path of the file
 	fileName string
-	file     *os.File
-	writer   *bufio.Writer
+	// the file object
+	file *os.File
+	// bufio.Writer object of the file
+	writer *bufio.Writer
 
-	// 互斥锁，用于互斥调用bufio
+	// exclusive lock while calling write function of bufio.Writer
 	lock *sync.Mutex
 
-	// writer 关闭标识
+	// close sign, default false
+	// set this tag true if writer is closed
 	closed bool
 
-	// logrotate
-	// 互斥锁，用于互斥logrotate
+	// configuration about logrotate
+	// exclusive lock use in logrotate
 	rotateLock *sync.Mutex
 
-	// 按时间rotate
-	// 默认关闭
-	timeRotated   bool
+	// configuration about time base logrotate
+	// sign of time base logrotate, default false
+	// set this tag true if logrotate in time base mode
+	timeRotated bool
+	// signal send when time base rotate needed
 	timeRotateSig chan bool
 
-	// size rotate按行数、大小rotate, 后缀 xxx.1, xxx.2
-	sizeRotateSig chan bool
-
-	// 按行rotate
-	// 默认关闭
-	lineRotated  bool
-	rotateLines  int
+	// configuration about size && line base logrotate
+	// sign of line base logrotate, default false
+	// set this tag true if logrotate in line base mode
+	lineRotated bool
+	// line base logrotate threshold
+	rotateLines int
+	// total lines written from last size && line base logrotate
 	currentLines int
-
-	// 按大小rotate
-	// 默认关闭
+	// sign of size base logrotate, default false
+	// set this tag true if logrotate in size base mode
 	sizeRotated bool
-	rotateSize  ByteSize
+	// size rotate按行数、大小rotate, 后缀 xxx.1, xxx.2
+	// signal send when size && line base logrotate
+	sizeRotateSig chan bool
+	// size base logrotate threshold
+	rotateSize ByteSize
+	// total size written after last size && line logrotate
 	currentSize ByteSize
-
-	// 当前按size,line rotate次数
+	// times of size && line base logrotate executions
 	sizeRotateTimes int
-
-	// 记录每次log的size
+	// channel used to sum up sizes written from last logrotate
 	logSizeChan chan int
 
-	// 日志等级是否带颜色输出
-	// 默认false
+	// sign decided logging with colors or not, default false
 	colored bool
 
-	// log hook
-	// 自定义log回调函数
-	hook      Hook
+	// configuration about user defined logging hook
+	// actual hook instance
+	hook Hook
+	// hook is called when message level exceed level of logging action
 	hookLevel Level
 }
 
-// 创建file writer
+// NewBaseFileWriter create a single file writer instance and return the poionter
+// of it. When any errors happened during creation, a null writer and appropriate
+// will be returned.
+// fileName must be an absolute path to the destination log file
 func NewBaseFileWriter(fileName string) (fileWriter *BaseFileWriter, err error) {
 	fileWriter = new(BaseFileWriter)
 	fileWriter.fileName = fileName
 	fileWriter.level = DEBUG
-
 	fileWriter.lock = new(sync.Mutex)
 	fileWriter.closed = false
 
-	// 日志轮询
+	// about logrotate
 	fileWriter.rotateLock = new(sync.Mutex)
 	fileWriter.timeRotated = false
 	fileWriter.timeRotateSig = make(chan bool)
@@ -91,14 +104,13 @@ func NewBaseFileWriter(fileName string) (fileWriter *BaseFileWriter, err error) 
 	fileWriter.rotateLines = DefaultRotateLines
 	fileWriter.currentLines = 0
 
-	// 日志等级颜色输出
 	fileWriter.colored = false
 
 	// log hook
 	fileWriter.hook = nil
 	fileWriter.hookLevel = DEBUG
 
-	// 打开文件描述符
+	// open file target file
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 	if nil != err {
 		return nil, err
@@ -111,11 +123,18 @@ func NewBaseFileWriter(fileName string) (fileWriter *BaseFileWriter, err error) 
 	return fileWriter, nil
 }
 
-// 常驻goroutine, 更新格式化的时间
+// daemon run in background as NewBaseFileWriter called.
+// It flushes writer buffer every 10 seconds.
+// It update timeCache every 1  seconds. Also it decides whether a time base
+// logrotate is needed. When it is needed, it just run time base logrotate.
+// It analyses lines && sizes already written. Alse it does the lines &&
+// size base logrotate
 func (self *BaseFileWriter) daemon() {
-	// 每秒刷新时间缓存，并判断是否需要logrotate
+	// tick every seconds
+	// update time cache && time base logrotate
 	t := time.Tick(1 * time.Second)
-	// 10秒钟自动flush一次bufio
+	// tick every 10 seconds
+	// auto flush writer buffer
 	f := time.Tick(10 * time.Second)
 
 DaemonLoop:
@@ -140,11 +159,11 @@ DaemonLoop:
 			date := now.Format(DateFormat)
 
 			if self.timeRotated && date != timeCache.date {
-				// 需要rotate
+				// need time base logrotate
 				self.sizeRotateTimes = 0
 
 				fileName := fmt.Sprintf("%s.%s", self.fileName, timeCache.date_yesterday)
-				// 更新bufio文件
+				// update file descriptor of the writer
 				self.lock.Lock()
 				self.flush()
 				os.Rename(self.fileName, fileName)
@@ -157,7 +176,8 @@ DaemonLoop:
 			}
 
 			self.rotateLock.Unlock()
-		// 统计log write size
+		// analyse lines && size written
+		// do lines && size base logrotate
 		case size := <-self.logSizeChan:
 			if self.closed {
 				break DaemonLoop
@@ -173,6 +193,7 @@ DaemonLoop:
 			self.currentLines++
 
 			if (self.sizeRotated && self.currentSize > self.rotateSize) || (self.lineRotated && self.currentLines > self.rotateLines) {
+				// need lines && size base logrotate
 
 				fileName := fmt.Sprintf("%s.%d", self.fileName, self.sizeRotateTimes+1)
 				if self.timeRotated {
@@ -180,7 +201,7 @@ DaemonLoop:
 
 				}
 
-				// 更新bufio文件
+				// update file descriptor of the writer
 				self.lock.Lock()
 				self.flush()
 				os.Rename(self.fileName, fileName)
@@ -198,6 +219,7 @@ DaemonLoop:
 	}
 }
 
+// resetFile resets file descriptor of the writer
 func (self *BaseFileWriter) resetFile() (err error) {
 	file, err := os.OpenFile(self.fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 
@@ -214,6 +236,7 @@ func (self *BaseFileWriter) resetFile() (err error) {
 	return
 }
 
+// write writes pure message with specific level
 func (self *BaseFileWriter) write(level Level, format string) {
 	self.lock.Lock()
 	defer func() {
@@ -241,10 +264,12 @@ func (self *BaseFileWriter) write(level Level, format string) {
 	self.writer.WriteByte(EOL)
 }
 
-// 格式化构造message
-// 边解析边输出
-// 使用 % 作占位符
+// write formats message with specific level and write it
 func (self *BaseFileWriter) writef(level Level, format string, args ...interface{}) {
+	// 格式化构造message
+	// 边解析边输出
+	// 使用 % 作占位符
+
 	self.lock.Lock()
 	// 统计日志size
 	var size int = 0

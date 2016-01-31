@@ -1,5 +1,5 @@
-// Copyright 2015
-// Author: huangjunwei@youmi.net
+// Copyright (c) 2015, huangjunwei <huangjunwei@youmi.net>. All rights reserved.
+
 package blog4go
 
 import (
@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+// struct FileWriter defines a writer for multi-files writer with different
+// message level
 type FileWriter struct {
 	// 日志等级
 	level Level
@@ -35,6 +37,12 @@ func NewFileWriter(baseDir string) (fileWriter *FileWriter, err error) {
 	}
 
 	return
+}
+
+func (self *FileWriter) SetTimeRotated(timeRotated bool) {
+	for _, fileWriter := range self.writers {
+		fileWriter.SetTimeRotated(timeRotated)
+	}
 }
 
 func (self *FileWriter) SetRotateSize(rotateSize ByteSize) {
