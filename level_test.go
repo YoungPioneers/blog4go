@@ -8,7 +8,7 @@ import (
 
 func TestLevelValidation(t *testing.T) {
 	if Level(-1).valid() {
-		t.Errorf("Level Validation Failed. level: %s", -1)
+		t.Errorf("Level Validation Failed. level: %d", -1)
 	}
 
 	if !DEBUG.valid() {
