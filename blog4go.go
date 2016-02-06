@@ -5,12 +5,12 @@
 // string filtering and calling user defined hook in asynchronous mode.
 package blog4go
 
-// Struct BLog4go is just a placeholder now. It may be of important use
+// BLog4go struct is just a placeholder now. It may be of important use
 // in the near future.
 type BLog4go struct {
 }
 
-// Interface Writer is a common definition of any writers in this package.
+// Writer interface is a common definition of any writers in this package.
 // Any struct implements Writer interface must implement functions below.
 // Close is used for close the writer and free any elements if needed.
 // write is an internal function that write pure message with specific

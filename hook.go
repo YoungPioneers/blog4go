@@ -2,7 +2,7 @@
 
 package blog4go
 
-// Interface Hook determine types of functions should be declared and
+// Hook Interface determine types of functions should be declared and
 // implemented when user offers user defined function call before every
 // logging action end.
 // users may use this hook as a callback function when something happen.

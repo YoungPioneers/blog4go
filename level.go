@@ -6,45 +6,62 @@ import (
 	"fmt"
 )
 
-// type defined for logging level
+// Level type defined for logging level
 // just use int
 type Level int
 
 const (
 	// level enum
+
+	// DEBUG debug level
 	DEBUG Level = iota
+	// TRACE trace level
 	TRACE
+	// INFO info level
 	INFO
+	// WARNING warn level
 	WARNING
+	// ERROR error level
 	ERROR
+	// CRITICAL critical level
 	CRITICAL
+	// UNKNOWN unknown level
 	UNKNOWN = "UNKNOWN"
 
-	DefaultLevel = DEBUG // default level for writers
+	// DefaultLevel default level for writers
+	DefaultLevel = DEBUG
 
-	// level format ahead every message
-	PrefixFormat        = " [%s] "                // pure format
+	// PrefixFormat is the level format ahead every message
+	PrefixFormat = " [%s] " // pure format
+	// ColoredPrefixFormat is the colored level format adhead every message
 	ColoredPrefixFormat = " [\x1b[%dm%s\x1b[0m] " // colored format
 
 	// color enum used in formating color bytes
+
+	// NOCOLOR no color
 	NOCOLOR = 0
-	RED     = 31
-	GREEN   = 32
-	YELLOW  = 33
-	BLUE    = 34
-	GRAY    = 37
+	// RED red color
+	RED = 31
+	// GREEN green color
+	GREEN = 32
+	// YELLOW yellow color
+	YELLOW = 33
+	// BLUE blue color
+	BLUE = 34
+	// GRAY gray color
+	GRAY = 37
 )
 
 var (
-	// string present for each level
+	// LevelStrings is string present for each level
 	LevelStrings = [...]string{"DEBUG", "TRACE", "INFO", "WARN", "ERROR", "CRITICAL"}
 
-	// a slice consist of all levels
+	// Levels is a slice consist of all levels
 	Levels = [...]Level{DEBUG, TRACE, INFO, WARNING, ERROR, CRITICAL}
 
-	// preformatted level prefix string
+	// Prefix is preformatted level prefix string
 	// help reduce string formatted burden in realtime logging
-	Prefix map[Level]string = make(map[Level]string)
+	Prefix = make(map[Level]string)
 )
 
 func init() {
@@ -73,22 +90,22 @@ func initPrefix(colored bool) {
 }
 
 // valid determines whether a Level instance is valid or not
-func (self Level) valid() bool {
-	if DEBUG > self || CRITICAL < self {
+func (level Level) valid() bool {
+	if DEBUG > level || CRITICAL < level {
 		return false
 	}
 	return true
 }
 
 // String return string format associate with a Level instance
-func (self Level) String() string {
-	if !self.valid() {
+func (level Level) String() string {
+	if !level.valid() {
 		return UNKNOWN
 	}
-	return LevelStrings[self]
+	return LevelStrings[level]
 }
 
 // Prefix return formatted prefix string associate with a Level instance
-func (self Level) Prefix() string {
-	return Prefix[self]
+func (level Level) Prefix() string {
+	return Prefix[level]
 }

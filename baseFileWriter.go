@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// struct BaseFileWriter defines a writer for single file.
+// BaseFileWriter defines a writer for single file.
 // It suppurts partially write while formatting message, logging level filtering,
 // logrotate, user defined hook for every logging action, change configuration
 // on the fly and logging with colors.
@@ -129,7 +129,7 @@ func NewBaseFileWriter(fileName string) (fileWriter *BaseFileWriter, err error) 
 // logrotate is needed. When it is needed, it just run time base logrotate.
 // It analyses lines && sizes already written. Alse it does the lines &&
 // size base logrotate
-func (self *BaseFileWriter) daemon() {
+func (writer *BaseFileWriter) daemon() {
 	// tick every seconds
 	// update time cache && time base logrotate
 	t := time.Tick(1 * time.Second)
@@ -141,174 +141,174 @@ DaemonLoop:
 	for {
 		select {
 		case <-f:
-			if self.closed {
+			if writer.closed {
 				break DaemonLoop
 			}
 
-			self.flush()
+			writer.flush()
 		case <-t:
-			if self.closed {
+			if writer.closed {
 				break DaemonLoop
 			}
 
-			self.rotateLock.Lock()
+			writer.rotateLock.Lock()
 
 			now := time.Now()
 			timeCache.now = now
 			timeCache.format = []byte(now.Format(PrefixTimeFormat))
 			date := now.Format(DateFormat)
 
-			if self.timeRotated && date != timeCache.date {
+			if writer.timeRotated && date != timeCache.date {
 				// need time base logrotate
-				self.sizeRotateTimes = 0
+				writer.sizeRotateTimes = 0
 
-				fileName := fmt.Sprintf("%s.%s", self.fileName, timeCache.date_yesterday)
+				fileName := fmt.Sprintf("%s.%s", writer.fileName, timeCache.dateYesterday)
 				// update file descriptor of the writer
-				self.lock.Lock()
-				self.flush()
-				os.Rename(self.fileName, fileName)
-				err := self.resetFile()
+				writer.lock.Lock()
+				writer.flush()
+				os.Rename(writer.fileName, fileName)
+				err := writer.resetFile()
 				if nil == err {
-					timeCache.date_yesterday = timeCache.date
+					timeCache.dateYesterday = timeCache.date
 					timeCache.date = now.Format(DateFormat)
 				}
-				self.lock.Unlock()
+				writer.lock.Unlock()
 			}
 
-			self.rotateLock.Unlock()
+			writer.rotateLock.Unlock()
 		// analyse lines && size written
 		// do lines && size base logrotate
-		case size := <-self.logSizeChan:
-			if self.closed {
+		case size := <-writer.logSizeChan:
+			if writer.closed {
 				break DaemonLoop
 			}
 
-			if !self.sizeRotated && !self.lineRotated {
+			if !writer.sizeRotated && !writer.lineRotated {
 				continue
 			}
 
-			self.rotateLock.Lock()
+			writer.rotateLock.Lock()
 
-			self.currentSize += ByteSize(size)
-			self.currentLines++
+			writer.currentSize += ByteSize(size)
+			writer.currentLines++
 
-			if (self.sizeRotated && self.currentSize > self.rotateSize) || (self.lineRotated && self.currentLines > self.rotateLines) {
+			if (writer.sizeRotated && writer.currentSize > writer.rotateSize) || (writer.lineRotated && writer.currentLines > writer.rotateLines) {
 				// need lines && size base logrotate
 
-				fileName := fmt.Sprintf("%s.%d", self.fileName, self.sizeRotateTimes+1)
-				if self.timeRotated {
-					fileName = fmt.Sprintf("%s.%s.%d", self.fileName, timeCache.date, self.sizeRotateTimes+1)
+				fileName := fmt.Sprintf("%s.%d", writer.fileName, writer.sizeRotateTimes+1)
+				if writer.timeRotated {
+					fileName = fmt.Sprintf("%s.%s.%d", writer.fileName, timeCache.date, writer.sizeRotateTimes+1)
 
 				}
 
 				// update file descriptor of the writer
-				self.lock.Lock()
-				self.flush()
-				os.Rename(self.fileName, fileName)
+				writer.lock.Lock()
+				writer.flush()
+				os.Rename(writer.fileName, fileName)
 
-				err := self.resetFile()
+				err := writer.resetFile()
 				if nil == err {
-					self.sizeRotateTimes++
-					self.currentSize = 0
-					self.currentLines = 0
+					writer.sizeRotateTimes++
+					writer.currentSize = 0
+					writer.currentLines = 0
 				}
-				self.lock.Unlock()
+				writer.lock.Unlock()
 			}
-			self.rotateLock.Unlock()
+			writer.rotateLock.Unlock()
 		}
 	}
 }
 
 // resetFile resets file descriptor of the writer
-func (self *BaseFileWriter) resetFile() (err error) {
-	file, err := os.OpenFile(self.fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
+func (writer *BaseFileWriter) resetFile() (err error) {
+	file, err := os.OpenFile(writer.fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 
 	if nil != err {
 		// 如果创建文件失败怎么做？
 		// 重试？
-		//file, err = os.OpenFile(self.fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
+		//file, err = os.OpenFile(writer.fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 	}
 
-	self.file.Close()
-	self.file = file
-	self.writer.Reset(file)
+	writer.file.Close()
+	writer.file = file
+	writer.writer.Reset(file)
 
 	return
 }
 
 // write writes pure message with specific level
-func (self *BaseFileWriter) write(level Level, format string) {
-	self.lock.Lock()
+func (writer *BaseFileWriter) write(level Level, format string) {
+	writer.lock.Lock()
 	defer func() {
-		self.lock.Unlock()
+		writer.lock.Unlock()
 		// logrotate
-		if self.sizeRotated || self.lineRotated {
-			self.logSizeChan <- len(timeCache.format) + len(level.Prefix()) + len(format) + 1
+		if writer.sizeRotated || writer.lineRotated {
+			writer.logSizeChan <- len(timeCache.format) + len(level.Prefix()) + len(format) + 1
 		}
 
 		// 异步调用log hook
-		if nil != self.hook && !(level < self.hookLevel) {
+		if nil != writer.hook && !(level < writer.hookLevel) {
 			go func(level Level, format string) {
-				self.hook.Fire(level, format)
+				writer.hook.Fire(level, format)
 			}(level, format)
 		}
 	}()
 
-	if self.closed {
+	if writer.closed {
 		return
 	}
 
-	self.writer.Write(timeCache.format)
-	self.writer.WriteString(level.Prefix())
-	self.writer.WriteString(format)
-	self.writer.WriteByte(EOL)
+	writer.writer.Write(timeCache.format)
+	writer.writer.WriteString(level.Prefix())
+	writer.writer.WriteString(format)
+	writer.writer.WriteByte(EOL)
 }
 
 // write formats message with specific level and write it
-func (self *BaseFileWriter) writef(level Level, format string, args ...interface{}) {
+func (writer *BaseFileWriter) writef(level Level, format string, args ...interface{}) {
 	// 格式化构造message
 	// 边解析边输出
 	// 使用 % 作占位符
 
-	self.lock.Lock()
+	writer.lock.Lock()
 	// 统计日志size
-	var size int = 0
+	var size int
 
 	defer func() {
-		self.lock.Unlock()
+		writer.lock.Unlock()
 		// logrotate
-		if self.sizeRotated || self.lineRotated {
-			self.logSizeChan <- size
+		if writer.sizeRotated || writer.lineRotated {
+			writer.logSizeChan <- size
 		}
 
 		// 异步调用log hook
-		if nil != self.hook && !(level < self.hookLevel) {
+		if nil != writer.hook && !(level < writer.hookLevel) {
 			go func(level Level, format string, args ...interface{}) {
-				self.hook.Fire(level, fmt.Sprintf(format, args...))
+				writer.hook.Fire(level, fmt.Sprintf(format, args...))
 			}(level, format, args...)
 		}
 	}()
 
-	if self.closed {
+	if writer.closed {
 		return
 	}
 
 	// 识别占位符标记
-	var tag bool = false
-	var tagPos int = 0
+	var tag = false
+	var tagPos int
 	// 转义字符标记
-	var escape bool = false
+	var escape = false
 	// 在处理的args 下标
-	var n int = 0
+	var n int
 	// 未输出的，第一个普通字符位置
-	var last int = 0
-	var s int = 0
+	var last int
+	var s int
 
-	self.writer.Write(timeCache.format)
-	self.writer.WriteString(level.Prefix())
+	writer.writer.Write(timeCache.format)
+	writer.writer.WriteString(level.Prefix())
 
 	// logrotate
-	if self.sizeRotated || self.lineRotated {
+	if writer.sizeRotated || writer.lineRotated {
 		size += len(timeCache.format) + len(level.Prefix())
 	}
 
@@ -320,9 +320,9 @@ func (self *BaseFileWriter) writef(level Level, format string, args ...interface
 					escape = false
 				}
 
-				s, _ = self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				s, _ = writer.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
 				// logrotate
-				if self.sizeRotated || self.lineRotated {
+				if writer.sizeRotated || writer.lineRotated {
 					size += s
 				}
 				n++
@@ -331,10 +331,10 @@ func (self *BaseFileWriter) writef(level Level, format string, args ...interface
 			//转义符
 			case ESCAPE:
 				if escape {
-					self.writer.WriteByte(ESCAPE)
+					writer.writer.WriteByte(ESCAPE)
 					// logrotate
-					if self.sizeRotated || self.lineRotated {
-						size += 1
+					if writer.sizeRotated || writer.lineRotated {
+						size++
 					}
 				}
 				escape = !escape
@@ -348,194 +348,219 @@ func (self *BaseFileWriter) writef(level Level, format string, args ...interface
 			if PLACEHOLDER == format[i] && !escape {
 				tag = true
 				tagPos = i
-				s, _ = self.writer.WriteString(format[last:i])
+				s, _ = writer.writer.WriteString(format[last:i])
 				size += s
 				escape = false
 			}
 		}
 	}
-	self.writer.WriteString(format[last:])
-	self.writer.WriteByte(EOL)
+	writer.writer.WriteString(format[last:])
+	writer.writer.WriteByte(EOL)
 
-	if self.sizeRotated || self.lineRotated {
+	if writer.sizeRotated || writer.lineRotated {
 		size += len(format[last:]) + 1
 	}
 }
 
-func (self *BaseFileWriter) SetTimeRotated(timeRotated bool) {
-	self.timeRotated = timeRotated
+// SetTimeRotated toggle time base logrotate on the fly
+func (writer *BaseFileWriter) SetTimeRotated(timeRotated bool) {
+	writer.timeRotated = timeRotated
 }
 
-func (self *BaseFileWriter) RotateSize() ByteSize {
-	return self.rotateSize
+// RotateSize return size threshold when logrotate
+func (writer *BaseFileWriter) RotateSize() ByteSize {
+	return writer.rotateSize
 }
 
-func (self *BaseFileWriter) SetRotateSize(rotateSize ByteSize) {
+// SetRotateSize set size when logroatate
+func (writer *BaseFileWriter) SetRotateSize(rotateSize ByteSize) {
 	if rotateSize > ByteSize(0) {
-		self.sizeRotated = true
-		self.rotateSize = rotateSize
+		writer.sizeRotated = true
+		writer.rotateSize = rotateSize
 	} else {
-		self.sizeRotated = false
+		writer.sizeRotated = false
 	}
 }
 
-func (self *BaseFileWriter) RotateLine() int {
-	return self.rotateLines
+// RotateLine return line threshold when logrotate
+func (writer *BaseFileWriter) RotateLine() int {
+	return writer.rotateLines
 }
 
-func (self *BaseFileWriter) SetRotateLines(rotateLines int) {
+// SetRotateLines set line number when logrotate
+func (writer *BaseFileWriter) SetRotateLines(rotateLines int) {
 	if rotateLines > 0 {
-		self.lineRotated = true
-		self.rotateLines = rotateLines
+		writer.lineRotated = true
+		writer.rotateLines = rotateLines
 	} else {
-		self.lineRotated = false
+		writer.lineRotated = false
 	}
 }
 
-func (self *BaseFileWriter) Colored() bool {
-	return self.colored
+// Colored return whether writer log with color
+func (writer *BaseFileWriter) Colored() bool {
+	return writer.colored
 }
 
-func (self *BaseFileWriter) SetColored(colored bool) {
-	if colored == self.colored {
+// SetColored set logging color
+func (writer *BaseFileWriter) SetColored(colored bool) {
+	if colored == writer.colored {
 		return
 	}
 
-	self.colored = colored
-	self.lock.Lock()
-	defer self.lock.Unlock()
+	writer.colored = colored
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
 
 	initPrefix(colored)
 }
 
-func (self *BaseFileWriter) SetHook(hook Hook) {
-	self.hook = hook
+// SetHook set hook for every logging actions
+func (writer *BaseFileWriter) SetHook(hook Hook) {
+	writer.hook = hook
 }
 
-func (self *BaseFileWriter) SetHookLevel(level Level) {
-	self.hookLevel = level
+// SetHookLevel set when hook will be called
+func (writer *BaseFileWriter) SetHookLevel(level Level) {
+	writer.hookLevel = level
 }
 
-func (self *BaseFileWriter) Level() Level {
-	return self.level
+// Level return logging level threshold
+func (writer *BaseFileWriter) Level() Level {
+	return writer.level
 }
 
-func (self *BaseFileWriter) SetLevel(level Level) *BaseFileWriter {
-	self.level = level
-	return self
+// SetLevel set logging level threshold
+func (writer *BaseFileWriter) SetLevel(level Level) *BaseFileWriter {
+	writer.level = level
+	return writer
 }
 
-func (self *BaseFileWriter) Close() {
-	self.lock.Lock()
-	defer self.lock.Unlock()
-	if self.closed {
+// Close close file writer
+func (writer *BaseFileWriter) Close() {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
+	if writer.closed {
 		return
 	}
 
-	self.writer.Flush()
-	self.file.Close()
-	self.writer = nil
-	self.closed = true
+	writer.writer.Flush()
+	writer.file.Close()
+	writer.writer = nil
+	writer.closed = true
 }
 
-func (self *BaseFileWriter) flush() {
-	self.lock.Lock()
-	defer self.lock.Unlock()
-	self.writer.Flush()
+// flush buffer to disk
+func (writer *BaseFileWriter) flush() {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
+	writer.writer.Flush()
 }
 
-func (self *BaseFileWriter) Debug(format string) {
-	if DEBUG < self.level {
+// Debug debug
+func (writer *BaseFileWriter) Debug(format string) {
+	if DEBUG < writer.level {
 		return
 	}
 
-	self.write(DEBUG, format)
+	writer.write(DEBUG, format)
 }
 
-func (self *BaseFileWriter) Debugf(format string, args ...interface{}) {
-	if DEBUG < self.level {
+// Debugf debugf
+func (writer *BaseFileWriter) Debugf(format string, args ...interface{}) {
+	if DEBUG < writer.level {
 		return
 	}
 
-	self.writef(DEBUG, format, args...)
+	writer.writef(DEBUG, format, args...)
 }
 
-func (self *BaseFileWriter) Trace(format string) {
-	if TRACE < self.level {
+// Trace trace
+func (writer *BaseFileWriter) Trace(format string) {
+	if TRACE < writer.level {
 		return
 	}
 
-	self.write(TRACE, format)
+	writer.write(TRACE, format)
 }
 
-func (self *BaseFileWriter) Tracef(format string, args ...interface{}) {
-	if TRACE < self.level {
+// Tracef tracef
+func (writer *BaseFileWriter) Tracef(format string, args ...interface{}) {
+	if TRACE < writer.level {
 		return
 	}
 
-	self.writef(TRACE, format, args...)
+	writer.writef(TRACE, format, args...)
 }
 
-func (self *BaseFileWriter) Info(format string) {
-	if INFO < self.level {
+// Info info
+func (writer *BaseFileWriter) Info(format string) {
+	if INFO < writer.level {
 		return
 	}
 
-	self.write(INFO, format)
+	writer.write(INFO, format)
 }
 
-func (self *BaseFileWriter) Infof(format string, args ...interface{}) {
-	if INFO < self.level {
+// Infof infof
+func (writer *BaseFileWriter) Infof(format string, args ...interface{}) {
+	if INFO < writer.level {
 		return
 	}
 
-	self.writef(INFO, format, args...)
+	writer.writef(INFO, format, args...)
 }
 
-func (self *BaseFileWriter) Error(format string) {
-	if ERROR < self.level {
+// Error error
+func (writer *BaseFileWriter) Error(format string) {
+	if ERROR < writer.level {
 		return
 	}
 
-	self.write(ERROR, format)
+	writer.write(ERROR, format)
 }
 
-func (self *BaseFileWriter) Errorf(format string, args ...interface{}) {
-	if ERROR < self.level {
+// Errorf errorf
+func (writer *BaseFileWriter) Errorf(format string, args ...interface{}) {
+	if ERROR < writer.level {
 		return
 	}
 
-	self.writef(ERROR, format, args...)
+	writer.writef(ERROR, format, args...)
 }
 
-func (self *BaseFileWriter) Warn(format string) {
-	if WARNING < self.level {
+// Warn warn
+func (writer *BaseFileWriter) Warn(format string) {
+	if WARNING < writer.level {
 		return
 	}
 
-	self.write(WARNING, format)
+	writer.write(WARNING, format)
 }
 
-func (self *BaseFileWriter) Warnf(format string, args ...interface{}) {
-	if WARNING < self.level {
+// Warnf warnf
+func (writer *BaseFileWriter) Warnf(format string, args ...interface{}) {
+	if WARNING < writer.level {
 		return
 	}
 
-	self.writef(WARNING, format, args...)
+	writer.writef(WARNING, format, args...)
 }
 
-func (self *BaseFileWriter) Critical(format string) {
-	if CRITICAL < self.level {
+// Critical critical
+func (writer *BaseFileWriter) Critical(format string) {
+	if CRITICAL < writer.level {
 		return
 	}
 
-	self.write(CRITICAL, format)
+	writer.write(CRITICAL, format)
 }
 
-func (self *BaseFileWriter) Criticalf(format string, args ...interface{}) {
-	if CRITICAL < self.level {
+// Criticalf criticalf
+func (writer *BaseFileWriter) Criticalf(format string, args ...interface{}) {
+	if CRITICAL < writer.level {
 		return
 	}
 
-	self.writef(CRITICAL, format, args...)
+	writer.writef(CRITICAL, format, args...)
 }

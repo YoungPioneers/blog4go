@@ -8,19 +8,18 @@ import (
 	"strings"
 )
 
-// struct FileWriter defines a writer for multi-files writer with different
+// FileWriter struct defines a writer for multi-files writer with different
 // message level
 type FileWriter struct {
-	// 日志等级
 	level Level
 
 	// file writers
 	writers map[Level]*BaseFileWriter
 
-	// 关闭标识
 	closed bool
 }
 
+// NewFileWriter initialize a file writer
 func NewFileWriter(baseDir string) (fileWriter *FileWriter, err error) {
 	fileWriter = new(FileWriter)
 	fileWriter.level = DEBUG
@@ -39,147 +38,167 @@ func NewFileWriter(baseDir string) (fileWriter *FileWriter, err error) {
 	return
 }
 
-func (self *FileWriter) SetTimeRotated(timeRotated bool) {
-	for _, fileWriter := range self.writers {
+// SetTimeRotated toggle time base logrotate
+func (writer *FileWriter) SetTimeRotated(timeRotated bool) {
+	for _, fileWriter := range writer.writers {
 		fileWriter.SetTimeRotated(timeRotated)
 	}
 }
 
-func (self *FileWriter) SetRotateSize(rotateSize ByteSize) {
-	for _, fileWriter := range self.writers {
+// SetRotateSize set size when logroatate
+func (writer *FileWriter) SetRotateSize(rotateSize ByteSize) {
+	for _, fileWriter := range writer.writers {
 		fileWriter.SetRotateSize(rotateSize)
 	}
 }
 
-func (self *FileWriter) SetRotateLines(rotateLines int) {
-	for _, fileWriter := range self.writers {
+// SetRotateLines set line number when logrotate
+func (writer *FileWriter) SetRotateLines(rotateLines int) {
+	for _, fileWriter := range writer.writers {
 		fileWriter.SetRotateLines(rotateLines)
 	}
 }
 
-func (self *FileWriter) SetColored(colored bool) {
-	for _, fileWriter := range self.writers {
+// SetColored set logging color
+func (writer *FileWriter) SetColored(colored bool) {
+	for _, fileWriter := range writer.writers {
 		fileWriter.SetColored(colored)
 	}
 }
 
-func (self *FileWriter) SetHook(hook Hook) {
-	for _, fileWriter := range self.writers {
+// SetHook set hook for every logging actions
+func (writer *FileWriter) SetHook(hook Hook) {
+	for _, fileWriter := range writer.writers {
 		fileWriter.SetHook(hook)
 	}
 }
 
-func (self *FileWriter) SetLevel(level Level) *FileWriter {
-	self.level = level
-	for _, fileWriter := range self.writers {
+// SetLevel set logging level threshold
+func (writer *FileWriter) SetLevel(level Level) *FileWriter {
+	writer.level = level
+	for _, fileWriter := range writer.writers {
 		fileWriter.SetLevel(level)
 	}
-	return self
+	return writer
 }
 
-func (self *FileWriter) Level() Level {
-	return self.level
+// Level return logging level threshold
+func (writer *FileWriter) Level() Level {
+	return writer.level
 }
 
-func (self *FileWriter) Close() {
-	for _, fileWriter := range self.writers {
+// Close close file writer
+func (writer *FileWriter) Close() {
+	for _, fileWriter := range writer.writers {
 		fileWriter.Close()
 	}
-	self.closed = true
+	writer.closed = true
 }
 
-func (self *FileWriter) Debug(format string) {
-	if DEBUG < self.level {
+// Debug debug
+func (writer *FileWriter) Debug(format string) {
+	if DEBUG < writer.level {
 		return
 	}
 
-	self.writers[DEBUG].write(DEBUG, format)
+	writer.writers[DEBUG].write(DEBUG, format)
 }
 
-func (self *FileWriter) Debugf(format string, args ...interface{}) {
-	if DEBUG < self.level {
+// Debugf debugf
+func (writer *FileWriter) Debugf(format string, args ...interface{}) {
+	if DEBUG < writer.level {
 		return
 	}
 
-	self.writers[DEBUG].writef(DEBUG, format, args...)
+	writer.writers[DEBUG].writef(DEBUG, format, args...)
 }
 
-func (self *FileWriter) Trace(format string) {
-	if TRACE < self.level {
+// Trace trace
+func (writer *FileWriter) Trace(format string) {
+	if TRACE < writer.level {
 		return
 	}
 
-	self.writers[TRACE].write(TRACE, format)
+	writer.writers[TRACE].write(TRACE, format)
 }
 
-func (self *FileWriter) Tracef(format string, args ...interface{}) {
-	if TRACE < self.level {
+// Tracef tracef
+func (writer *FileWriter) Tracef(format string, args ...interface{}) {
+	if TRACE < writer.level {
 		return
 	}
 
-	self.writers[TRACE].writef(TRACE, format, args...)
+	writer.writers[TRACE].writef(TRACE, format, args...)
 }
 
-func (self *FileWriter) Info(format string) {
-	if INFO < self.level {
+// Info info
+func (writer *FileWriter) Info(format string) {
+	if INFO < writer.level {
 		return
 	}
 
-	self.writers[INFO].write(INFO, format)
+	writer.writers[INFO].write(INFO, format)
 }
 
-func (self *FileWriter) Infof(format string, args ...interface{}) {
-	if INFO < self.level {
+// Infof infof
+func (writer *FileWriter) Infof(format string, args ...interface{}) {
+	if INFO < writer.level {
 		return
 	}
 
-	self.writers[INFO].writef(INFO, format, args...)
+	writer.writers[INFO].writef(INFO, format, args...)
 }
 
-func (self *FileWriter) Warn(format string) {
-	if WARNING < self.level {
+// Warn warn
+func (writer *FileWriter) Warn(format string) {
+	if WARNING < writer.level {
 		return
 	}
 
-	self.writers[WARNING].write(WARNING, format)
+	writer.writers[WARNING].write(WARNING, format)
 }
 
-func (self *FileWriter) Warnf(format string, args ...interface{}) {
-	if WARNING < self.level {
+// Warnf warnf
+func (writer *FileWriter) Warnf(format string, args ...interface{}) {
+	if WARNING < writer.level {
 		return
 	}
 
-	self.writers[WARNING].writef(WARNING, format, args...)
+	writer.writers[WARNING].writef(WARNING, format, args...)
 }
 
-func (self *FileWriter) Error(format string) {
-	if ERROR < self.level {
+// Error error
+func (writer *FileWriter) Error(format string) {
+	if ERROR < writer.level {
 		return
 	}
 
-	self.writers[ERROR].write(ERROR, format)
+	writer.writers[ERROR].write(ERROR, format)
 }
 
-func (self *FileWriter) Errorf(format string, args ...interface{}) {
-	if ERROR < self.level {
+// Errorf errorf
+func (writer *FileWriter) Errorf(format string, args ...interface{}) {
+	if ERROR < writer.level {
 		return
 	}
 
-	self.writers[ERROR].writef(ERROR, format, args...)
+	writer.writers[ERROR].writef(ERROR, format, args...)
 }
 
-func (self *FileWriter) Critical(format string) {
-	if CRITICAL < self.level {
+// Critical critical
+func (writer *FileWriter) Critical(format string) {
+	if CRITICAL < writer.level {
 		return
 	}
 
-	self.writers[CRITICAL].write(CRITICAL, format)
+	writer.writers[CRITICAL].write(CRITICAL, format)
 }
 
-func (self *FileWriter) Criticalf(format string, args ...interface{}) {
-	if CRITICAL < self.level {
+// Criticalf criticalf
+func (writer *FileWriter) Criticalf(format string, args ...interface{}) {
+	if CRITICAL < writer.level {
 		return
 	}
 
-	self.writers[CRITICAL].writef(CRITICAL, format, args...)
+	writer.writers[CRITICAL].writef(CRITICAL, format, args...)
 }

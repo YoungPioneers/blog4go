@@ -16,7 +16,7 @@ type timeFormatCacheType struct {
 	// bufio write bytes会比write string效率高
 	format []byte
 	// 昨日日期
-	date_yesterday string
+	dateYesterday string
 }
 
 // 用全局的timeCache好像比较好
@@ -28,5 +28,5 @@ func init() {
 	timeCache.now = time.Now()
 	timeCache.date = timeCache.now.Format(DateFormat)
 	timeCache.format = []byte(timeCache.now.Format(PrefixTimeFormat))
-	timeCache.date_yesterday = timeCache.now.Add(-24 * time.Hour).Format(DateFormat)
+	timeCache.dateYesterday = timeCache.now.Add(-24 * time.Hour).Format(DateFormat)
 }

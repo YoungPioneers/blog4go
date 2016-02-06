@@ -7,42 +7,48 @@ import (
 	"os"
 )
 
+// ByteSize is type of sizes
 type ByteSize int
 
 const (
-	// 大小单位
-	_           = iota // ignore first value by assigning to blank identifier
+	// unit of sizes
+
+	_ = iota // ignore first value by assigning to blank identifier
+	// KB unit of kilobyte
 	KB ByteSize = 1 << (10 * iota)
+	// MB unit of megabyte
 	MB
+	// GB unit of gigabyte
 	GB
 
-	// 默认logrotate条件
-	DefaultRotateSize  = 500 * MB
-	DefaultRotateLines = 2000000 // 200w
+	// default logrotate condition
 
-	// 时间前缀的格式
+	// DefaultRotateSize is default size when size base logrotate needed
+	DefaultRotateSize = 500 * MB
+	// DefaultRotateLines is default lines when lines base logrotate needed
+	DefaultRotateLines = 2000000 // 2 million
+
+	// PrefixTimeFormat const time format prefix
 	PrefixTimeFormat = "[2006/01/02:15:04:05]"
-	// 日期格式
+	// DateFormat date format
 	DateFormat = "2006-01-02"
 
-	// 换行符
+	// EOL end of a line
 	EOL = '\n'
-	// 转移符
+	// ESCAPE escape character
 	ESCAPE = '\\'
-	// 占位符
+	// PLACEHOLDER placeholder
 	PLACEHOLDER = '%'
 )
 
 var (
-	// bufio buffer size
-	// 好像buffer size 调大点benchmark效果更好
-	// 默认使用内存页大小
-	DefaultBufferSize = 4096
+	// DefaultBufferSize bufio buffer size
+	DefaultBufferSize = 4096 // default memory page size
 
+	// ErrInvalidFormat invalid format error
 	ErrInvalidFormat = errors.New("Invalid format type.")
 )
 
-// 包初始化函数
 func init() {
 	DefaultBufferSize = os.Getpagesize()
 }

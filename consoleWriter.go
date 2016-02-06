@@ -10,22 +10,16 @@ import (
 	"time"
 )
 
-// console logger
+// ConsoleWriter is a console logger
 type ConsoleWriter struct {
-	// 日志登记
 	level Level
 
-	// log文件
 	writer *bufio.Writer
 
-	// 互斥锁，用于互斥调用bufio
 	lock *sync.Mutex
 
-	// writer 关闭标识
 	closed bool
 
-	// 日志等级是否带颜色输出
-	// 默认false
 	colored bool
 
 	// log hook
@@ -33,7 +27,7 @@ type ConsoleWriter struct {
 	hookLevel Level
 }
 
-// 创建console writer
+// NewConsoleWriter initialize a console writer
 func NewConsoleWriter() (consoleWriter *ConsoleWriter, err error) {
 	consoleWriter = new(ConsoleWriter)
 	consoleWriter.level = DEBUG
@@ -41,7 +35,6 @@ func NewConsoleWriter() (consoleWriter *ConsoleWriter, err error) {
 	consoleWriter.lock = new(sync.Mutex)
 	consoleWriter.closed = false
 
-	// 日志等级颜色输出
 	consoleWriter.colored = false
 
 	// log hook
@@ -55,24 +48,21 @@ func NewConsoleWriter() (consoleWriter *ConsoleWriter, err error) {
 	return consoleWriter, nil
 }
 
-// 常驻goroutine, 更新格式化的时间
-func (self *ConsoleWriter) daemon() {
-	// 每秒刷新时间缓存，并判断是否需要logrotate
+func (writer *ConsoleWriter) daemon() {
 	t := time.Tick(1 * time.Second)
-	// 10秒钟自动flush一次bufio
 	f := time.Tick(10 * time.Second)
 
 DaemonLoop:
 	for {
 		select {
 		case <-f:
-			if self.closed {
+			if writer.closed {
 				break DaemonLoop
 			}
 
-			self.flush()
+			writer.flush()
 		case <-t:
-			if self.closed {
+			if writer.closed {
 				break DaemonLoop
 			}
 
@@ -84,62 +74,53 @@ DaemonLoop:
 	}
 }
 
-func (self *ConsoleWriter) write(level Level, format string) {
-	self.lock.Lock()
+func (writer *ConsoleWriter) write(level Level, format string) {
+	writer.lock.Lock()
 
 	defer func() {
-		self.lock.Unlock()
-		// 异步调用log hook
-		if nil != self.hook && !(level < self.hookLevel) {
+		writer.lock.Unlock()
+		if nil != writer.hook && !(level < writer.hookLevel) {
 			go func(level Level, format string) {
-				self.hook.Fire(level, format)
+				writer.hook.Fire(level, format)
 			}(level, format)
 		}
 	}()
 
-	if self.closed {
+	if writer.closed {
 		return
 	}
 
-	self.writer.Write(timeCache.format)
-	self.writer.WriteString(level.Prefix())
-	self.writer.WriteString(format)
-	self.writer.WriteByte(EOL)
+	writer.writer.Write(timeCache.format)
+	writer.writer.WriteString(level.Prefix())
+	writer.writer.WriteString(format)
+	writer.writer.WriteByte(EOL)
 }
 
-// 格式化构造message
-// 边解析边输出
-// 使用 % 作占位符
-func (self *ConsoleWriter) writef(level Level, format string, args ...interface{}) {
-	self.lock.Lock()
+func (writer *ConsoleWriter) writef(level Level, format string, args ...interface{}) {
+	writer.lock.Lock()
 
 	defer func() {
-		self.lock.Unlock()
+		writer.lock.Unlock()
 
-		// 异步调用log hook
-		if nil != self.hook && !(level < self.hookLevel) {
+		if nil != writer.hook && !(level < writer.hookLevel) {
 			go func(level Level, format string, args ...interface{}) {
-				self.hook.Fire(level, fmt.Sprintf(format, args...))
+				writer.hook.Fire(level, fmt.Sprintf(format, args...))
 			}(level, format, args...)
 		}
 	}()
 
-	if self.closed {
+	if writer.closed {
 		return
 	}
 
-	// 识别占位符标记
-	var tag bool = false
-	var tagPos int = 0
-	// 转义字符标记
-	var escape bool = false
-	// 在处理的args 下标
-	var n int = 0
-	// 未输出的，第一个普通字符位置
-	var last int = 0
+	var tag = false
+	var tagPos int
+	var escape = false
+	var n int
+	var last int
 
-	self.writer.Write(timeCache.format)
-	self.writer.WriteString(level.Prefix())
+	writer.writer.Write(timeCache.format)
+	writer.writer.WriteString(level.Prefix())
 
 	for i, v := range format {
 		if tag {
@@ -149,178 +130,195 @@ func (self *ConsoleWriter) writef(level Level, format string, args ...interface{
 					escape = false
 				}
 
-				self.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				writer.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
 				n++
 				last = i + 1
 				tag = false
-			//转义符
 			case ESCAPE:
 				if escape {
-					self.writer.WriteByte(ESCAPE)
+					writer.writer.WriteByte(ESCAPE)
 				}
 				escape = !escape
-			//默认
 			default:
 
 			}
 
 		} else {
-			// 占位符，百分号
 			if PLACEHOLDER == format[i] && !escape {
 				tag = true
 				tagPos = i
-				self.writer.WriteString(format[last:i])
+				writer.writer.WriteString(format[last:i])
 				escape = false
 			}
 		}
 	}
-	self.writer.WriteString(format[last:])
-	self.writer.WriteByte(EOL)
+	writer.writer.WriteString(format[last:])
+	writer.writer.WriteByte(EOL)
 }
 
-func (self *ConsoleWriter) Level() Level {
-	return self.level
+// Level return logging level threshold
+func (writer *ConsoleWriter) Level() Level {
+	return writer.level
 }
 
-func (self *ConsoleWriter) SetLevel(level Level) *ConsoleWriter {
-	self.level = level
-	return self
+// SetLevel set logger level
+func (writer *ConsoleWriter) SetLevel(level Level) *ConsoleWriter {
+	writer.level = level
+	return writer
 }
 
-func (self *ConsoleWriter) Colored() bool {
-	return self.colored
+// Colored return whether writer log with color
+func (writer *ConsoleWriter) Colored() bool {
+	return writer.colored
 }
 
-func (self *ConsoleWriter) SetColored(colored bool) {
-	if colored == self.colored {
+// SetColored set logging color
+func (writer *ConsoleWriter) SetColored(colored bool) {
+	if colored == writer.colored {
 		return
 	}
 
-	self.colored = colored
-	self.lock.Lock()
-	defer self.lock.Unlock()
+	writer.colored = colored
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
 
 	initPrefix(colored)
 }
 
-func (self *ConsoleWriter) SetHook(hook Hook) {
-	self.hook = hook
+// SetHook set hook for logging action
+func (writer *ConsoleWriter) SetHook(hook Hook) {
+	writer.hook = hook
 }
 
-func (self *ConsoleWriter) SetHookLevel(level Level) {
-	self.hookLevel = level
+// SetHookLevel set when hook will be called
+func (writer *ConsoleWriter) SetHookLevel(level Level) {
+	writer.hookLevel = level
 }
 
-func (self *ConsoleWriter) Close() {
-	self.lock.Lock()
-	defer self.lock.Unlock()
-	if self.closed {
+// Close close console writer
+func (writer *ConsoleWriter) Close() {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
+	if writer.closed {
 		return
 	}
 
-	self.writer.Flush()
-	self.writer = nil
-	self.closed = true
+	writer.writer.Flush()
+	writer.writer = nil
+	writer.closed = true
 }
 
-func (self *ConsoleWriter) flush() {
-	self.lock.Lock()
-	defer self.lock.Unlock()
-	self.writer.Flush()
+// flush buffer to disk
+func (writer *ConsoleWriter) flush() {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
+	writer.writer.Flush()
 }
 
-func (self *ConsoleWriter) Debug(format string) {
-	if DEBUG < self.level {
+// Debug debug
+func (writer *ConsoleWriter) Debug(format string) {
+	if DEBUG < writer.level {
 		return
 	}
 
-	self.write(DEBUG, format)
+	writer.write(DEBUG, format)
 }
 
-func (self *ConsoleWriter) Debugf(format string, args ...interface{}) {
-	if DEBUG < self.level {
+// Debugf debugf
+func (writer *ConsoleWriter) Debugf(format string, args ...interface{}) {
+	if DEBUG < writer.level {
 		return
 	}
 
-	self.writef(DEBUG, format, args...)
+	writer.writef(DEBUG, format, args...)
 }
 
-func (self *ConsoleWriter) Trace(format string) {
-	if TRACE < self.level {
+// Trace trace
+func (writer *ConsoleWriter) Trace(format string) {
+	if TRACE < writer.level {
 		return
 	}
 
-	self.write(TRACE, format)
+	writer.write(TRACE, format)
 }
 
-func (self *ConsoleWriter) Tracef(format string, args ...interface{}) {
-	if TRACE < self.level {
+// Tracef tracef
+func (writer *ConsoleWriter) Tracef(format string, args ...interface{}) {
+	if TRACE < writer.level {
 		return
 	}
 
-	self.writef(TRACE, format, args...)
+	writer.writef(TRACE, format, args...)
 }
 
-func (self *ConsoleWriter) Info(format string) {
-	if INFO < self.level {
+// Info info
+func (writer *ConsoleWriter) Info(format string) {
+	if INFO < writer.level {
 		return
 	}
 
-	self.write(INFO, format)
+	writer.write(INFO, format)
 }
 
-func (self *ConsoleWriter) Infof(format string, args ...interface{}) {
-	if INFO < self.level {
+// Infof infof
+func (writer *ConsoleWriter) Infof(format string, args ...interface{}) {
+	if INFO < writer.level {
 		return
 	}
 
-	self.writef(INFO, format, args...)
+	writer.writef(INFO, format, args...)
 }
 
-func (self *ConsoleWriter) Error(format string) {
-	if ERROR < self.level {
+// Error error
+func (writer *ConsoleWriter) Error(format string) {
+	if ERROR < writer.level {
 		return
 	}
 
-	self.write(ERROR, format)
+	writer.write(ERROR, format)
 }
 
-func (self *ConsoleWriter) Errorf(format string, args ...interface{}) {
-	if ERROR < self.level {
+// Errorf errorf
+func (writer *ConsoleWriter) Errorf(format string, args ...interface{}) {
+	if ERROR < writer.level {
 		return
 	}
 
-	self.writef(ERROR, format, args...)
+	writer.writef(ERROR, format, args...)
 }
 
-func (self *ConsoleWriter) Warn(format string) {
-	if WARNING < self.level {
+// Warn warn
+func (writer *ConsoleWriter) Warn(format string) {
+	if WARNING < writer.level {
 		return
 	}
 
-	self.write(WARNING, format)
+	writer.write(WARNING, format)
 }
 
-func (self *ConsoleWriter) Warnf(format string, args ...interface{}) {
-	if WARNING < self.level {
+// Warnf warnf
+func (writer *ConsoleWriter) Warnf(format string, args ...interface{}) {
+	if WARNING < writer.level {
 		return
 	}
 
-	self.writef(WARNING, format, args...)
+	writer.writef(WARNING, format, args...)
 }
 
-func (self *ConsoleWriter) Critical(format string) {
-	if CRITICAL < self.level {
+// Critical critical
+func (writer *ConsoleWriter) Critical(format string) {
+	if CRITICAL < writer.level {
 		return
 	}
 
-	self.write(CRITICAL, format)
+	writer.write(CRITICAL, format)
 }
 
-func (self *ConsoleWriter) Criticalf(format string, args ...interface{}) {
-	if CRITICAL < self.level {
+// Criticalf criticalf
+func (writer *ConsoleWriter) Criticalf(format string, args ...interface{}) {
+	if CRITICAL < writer.level {
 		return
 	}
 
-	self.writef(CRITICAL, format, args...)
+	writer.writef(CRITICAL, format, args...)
 }
