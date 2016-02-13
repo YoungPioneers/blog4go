@@ -6,10 +6,14 @@ go:
         - 1.5
         - tip
 
+install:
+        - go get github.com/golang/lint/golint
+
 env:
         - GIMME_OS=linux GIMME_ARCH=amd64
 
 script:
         - test -z "$(go fmt ./...)"
         - test -z "$(go vet ./...)"
+        - test -z "$(golint)"
         - go test .

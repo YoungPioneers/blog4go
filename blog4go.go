@@ -8,7 +8,7 @@ package blog4go
 import (
 	"bufio"
 	"fmt"
-	"os"
+	"io"
 	"sync"
 )
 
@@ -44,12 +44,10 @@ type BLog struct {
 	// every message level exceed this level will be written
 	level Level
 
-	// configuration about file
-	// full path of the file
-	fileName string
-	// the file object
-	file *os.File
-	// bufio.Writer object of the file
+	// input io
+	in io.Writer
+
+	// bufio.Writer object of the input io
 	writer *bufio.Writer
 
 	// exclusive lock while calling write function of bufio.Writer
@@ -58,46 +56,40 @@ type BLog struct {
 
 // NewBLog create a BLog instance and return the pointer of it.
 // fileName must be an absolute path to the destination log file
-func NewBLog(fileName string) (blog *BLog, err error) {
+func NewBLog(in io.Writer) (blog *BLog) {
 	blog = new(BLog)
-	blog.fileName = fileName
+	blog.in = in
 	blog.level = DEBUG
 	blog.lock = new(sync.Mutex)
 
-	// open file target file
-	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
-	if nil != err {
-		return nil, err
-	}
-	blog.file = file
-	blog.writer = bufio.NewWriterSize(file, DefaultBufferSize)
+	blog.writer = bufio.NewWriterSize(in, DefaultBufferSize)
 	return
 }
 
 // write writes pure message with specific level
-func (log BLog) write(level Level, format string) int {
+func (blog *BLog) write(level Level, format string) int {
 	// 统计日志size
 	var size = 0
 
-	log.lock.Lock()
-	defer log.lock.Unlock()
+	blog.lock.Lock()
+	defer blog.lock.Unlock()
 
-	log.writer.Write(timeCache.format)
-	log.writer.WriteString(level.Prefix())
-	log.writer.WriteString(format)
-	log.writer.WriteByte(EOL)
+	blog.writer.Write(timeCache.format)
+	blog.writer.WriteString(level.Prefix())
+	blog.writer.WriteString(format)
+	blog.writer.WriteByte(EOL)
 
 	size = len(timeCache.format) + len(level.Prefix()) + len(format) + 1
 	return size
 }
 
 // write formats message with specific level and write it
-func (log *BLog) writef(level Level, format string, args ...interface{}) int {
+func (blog *BLog) writef(level Level, format string, args ...interface{}) int {
 	// 格式化构造message
 	// 边解析边输出
 	// 使用 % 作占位符
-	log.lock.Lock()
-	defer log.lock.Unlock()
+	blog.lock.Lock()
+	defer blog.lock.Unlock()
 
 	// 统计日志size
 	var size = 0
@@ -113,8 +105,8 @@ func (log *BLog) writef(level Level, format string, args ...interface{}) int {
 	var last int
 	var s int
 
-	log.writer.Write(timeCache.format)
-	log.writer.WriteString(level.Prefix())
+	blog.writer.Write(timeCache.format)
+	blog.writer.WriteString(level.Prefix())
 
 	size += len(timeCache.format) + len(level.Prefix())
 
@@ -126,7 +118,7 @@ func (log *BLog) writef(level Level, format string, args ...interface{}) int {
 					escape = false
 				}
 
-				s, _ = log.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				s, _ = blog.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
 				size += s
 				n++
 				last = i + 1
@@ -134,7 +126,7 @@ func (log *BLog) writef(level Level, format string, args ...interface{}) int {
 			//转义符
 			case ESCAPE:
 				if escape {
-					log.writer.WriteByte(ESCAPE)
+					blog.writer.WriteByte(ESCAPE)
 					size++
 				}
 				escape = !escape
@@ -148,21 +140,21 @@ func (log *BLog) writef(level Level, format string, args ...interface{}) int {
 			if PLACEHOLDER == format[i] && !escape {
 				tag = true
 				tagPos = i
-				s, _ = log.writer.WriteString(format[last:i])
+				s, _ = blog.writer.WriteString(format[last:i])
 				size += s
 				escape = false
 			}
 		}
 	}
-	log.writer.WriteString(format[last:])
-	log.writer.WriteByte(EOL)
+	blog.writer.WriteString(format[last:])
+	blog.writer.WriteByte(EOL)
 
 	size += len(format[last:]) + 1
 	return size
 }
 
-// flush buffer to disk
-func (blog *BLog) Flush() {
+// Flush flush buffer to disk
+func (blog *BLog) flush() {
 	blog.lock.Lock()
 	defer blog.lock.Unlock()
 	blog.writer.Flush()
@@ -174,13 +166,12 @@ func (blog *BLog) Close() {
 	defer blog.lock.Unlock()
 
 	blog.writer.Flush()
-	blog.file.Close()
 	blog.writer = nil
 }
 
-// FileName return file name
-func (blog *BLog) FileName() string {
-	return blog.fileName
+// In return the input io.Writer
+func (blog *BLog) In() io.Writer {
+	return blog.in
 }
 
 // Level return logging level threshold
@@ -194,47 +185,14 @@ func (blog *BLog) SetLevel(level Level) *BLog {
 	return blog
 }
 
-// resetFile resets file descriptor of the writer
-func (blog *BLog) resetFile() (err error) {
-	blog.lock.Lock()
-	defer blog.lock.Unlock()
-	blog.writer.Flush()
-
-	file, err := os.OpenFile(blog.fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
-
-	if nil != err {
-		// 如果创建文件失败怎么做？
-		// 重试？
-		//file, err = os.OpenFile(blog.fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
-		return
-	}
-
-	blog.file.Close()
-	blog.file = file
-	blog.writer.Reset(file)
-
-	return
-}
-
 // resetFile resets file descriptor of the writer with specific file name
-// can be used in logrotate
-func (blog *BLog) resetFileWithName(fileName string) (err error) {
+func (blog *BLog) resetFile(in io.Writer) (err error) {
 	blog.lock.Lock()
 	defer blog.lock.Unlock()
 	blog.writer.Flush()
 
-	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
-
-	if nil != err {
-		// 如果创建文件失败怎么做？
-		// 重试？
-		//file, err = os.OpenFile(blog.fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
-		return
-	}
-
-	blog.file.Close()
-	blog.file = file
-	blog.writer.Reset(file)
+	blog.in = in
+	blog.writer.Reset(in)
 
 	return
 }

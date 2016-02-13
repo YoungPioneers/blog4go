@@ -3,20 +3,14 @@
 package blog4go
 
 import (
-	"bufio"
 	"fmt"
 	"os"
-	"sync"
 	"time"
 )
 
 // ConsoleWriter is a console logger
 type ConsoleWriter struct {
-	level Level
-
-	writer *bufio.Writer
-
-	lock *sync.Mutex
+	blog *BLog
 
 	closed bool
 
@@ -30,9 +24,8 @@ type ConsoleWriter struct {
 // NewConsoleWriter initialize a console writer
 func NewConsoleWriter() (consoleWriter *ConsoleWriter, err error) {
 	consoleWriter = new(ConsoleWriter)
-	consoleWriter.level = DEBUG
+	consoleWriter.blog = NewBLog(os.Stdout)
 
-	consoleWriter.lock = new(sync.Mutex)
 	consoleWriter.closed = false
 
 	consoleWriter.colored = false
@@ -41,15 +34,12 @@ func NewConsoleWriter() (consoleWriter *ConsoleWriter, err error) {
 	consoleWriter.hook = nil
 	consoleWriter.hookLevel = DEBUG
 
-	consoleWriter.writer = bufio.NewWriterSize(os.Stdout, DefaultBufferSize)
-
 	go consoleWriter.daemon()
 
 	return consoleWriter, nil
 }
 
 func (writer *ConsoleWriter) daemon() {
-	t := time.Tick(1 * time.Second)
 	f := time.Tick(10 * time.Second)
 
 DaemonLoop:
@@ -61,24 +51,12 @@ DaemonLoop:
 			}
 
 			writer.flush()
-		case <-t:
-			if writer.closed {
-				break DaemonLoop
-			}
-
-			now := time.Now()
-			timeCache.now = now
-			timeCache.format = []byte(now.Format(PrefixTimeFormat))
-
 		}
 	}
 }
 
 func (writer *ConsoleWriter) write(level Level, format string) {
-	writer.lock.Lock()
-
 	defer func() {
-		writer.lock.Unlock()
 		if nil != writer.hook && !(level < writer.hookLevel) {
 			go func(level Level, format string) {
 				writer.hook.Fire(level, format)
@@ -90,17 +68,11 @@ func (writer *ConsoleWriter) write(level Level, format string) {
 		return
 	}
 
-	writer.writer.Write(timeCache.format)
-	writer.writer.WriteString(level.Prefix())
-	writer.writer.WriteString(format)
-	writer.writer.WriteByte(EOL)
+	writer.blog.write(level, format)
 }
 
 func (writer *ConsoleWriter) writef(level Level, format string, args ...interface{}) {
-	writer.lock.Lock()
-
 	defer func() {
-		writer.lock.Unlock()
 
 		if nil != writer.hook && !(level < writer.hookLevel) {
 			go func(level Level, format string, args ...interface{}) {
@@ -113,57 +85,17 @@ func (writer *ConsoleWriter) writef(level Level, format string, args ...interfac
 		return
 	}
 
-	var tag = false
-	var tagPos int
-	var escape = false
-	var n int
-	var last int
-
-	writer.writer.Write(timeCache.format)
-	writer.writer.WriteString(level.Prefix())
-
-	for i, v := range format {
-		if tag {
-			switch v {
-			case 'd', 'f', 'v', 'b', 'o', 'x', 'X', 'c', 'p', 't', 's', 'T', 'q', 'U', 'e', 'E', 'g', 'G':
-				if escape {
-					escape = false
-				}
-
-				writer.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
-				n++
-				last = i + 1
-				tag = false
-			case ESCAPE:
-				if escape {
-					writer.writer.WriteByte(ESCAPE)
-				}
-				escape = !escape
-			default:
-
-			}
-
-		} else {
-			if PLACEHOLDER == format[i] && !escape {
-				tag = true
-				tagPos = i
-				writer.writer.WriteString(format[last:i])
-				escape = false
-			}
-		}
-	}
-	writer.writer.WriteString(format[last:])
-	writer.writer.WriteByte(EOL)
+	writer.blog.writef(level, format, args...)
 }
 
 // Level return logging level threshold
 func (writer *ConsoleWriter) Level() Level {
-	return writer.level
+	return writer.blog.Level()
 }
 
 // SetLevel set logger level
 func (writer *ConsoleWriter) SetLevel(level Level) *ConsoleWriter {
-	writer.level = level
+	writer.blog.SetLevel(level)
 	return writer
 }
 
@@ -179,8 +111,6 @@ func (writer *ConsoleWriter) SetColored(colored bool) {
 	}
 
 	writer.colored = colored
-	writer.lock.Lock()
-	defer writer.lock.Unlock()
 
 	initPrefix(colored)
 }
@@ -197,27 +127,23 @@ func (writer *ConsoleWriter) SetHookLevel(level Level) {
 
 // Close close console writer
 func (writer *ConsoleWriter) Close() {
-	writer.lock.Lock()
-	defer writer.lock.Unlock()
 	if writer.closed {
 		return
 	}
 
-	writer.writer.Flush()
-	writer.writer = nil
+	writer.blog.flush()
+	writer.blog = nil
 	writer.closed = true
 }
 
 // flush buffer to disk
 func (writer *ConsoleWriter) flush() {
-	writer.lock.Lock()
-	defer writer.lock.Unlock()
-	writer.writer.Flush()
+	writer.blog.flush()
 }
 
 // Debug debug
 func (writer *ConsoleWriter) Debug(format string) {
-	if DEBUG < writer.level {
+	if DEBUG < writer.blog.Level() {
 		return
 	}
 
@@ -226,7 +152,7 @@ func (writer *ConsoleWriter) Debug(format string) {
 
 // Debugf debugf
 func (writer *ConsoleWriter) Debugf(format string, args ...interface{}) {
-	if DEBUG < writer.level {
+	if DEBUG < writer.blog.Level() {
 		return
 	}
 
@@ -235,7 +161,7 @@ func (writer *ConsoleWriter) Debugf(format string, args ...interface{}) {
 
 // Trace trace
 func (writer *ConsoleWriter) Trace(format string) {
-	if TRACE < writer.level {
+	if TRACE < writer.blog.Level() {
 		return
 	}
 
@@ -244,7 +170,7 @@ func (writer *ConsoleWriter) Trace(format string) {
 
 // Tracef tracef
 func (writer *ConsoleWriter) Tracef(format string, args ...interface{}) {
-	if TRACE < writer.level {
+	if TRACE < writer.blog.Level() {
 		return
 	}
 
@@ -253,7 +179,7 @@ func (writer *ConsoleWriter) Tracef(format string, args ...interface{}) {
 
 // Info info
 func (writer *ConsoleWriter) Info(format string) {
-	if INFO < writer.level {
+	if INFO < writer.blog.Level() {
 		return
 	}
 
@@ -262,7 +188,7 @@ func (writer *ConsoleWriter) Info(format string) {
 
 // Infof infof
 func (writer *ConsoleWriter) Infof(format string, args ...interface{}) {
-	if INFO < writer.level {
+	if INFO < writer.blog.Level() {
 		return
 	}
 
@@ -271,7 +197,7 @@ func (writer *ConsoleWriter) Infof(format string, args ...interface{}) {
 
 // Error error
 func (writer *ConsoleWriter) Error(format string) {
-	if ERROR < writer.level {
+	if ERROR < writer.blog.Level() {
 		return
 	}
 
@@ -280,7 +206,7 @@ func (writer *ConsoleWriter) Error(format string) {
 
 // Errorf errorf
 func (writer *ConsoleWriter) Errorf(format string, args ...interface{}) {
-	if ERROR < writer.level {
+	if ERROR < writer.blog.Level() {
 		return
 	}
 
@@ -289,7 +215,7 @@ func (writer *ConsoleWriter) Errorf(format string, args ...interface{}) {
 
 // Warn warn
 func (writer *ConsoleWriter) Warn(format string) {
-	if WARNING < writer.level {
+	if WARNING < writer.blog.Level() {
 		return
 	}
 
@@ -298,7 +224,7 @@ func (writer *ConsoleWriter) Warn(format string) {
 
 // Warnf warnf
 func (writer *ConsoleWriter) Warnf(format string, args ...interface{}) {
-	if WARNING < writer.level {
+	if WARNING < writer.blog.Level() {
 		return
 	}
 
@@ -307,7 +233,7 @@ func (writer *ConsoleWriter) Warnf(format string, args ...interface{}) {
 
 // Critical critical
 func (writer *ConsoleWriter) Critical(format string) {
-	if CRITICAL < writer.level {
+	if CRITICAL < writer.blog.Level() {
 		return
 	}
 
@@ -316,7 +242,7 @@ func (writer *ConsoleWriter) Critical(format string) {
 
 // Criticalf criticalf
 func (writer *ConsoleWriter) Criticalf(format string, args ...interface{}) {
-	if CRITICAL < writer.level {
+	if CRITICAL < writer.blog.Level() {
 		return
 	}
 

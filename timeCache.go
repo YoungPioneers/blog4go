@@ -6,24 +6,21 @@ import (
 	"time"
 )
 
-// 时间格式化的cache
+// timeFormatCacheType is a time formated cache
 type timeFormatCacheType struct {
-	// 当前
+	// current time
 	now time.Time
-	// 当前日期
+	// current date
 	date string
-	// 当前时间格式化结果
-	// bufio write bytes会比write string效率高
+	// current formated date
 	format []byte
-	// 昨日日期
+	// yesterdate
 	dateYesterday string
 }
 
-// 用全局的timeCache好像比较好
-// 实例的timeCache没那么好统一更新
+// global time cache instance used for every log writer
 var timeCache = timeFormatCacheType{}
 
-// 包初始化函数
 func init() {
 	timeCache.now = time.Now()
 	timeCache.date = timeCache.now.Format(DateFormat)

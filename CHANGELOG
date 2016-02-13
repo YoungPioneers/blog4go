@@ -54,3 +54,4 @@ All notable changes to this project will be documented in this file.
 ## [0.3.0] - 2016-02-13
 ### Changed
 - 通用的write方法抽象成BLog.
+- file, console writer使用通用BLog

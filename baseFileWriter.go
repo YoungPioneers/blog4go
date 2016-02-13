@@ -4,6 +4,7 @@ package blog4go
 
 import (
 	"fmt"
+	"os"
 	"sync"
 	"time"
 )
@@ -13,11 +14,14 @@ import (
 // logrotate, user defined hook for every logging action, change configuration
 // on the fly and logging with colors.
 type BaseFileWriter struct {
+	// configuration about file
+	// full path of the file
+	fileName string
+	// the file object
+	file *os.File
+
 	// the BLog
 	blog *BLog
-
-	// exclusive lock while calling write function of bufio.Writer
-	lock *sync.Mutex
 
 	// close sign, default false
 	// set this tag true if writer is closed
@@ -73,12 +77,15 @@ type BaseFileWriter struct {
 // fileName must be an absolute path to the destination log file
 func NewBaseFileWriter(fileName string) (fileWriter *BaseFileWriter, err error) {
 	fileWriter = new(BaseFileWriter)
-	blog, err := NewBLog(fileName)
+	fileWriter.fileName = fileName
+	// open file target file
+	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
+	fileWriter.file = file
 	if nil != err {
 		return nil, err
 	}
-	fileWriter.blog = blog
-	fileWriter.lock = new(sync.Mutex)
+	fileWriter.blog = NewBLog(file)
+
 	fileWriter.closed = false
 
 	// about logrotate
@@ -109,13 +116,12 @@ func NewBaseFileWriter(fileName string) (fileWriter *BaseFileWriter, err error) 
 
 // daemon run in background as NewBaseFileWriter called.
 // It flushes writer buffer every 10 seconds.
-// It update timeCache every 1  seconds. Also it decides whether a time base
-// logrotate is needed. When it is needed, it just run time base logrotate.
-// It analyses lines && sizes already written. Alse it does the lines &&
+// It decides whether a time base when logrotate is needed.
+// It sums up lines && sizes already written. Alse it does the lines &&
 // size base logrotate
 func (writer *BaseFileWriter) daemon() {
 	// tick every seconds
-	// update time cache && time base logrotate
+	// time base logrotate
 	t := time.Tick(1 * time.Second)
 	// tick every 10 seconds
 	// auto flush writer buffer
@@ -129,7 +135,7 @@ DaemonLoop:
 				break DaemonLoop
 			}
 
-			writer.flush()
+			writer.blog.flush()
 		case <-t:
 			if writer.closed {
 				break DaemonLoop
@@ -137,20 +143,18 @@ DaemonLoop:
 
 			writer.rotateLock.Lock()
 
-			now := time.Now()
-			timeCache.now = now
-			timeCache.format = []byte(now.Format(PrefixTimeFormat))
-			date := now.Format(DateFormat)
+			date := time.Now().Format(DateFormat)
 
 			if writer.timeRotated && date != timeCache.date {
 				// need time base logrotate
 				writer.sizeRotateTimes = 0
 
-				fileName := fmt.Sprintf("%s.%s", writer.blog.FileName(), timeCache.dateYesterday)
-				writer.blog.resetFileWithName(fileName)
+				fileName := fmt.Sprintf("%s.%s", writer.fileName, timeCache.dateYesterday)
+				file, _ := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 
-				timeCache.dateYesterday = timeCache.date
-				timeCache.date = now.Format(DateFormat)
+				writer.file.Close()
+				writer.blog.resetFile(file)
+				writer.file = file
 			}
 
 			writer.rotateLock.Unlock()
@@ -172,15 +176,19 @@ DaemonLoop:
 
 			if (writer.sizeRotated && writer.currentSize > writer.rotateSize) || (writer.lineRotated && writer.currentLines > writer.rotateLines) {
 				// need lines && size base logrotate
-
-				fileName := fmt.Sprintf("%s.%d", writer.blog.FileName(), writer.sizeRotateTimes+1)
-				if writer.timeRotated {
-					fileName = fmt.Sprintf("%s.%s.%d", writer.blog.FileName(), timeCache.date, writer.sizeRotateTimes+1)
-				}
-				writer.blog.resetFileWithName(fileName)
 				writer.sizeRotateTimes++
 				writer.currentSize = 0
 				writer.currentLines = 0
+
+				fileName := fmt.Sprintf("%s.%d", writer.fileName, writer.sizeRotateTimes+1)
+				if writer.timeRotated {
+					fileName = fmt.Sprintf("%s.%s.%d", writer.fileName, timeCache.date, writer.sizeRotateTimes+1)
+				}
+				file, _ := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
+
+				writer.file.Close()
+				writer.blog.resetFile(file)
+				writer.file = file
 			}
 			writer.rotateLock.Unlock()
 		}
@@ -190,9 +198,7 @@ DaemonLoop:
 // write writes pure message with specific level
 func (writer *BaseFileWriter) write(level Level, format string) {
 	var size = 0
-	writer.lock.Lock()
 	defer func() {
-		writer.lock.Unlock()
 		// logrotate
 		if writer.sizeRotated || writer.lineRotated {
 			writer.logSizeChan <- size
@@ -219,12 +225,10 @@ func (writer *BaseFileWriter) writef(level Level, format string, args ...interfa
 	// 边解析边输出
 	// 使用 % 作占位符
 
-	writer.lock.Lock()
 	// 统计日志size
 	var size = 0
 
 	defer func() {
-		writer.lock.Unlock()
 		// logrotate
 		if writer.sizeRotated || writer.lineRotated {
 			writer.logSizeChan <- size
@@ -292,9 +296,6 @@ func (writer *BaseFileWriter) SetColored(colored bool) {
 	}
 
 	writer.colored = colored
-	writer.lock.Lock()
-	defer writer.lock.Unlock()
-
 	initPrefix(colored)
 }
 
@@ -321,22 +322,13 @@ func (writer *BaseFileWriter) SetLevel(level Level) *BaseFileWriter {
 
 // Close close file writer
 func (writer *BaseFileWriter) Close() {
-	writer.lock.Lock()
-	defer writer.lock.Unlock()
 	if writer.closed {
 		return
 	}
 
-	writer.blog.Flush()
 	writer.blog.Close()
+	writer.blog = nil
 	writer.closed = true
-}
-
-// flush buffer to disk
-func (writer *BaseFileWriter) flush() {
-	writer.lock.Lock()
-	defer writer.lock.Unlock()
-	writer.blog.Flush()
 }
 
 // Debug debug
