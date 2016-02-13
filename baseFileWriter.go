@@ -3,9 +3,7 @@
 package blog4go
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"sync"
 	"time"
 )
@@ -15,17 +13,8 @@ import (
 // logrotate, user defined hook for every logging action, change configuration
 // on the fly and logging with colors.
 type BaseFileWriter struct {
-	// logging level
-	// every message level exceed this level will be written
-	level Level
-
-	// configuration about file
-	// full path of the file
-	fileName string
-	// the file object
-	file *os.File
-	// bufio.Writer object of the file
-	writer *bufio.Writer
+	// the BLog
+	blog *BLog
 
 	// exclusive lock while calling write function of bufio.Writer
 	lock *sync.Mutex
@@ -84,8 +73,11 @@ type BaseFileWriter struct {
 // fileName must be an absolute path to the destination log file
 func NewBaseFileWriter(fileName string) (fileWriter *BaseFileWriter, err error) {
 	fileWriter = new(BaseFileWriter)
-	fileWriter.fileName = fileName
-	fileWriter.level = DEBUG
+	blog, err := NewBLog(fileName)
+	if nil != err {
+		return nil, err
+	}
+	fileWriter.blog = blog
 	fileWriter.lock = new(sync.Mutex)
 	fileWriter.closed = false
 
@@ -109,14 +101,6 @@ func NewBaseFileWriter(fileName string) (fileWriter *BaseFileWriter, err error) 
 	// log hook
 	fileWriter.hook = nil
 	fileWriter.hookLevel = DEBUG
-
-	// open file target file
-	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
-	if nil != err {
-		return nil, err
-	}
-	fileWriter.file = file
-	fileWriter.writer = bufio.NewWriterSize(file, DefaultBufferSize)
 
 	go fileWriter.daemon()
 
@@ -162,17 +146,11 @@ DaemonLoop:
 				// need time base logrotate
 				writer.sizeRotateTimes = 0
 
-				fileName := fmt.Sprintf("%s.%s", writer.fileName, timeCache.dateYesterday)
-				// update file descriptor of the writer
-				writer.lock.Lock()
-				writer.flush()
-				os.Rename(writer.fileName, fileName)
-				err := writer.resetFile()
-				if nil == err {
-					timeCache.dateYesterday = timeCache.date
-					timeCache.date = now.Format(DateFormat)
-				}
-				writer.lock.Unlock()
+				fileName := fmt.Sprintf("%s.%s", writer.blog.FileName(), timeCache.dateYesterday)
+				writer.blog.resetFileWithName(fileName)
+
+				timeCache.dateYesterday = timeCache.date
+				timeCache.date = now.Format(DateFormat)
 			}
 
 			writer.rotateLock.Unlock()
@@ -195,55 +173,29 @@ DaemonLoop:
 			if (writer.sizeRotated && writer.currentSize > writer.rotateSize) || (writer.lineRotated && writer.currentLines > writer.rotateLines) {
 				// need lines && size base logrotate
 
-				fileName := fmt.Sprintf("%s.%d", writer.fileName, writer.sizeRotateTimes+1)
+				fileName := fmt.Sprintf("%s.%d", writer.blog.FileName(), writer.sizeRotateTimes+1)
 				if writer.timeRotated {
-					fileName = fmt.Sprintf("%s.%s.%d", writer.fileName, timeCache.date, writer.sizeRotateTimes+1)
-
+					fileName = fmt.Sprintf("%s.%s.%d", writer.blog.FileName(), timeCache.date, writer.sizeRotateTimes+1)
 				}
-
-				// update file descriptor of the writer
-				writer.lock.Lock()
-				writer.flush()
-				os.Rename(writer.fileName, fileName)
-
-				err := writer.resetFile()
-				if nil == err {
-					writer.sizeRotateTimes++
-					writer.currentSize = 0
-					writer.currentLines = 0
-				}
-				writer.lock.Unlock()
+				writer.blog.resetFileWithName(fileName)
+				writer.sizeRotateTimes++
+				writer.currentSize = 0
+				writer.currentLines = 0
 			}
 			writer.rotateLock.Unlock()
 		}
 	}
 }
 
-// resetFile resets file descriptor of the writer
-func (writer *BaseFileWriter) resetFile() (err error) {
-	file, err := os.OpenFile(writer.fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
-
-	if nil != err {
-		// 如果创建文件失败怎么做？
-		// 重试？
-		//file, err = os.OpenFile(writer.fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
-	}
-
-	writer.file.Close()
-	writer.file = file
-	writer.writer.Reset(file)
-
-	return
-}
-
 // write writes pure message with specific level
 func (writer *BaseFileWriter) write(level Level, format string) {
+	var size = 0
 	writer.lock.Lock()
 	defer func() {
 		writer.lock.Unlock()
 		// logrotate
 		if writer.sizeRotated || writer.lineRotated {
-			writer.logSizeChan <- len(timeCache.format) + len(level.Prefix()) + len(format) + 1
+			writer.logSizeChan <- size
 		}
 
 		// 异步调用log hook
@@ -258,10 +210,7 @@ func (writer *BaseFileWriter) write(level Level, format string) {
 		return
 	}
 
-	writer.writer.Write(timeCache.format)
-	writer.writer.WriteString(level.Prefix())
-	writer.writer.WriteString(format)
-	writer.writer.WriteByte(EOL)
+	size = writer.blog.write(level, format)
 }
 
 // write formats message with specific level and write it
@@ -272,7 +221,7 @@ func (writer *BaseFileWriter) writef(level Level, format string, args ...interfa
 
 	writer.lock.Lock()
 	// 统计日志size
-	var size int
+	var size = 0
 
 	defer func() {
 		writer.lock.Unlock()
@@ -293,73 +242,7 @@ func (writer *BaseFileWriter) writef(level Level, format string, args ...interfa
 		return
 	}
 
-	// 识别占位符标记
-	var tag = false
-	var tagPos int
-	// 转义字符标记
-	var escape = false
-	// 在处理的args 下标
-	var n int
-	// 未输出的，第一个普通字符位置
-	var last int
-	var s int
-
-	writer.writer.Write(timeCache.format)
-	writer.writer.WriteString(level.Prefix())
-
-	// logrotate
-	if writer.sizeRotated || writer.lineRotated {
-		size += len(timeCache.format) + len(level.Prefix())
-	}
-
-	for i, v := range format {
-		if tag {
-			switch v {
-			case 'd', 'f', 'v', 'b', 'o', 'x', 'X', 'c', 'p', 't', 's', 'T', 'q', 'U', 'e', 'E', 'g', 'G':
-				if escape {
-					escape = false
-				}
-
-				s, _ = writer.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
-				// logrotate
-				if writer.sizeRotated || writer.lineRotated {
-					size += s
-				}
-				n++
-				last = i + 1
-				tag = false
-			//转义符
-			case ESCAPE:
-				if escape {
-					writer.writer.WriteByte(ESCAPE)
-					// logrotate
-					if writer.sizeRotated || writer.lineRotated {
-						size++
-					}
-				}
-				escape = !escape
-			//默认
-			default:
-
-			}
-
-		} else {
-			// 占位符，百分号
-			if PLACEHOLDER == format[i] && !escape {
-				tag = true
-				tagPos = i
-				s, _ = writer.writer.WriteString(format[last:i])
-				size += s
-				escape = false
-			}
-		}
-	}
-	writer.writer.WriteString(format[last:])
-	writer.writer.WriteByte(EOL)
-
-	if writer.sizeRotated || writer.lineRotated {
-		size += len(format[last:]) + 1
-	}
+	size = writer.blog.writef(level, format, args...)
 }
 
 // SetTimeRotated toggle time base logrotate on the fly
@@ -427,12 +310,12 @@ func (writer *BaseFileWriter) SetHookLevel(level Level) {
 
 // Level return logging level threshold
 func (writer *BaseFileWriter) Level() Level {
-	return writer.level
+	return writer.blog.Level()
 }
 
 // SetLevel set logging level threshold
 func (writer *BaseFileWriter) SetLevel(level Level) *BaseFileWriter {
-	writer.level = level
+	writer.blog.SetLevel(level)
 	return writer
 }
 
@@ -444,9 +327,8 @@ func (writer *BaseFileWriter) Close() {
 		return
 	}
 
-	writer.writer.Flush()
-	writer.file.Close()
-	writer.writer = nil
+	writer.blog.Flush()
+	writer.blog.Close()
 	writer.closed = true
 }
 
@@ -454,12 +336,12 @@ func (writer *BaseFileWriter) Close() {
 func (writer *BaseFileWriter) flush() {
 	writer.lock.Lock()
 	defer writer.lock.Unlock()
-	writer.writer.Flush()
+	writer.blog.Flush()
 }
 
 // Debug debug
 func (writer *BaseFileWriter) Debug(format string) {
-	if DEBUG < writer.level {
+	if DEBUG < writer.blog.Level() {
 		return
 	}
 
@@ -468,7 +350,7 @@ func (writer *BaseFileWriter) Debug(format string) {
 
 // Debugf debugf
 func (writer *BaseFileWriter) Debugf(format string, args ...interface{}) {
-	if DEBUG < writer.level {
+	if DEBUG < writer.blog.Level() {
 		return
 	}
 
@@ -477,7 +359,7 @@ func (writer *BaseFileWriter) Debugf(format string, args ...interface{}) {
 
 // Trace trace
 func (writer *BaseFileWriter) Trace(format string) {
-	if TRACE < writer.level {
+	if TRACE < writer.blog.Level() {
 		return
 	}
 
@@ -486,7 +368,7 @@ func (writer *BaseFileWriter) Trace(format string) {
 
 // Tracef tracef
 func (writer *BaseFileWriter) Tracef(format string, args ...interface{}) {
-	if TRACE < writer.level {
+	if TRACE < writer.blog.Level() {
 		return
 	}
 
@@ -495,7 +377,7 @@ func (writer *BaseFileWriter) Tracef(format string, args ...interface{}) {
 
 // Info info
 func (writer *BaseFileWriter) Info(format string) {
-	if INFO < writer.level {
+	if INFO < writer.blog.Level() {
 		return
 	}
 
@@ -504,7 +386,7 @@ func (writer *BaseFileWriter) Info(format string) {
 
 // Infof infof
 func (writer *BaseFileWriter) Infof(format string, args ...interface{}) {
-	if INFO < writer.level {
+	if INFO < writer.blog.Level() {
 		return
 	}
 
@@ -513,7 +395,7 @@ func (writer *BaseFileWriter) Infof(format string, args ...interface{}) {
 
 // Error error
 func (writer *BaseFileWriter) Error(format string) {
-	if ERROR < writer.level {
+	if ERROR < writer.blog.Level() {
 		return
 	}
 
@@ -522,7 +404,7 @@ func (writer *BaseFileWriter) Error(format string) {
 
 // Errorf errorf
 func (writer *BaseFileWriter) Errorf(format string, args ...interface{}) {
-	if ERROR < writer.level {
+	if ERROR < writer.blog.Level() {
 		return
 	}
 
@@ -531,7 +413,7 @@ func (writer *BaseFileWriter) Errorf(format string, args ...interface{}) {
 
 // Warn warn
 func (writer *BaseFileWriter) Warn(format string) {
-	if WARNING < writer.level {
+	if WARNING < writer.blog.Level() {
 		return
 	}
 
@@ -540,7 +422,7 @@ func (writer *BaseFileWriter) Warn(format string) {
 
 // Warnf warnf
 func (writer *BaseFileWriter) Warnf(format string, args ...interface{}) {
-	if WARNING < writer.level {
+	if WARNING < writer.blog.Level() {
 		return
 	}
 
@@ -549,7 +431,7 @@ func (writer *BaseFileWriter) Warnf(format string, args ...interface{}) {
 
 // Critical critical
 func (writer *BaseFileWriter) Critical(format string) {
-	if CRITICAL < writer.level {
+	if CRITICAL < writer.blog.Level() {
 		return
 	}
 
@@ -558,7 +440,7 @@ func (writer *BaseFileWriter) Critical(format string) {
 
 // Criticalf criticalf
 func (writer *BaseFileWriter) Criticalf(format string, args ...interface{}) {
-	if CRITICAL < writer.level {
+	if CRITICAL < writer.blog.Level() {
 		return
 	}
 

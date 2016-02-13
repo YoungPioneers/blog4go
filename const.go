@@ -32,13 +32,6 @@ const (
 	PrefixTimeFormat = "[2006/01/02:15:04:05]"
 	// DateFormat date format
 	DateFormat = "2006-01-02"
-
-	// EOL end of a line
-	EOL = '\n'
-	// ESCAPE escape character
-	ESCAPE = '\\'
-	// PLACEHOLDER placeholder
-	PLACEHOLDER = '%'
 )
 
 var (

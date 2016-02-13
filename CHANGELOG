@@ -50,3 +50,7 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - 部分有误注释。
+
+## [0.3.0] - 2016-02-13
+### Changed
+- 通用的write方法抽象成BLog.

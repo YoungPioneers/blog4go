@@ -29,4 +29,25 @@ func init() {
 	timeCache.date = timeCache.now.Format(DateFormat)
 	timeCache.format = []byte(timeCache.now.Format(PrefixTimeFormat))
 	timeCache.dateYesterday = timeCache.now.Add(-24 * time.Hour).Format(DateFormat)
+
+	// update timeCache every seconds
+	go func() {
+		// tick every seconds
+		t := time.Tick(1 * time.Second)
+
+		//UpdateTimeCacheLoop:
+		for {
+			select {
+			case <-t:
+				now := time.Now()
+				timeCache.now = now
+				timeCache.format = []byte(now.Format(PrefixTimeFormat))
+				date := now.Format(DateFormat)
+				if date != timeCache.date {
+					timeCache.dateYesterday = timeCache.date
+					timeCache.date = now.Format(DateFormat)
+				}
+			}
+		}
+	}()
 }
