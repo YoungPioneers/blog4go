@@ -51,9 +51,10 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - 部分有误注释。
 
-## [0.3.0] - 2016-02-13
+## [0.4.0] - 2016-02-13
 ### Added
 - 增加timeCache测试。
+- 支持xml配置文件初始化file writer.
 
 ### Changed
 - 通用的write方法抽象成BLog.

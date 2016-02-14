@@ -56,6 +56,9 @@ var (
 	// LevelStrings is string present for each level
 	LevelStrings = [...]string{"DEBUG", "TRACE", "INFO", "WARN", "ERROR", "CRITICAL"}
 
+	// StringLevels is map, level strings to levels
+	StringLevels = map[string]Level{"DEBUG": DEBUG, "TRACE": TRACE, "INFO": INFO, "WARN": WARNING, "ERROR": ERROR, "CRITICAL": CRITICAL}
+
 	// Levels is a slice consist of all levels
 	Levels = [...]Level{DEBUG, TRACE, INFO, WARNING, ERROR, CRITICAL}
 
@@ -108,4 +111,13 @@ func (level Level) String() string {
 // Prefix return formatted prefix string associate with a Level instance
 func (level Level) Prefix() string {
 	return Prefix[level]
+}
+
+// LevelFromString return Level according to given string
+func LevelFromString(str string) Level {
+	level, ok := StringLevels[str]
+	if !ok {
+		return Level(-1)
+	}
+	return level
 }

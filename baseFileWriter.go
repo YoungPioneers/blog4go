@@ -10,7 +10,7 @@ import (
 )
 
 // ByteSize is type of sizes
-type ByteSize int
+type ByteSize int64
 
 const (
 	// unit of sizes

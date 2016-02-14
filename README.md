@@ -13,9 +13,10 @@ Features
 * Configurable logrotate strategy
 * Call user defined hook in asynchronous mode for every logging action
 * Adjustable message formatting
-* Configurable logging behavier when looging on the fly without restarting
+* Configurable logging behavier when looging *on the fly* without restarting
 * Suit configuration to the environment when logging start
 * Try best to get every done in background
+* File writer can be configured according to given config file
 * Different output writers
 	* Console writer
 	* File writer
@@ -24,8 +25,8 @@ Features
 
 Quick-start
 ------------------
-I
-```
+
+```go
 package main
 
 import (
@@ -57,8 +58,32 @@ func main() {
 	
 	// optionally set hook for logging
 	hook := new(MyHook)
-	writer.SetHookLevel(hook)
+	writer.SetHook(hook)
+	writer.SetHookLevel(blog4go.INFO)
 	writer.Debugf("Good morning, %s", "eddie")	
+	
+	
+	// init a file write using xml config file
+	writersFromConfig, err := blog4go.NewFileWriterFromConfigAsFile("config.xml")
+	if nil != err {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+	defer writersFromConfig.Close()
+		
+	
+	// init a file writer just give it a logging base directory
+	writers, err := blog4go.blog4go.NewBaseFileWriter("output.log")
+	if nil != err {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+	
+	defer writersFromConfig.Close()
+	writersFromConfig.SetHook(hook) // writersFromConfig can be replaced with writers
+	writersFromConfig.SetHookLevel(blog4go.INFO)
+	writersFromConfig.Debugf("Good morning, %s", "eddie")	
+	
 }
 ```
 
@@ -73,6 +98,10 @@ If you don't have the Go development environment installed, visit the
 go get -u github.com/YoungPioneers/blog4go
 ```
 
+Benchmark
+------------------
+
+TODO
 
 Documentation
 ------------------
