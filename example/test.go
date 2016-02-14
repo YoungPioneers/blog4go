@@ -37,43 +37,43 @@ func main() {
 	writers.Critical("Critical")
 
 	// blog
-	//writer, err := blog4go.NewBaseFileWriter("output.log")
-	//if nil != err {
-	//fmt.Println(err.Error())
-	//os.Exit(1)
-	//}
-	//defer writer.Close()
+	writer, err := blog4go.NewBaseFileWriter("output.log")
+	if nil != err {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+	defer writer.Close()
 
 	// test rotate line
-	//writer.SetRotateLines(100)
+	writer.SetRotateLines(100)
 
 	// test hook
-	//hook := new(MyHook)
-	//writer.SetHook(hook)
+	hook := new(MyHook)
+	writer.SetHook(hook)
 
-	//for i := 1; i < 5; i++ {
-	//go logging(writer)
-	//}
+	for i := 1; i < 5; i++ {
+		go logging(writer)
+	}
 
 	// blog writers
-	//writers, err := blog4go.NewFileWriter("./")
-	//if nil != err {
-	//fmt.Println(err.Error())
-	//os.Exit(1)
-	//}
-	//defer writers.Close()
-	//writers.Debug("Debug")
-	//writers.Trace("Trace")
-	//writers.Info("Info")
-	//writers.Warn("Warn")
-	//writers.Error("Error")
-	//writers.Critical("Critical")
+	pure_writers, err := blog4go.NewFileWriter("./")
+	if nil != err {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+	defer pure_writers.Close()
+	pure_writers.Debug("Debug")
+	pure_writers.Trace("Trace")
+	pure_writers.Info("Info")
+	pure_writers.Warn("Warn")
+	pure_writers.Error("Error")
+	pure_writers.Critical("Critical")
 
 	// socket writer
 	// nc -u -l 12124
-	//socketWriter, err := blog4go.NewSocketWriter("udp", "127.0.0.1:12124")
-	//defer socketWriter.Close()
-	//socketWriter.Debug("debug")
+	socketWriter, err := blog4go.NewSocketWriter("udp", "127.0.0.1:12124")
+	defer socketWriter.Close()
+	socketWriter.Debug("debug")
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGTERM, os.Interrupt, os.Kill)
