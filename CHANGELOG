@@ -55,6 +55,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - 增加timeCache测试。
 - 支持xml配置文件初始化file writer.
+- file writer添加SetHookLevel设置自定义钩子函数。
 
 ### Changed
 - 通用的write方法抽象成BLog.

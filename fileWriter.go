@@ -67,7 +67,7 @@ func NewFileWriterFromConfigAsFile(configFile string) (fileWriter *FileWriter, e
 	fileWriter = new(FileWriter)
 
 	fileWriter.level = DEBUG
-	if level := LevelFromString(strings.ToUpper(config.MinLevel)); level.valid() {
+	if level := LevelFromString(config.MinLevel); level.valid() {
 
 		fileWriter.level = level
 	}
@@ -98,7 +98,7 @@ func NewFileWriterFromConfigAsFile(configFile string) (fileWriter *FileWriter, e
 		levels := strings.Split(filter.Levels, ",")
 		for _, levelStr := range levels {
 			var level Level
-			if level = LevelFromString(strings.ToUpper(levelStr)); !level.valid() {
+			if level = LevelFromString(levelStr); !level.valid() {
 				return nil, ErrInvalidLevel
 			}
 
@@ -122,7 +122,6 @@ func NewFileWriterFromConfigAsFile(configFile string) (fileWriter *FileWriter, e
 
 	}
 
-	fmt.Printf("\n\n%+v\n\n", fileWriter.writers)
 	return
 }
 
@@ -158,6 +157,13 @@ func (writer *FileWriter) SetColored(colored bool) {
 func (writer *FileWriter) SetHook(hook Hook) {
 	for _, fileWriter := range writer.writers {
 		fileWriter.SetHook(hook)
+	}
+}
+
+// SetHookLevel set hook level for every logging actions
+func (writer *FileWriter) SetHookLevel(level Level) {
+	for _, fileWriter := range writer.writers {
+		fileWriter.SetHookLevel(level)
 	}
 }
 

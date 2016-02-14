@@ -48,3 +48,15 @@ func TestLevelStringFormat(t *testing.T) {
 		t.Error("Wrong Level to wrong string format.")
 	}
 }
+
+func TestStringToLevel(t *testing.T) {
+	str := "debug"
+	if DEBUG != LevelFromString(str) {
+		t.Errorf("String to level failed. str: %s", str)
+	}
+
+	str = "something"
+	if LevelFromString(str).valid() {
+		t.Errorf("String to level invalid. str: %s", str)
+	}
+}

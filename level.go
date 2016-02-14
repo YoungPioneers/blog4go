@@ -4,6 +4,7 @@ package blog4go
 
 import (
 	"fmt"
+	"strings"
 )
 
 // Level type defined for logging level
@@ -115,7 +116,7 @@ func (level Level) Prefix() string {
 
 // LevelFromString return Level according to given string
 func LevelFromString(str string) Level {
-	level, ok := StringLevels[str]
+	level, ok := StringLevels[strings.ToUpper(str)]
 	if !ok {
 		return Level(-1)
 	}
