@@ -7,8 +7,10 @@ package blog4go
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io"
+	"os"
 	"sync"
 )
 
@@ -19,6 +21,13 @@ const (
 	ESCAPE = '\\'
 	// PLACEHOLDER placeholder
 	PLACEHOLDER = '%'
+)
+
+var (
+	// DefaultBufferSize bufio buffer size
+	DefaultBufferSize = 4096 // default memory page size
+	// ErrInvalidFormat invalid format error
+	ErrInvalidFormat = errors.New("Invalid format type.")
 )
 
 // Writer interface is a common definition of any writers in this package.
@@ -36,6 +45,10 @@ type Writer interface {
 
 	write(level Level, format string)                       // write pure string
 	writef(level Level, format string, args ...interface{}) // format string and write it
+}
+
+func init() {
+	DefaultBufferSize = os.Getpagesize()
 }
 
 // BLog struct is a threadsafe log writer inherit bufio.Writer

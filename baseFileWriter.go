@@ -9,6 +9,28 @@ import (
 	"time"
 )
 
+// ByteSize is type of sizes
+type ByteSize int
+
+const (
+	// unit of sizes
+
+	_ = iota // ignore first value by assigning to blank identifier
+	// KB unit of kilobyte
+	KB ByteSize = 1 << (10 * iota)
+	// MB unit of megabyte
+	MB
+	// GB unit of gigabyte
+	GB
+
+	// default logrotate condition
+
+	// DefaultRotateSize is default size when size base logrotate needed
+	DefaultRotateSize = 500 * MB
+	// DefaultRotateLines is default lines when lines base logrotate needed
+	DefaultRotateLines = 2000000 // 2 million
+)
+
 // BaseFileWriter defines a writer for single file.
 // It suppurts partially write while formatting message, logging level filtering,
 // logrotate, user defined hook for every logging action, change configuration

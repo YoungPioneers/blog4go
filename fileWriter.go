@@ -8,8 +8,7 @@ import (
 	"strings"
 )
 
-// FileWriter struct defines a writer for multi-files writer with different
-// message level
+// FileWriter struct defines a writer for multi-files writer with different message level
 type FileWriter struct {
 	level Level
 

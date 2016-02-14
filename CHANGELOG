@@ -52,6 +52,10 @@ All notable changes to this project will be documented in this file.
 - 部分有误注释。
 
 ## [0.3.0] - 2016-02-13
+### Added
+- 增加timeCache测试。
+
 ### Changed
 - 通用的write方法抽象成BLog.
-- file, console writer使用通用BLog
+- file, console writer使用通用BLog.
+- 删除const.go, 常量归于对应使用的文件中。
