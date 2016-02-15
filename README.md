@@ -97,7 +97,7 @@ config.xml
 		<file path="debug.log"></file>
 	</filter>
 	<filter levels="error,critical">
-		<rotatefile path="error.log" type="size" rotateSize="50000000"></rotatefile>
+		<rotatefile path="error.log" type="size" rotateSize="50000000" rotateLines="8000000"></rotatefile>
 	</filter>
 </blog4go>
 ```
