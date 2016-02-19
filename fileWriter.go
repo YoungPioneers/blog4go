@@ -30,27 +30,44 @@ type FileWriter struct {
 	level Level
 
 	// file writers
-	writers map[Level]*BaseFileWriter
+	writers map[Level]*baseFileWriter
 
 	closed bool
+
+	// configuration about user defined logging hook
+	// actual hook instance
+	hook Hook
+	// hook is called when message level exceed level of logging action
+	hookLevel Level
 }
 
 // NewFileWriter initialize a file writer
 // baseDir must be base directory of log files
-func NewFileWriter(baseDir string) (fileWriter *FileWriter, err error) {
-	fileWriter = new(FileWriter)
+func NewFileWriter(baseDir string) (err error) {
+	singltonLock.Lock()
+	defer singltonLock.Unlock()
+	if nil != blog {
+		return
+	}
+
+	fmt.Println("here")
+	fileWriter := new(FileWriter)
 	fileWriter.level = DEBUG
 	fileWriter.closed = false
 
-	fileWriter.writers = make(map[Level]*BaseFileWriter)
+	fileWriter.writers = make(map[Level]*baseFileWriter)
 	for _, level := range Levels {
 		fileName := fmt.Sprintf("%s.log", strings.ToLower(level.String()))
-		writer, err := NewBaseFileWriter(path.Join(baseDir, fileName))
+		writer, err := newBaseFileWriter(path.Join(baseDir, fileName))
 		if nil != err {
-			return nil, err
+			return err
 		}
 		fileWriter.writers[level] = writer
 	}
+
+	// log hook
+	fileWriter.hook = nil
+	fileWriter.hookLevel = DEBUG
 
 	blog = fileWriter
 	return
@@ -58,14 +75,20 @@ func NewFileWriter(baseDir string) (fileWriter *FileWriter, err error) {
 
 // NewFileWriterFromConfigAsFile initialize a file writer according to given config file
 // configFile must be the path to the config file
-func NewFileWriterFromConfigAsFile(configFile string) (fileWriter *FileWriter, err error) {
+func NewFileWriterFromConfigAsFile(configFile string) (err error) {
+	singltonLock.Lock()
+	defer singltonLock.Unlock()
+	if nil != blog {
+		return
+	}
+
 	// read config from file
 	config, err := readConfig(configFile)
 	if nil != err {
-		return nil, err
+		return
 	}
 
-	fileWriter = new(FileWriter)
+	fileWriter := new(FileWriter)
 
 	fileWriter.level = DEBUG
 	if level := LevelFromString(config.MinLevel); level.valid() {
@@ -73,7 +96,7 @@ func NewFileWriterFromConfigAsFile(configFile string) (fileWriter *FileWriter, e
 		fileWriter.level = level
 	}
 	fileWriter.closed = false
-	fileWriter.writers = make(map[Level]*BaseFileWriter)
+	fileWriter.writers = make(map[Level]*baseFileWriter)
 
 	for _, filter := range config.Filters {
 		var rotate = false
@@ -87,20 +110,20 @@ func NewFileWriterFromConfigAsFile(configFile string) (fileWriter *FileWriter, e
 			rotate = true
 		} else {
 			// config error
-			return nil, ErrFilePathNotFound
+			return ErrFilePathNotFound
 		}
 
 		// init a base file writer
-		writer, err := NewBaseFileWriter(filePath)
+		writer, err := newBaseFileWriter(filePath)
 		if nil != err {
-			return nil, err
+			return err
 		}
 
 		levels := strings.Split(filter.Levels, ",")
 		for _, levelStr := range levels {
 			var level Level
 			if level = LevelFromString(levelStr); !level.valid() {
-				return nil, ErrInvalidLevel
+				return ErrInvalidLevel
 			}
 
 			if rotate {
@@ -112,7 +135,7 @@ func NewFileWriterFromConfigAsFile(configFile string) (fileWriter *FileWriter, e
 					writer.SetRotateSize(filter.RotateFile.RotateSize)
 					writer.SetRotateLines(filter.RotateFile.RotateLines)
 				default:
-					return nil, ErrInvalidRotateType
+					return ErrInvalidRotateType
 				}
 			}
 
@@ -121,6 +144,10 @@ func NewFileWriterFromConfigAsFile(configFile string) (fileWriter *FileWriter, e
 			fileWriter.writers[level] = writer
 		}
 	}
+
+	// log hook
+	fileWriter.hook = nil
+	fileWriter.hookLevel = DEBUG
 
 	blog = fileWriter
 	return
@@ -156,16 +183,12 @@ func (writer *FileWriter) SetColored(colored bool) {
 
 // SetHook set hook for every logging actions
 func (writer *FileWriter) SetHook(hook Hook) {
-	for _, fileWriter := range writer.writers {
-		fileWriter.SetHook(hook)
-	}
+	writer.hook = hook
 }
 
-// SetHookLevel set hook level for every logging actions
+// SetHookLevel set when hook will be called
 func (writer *FileWriter) SetHookLevel(level Level) {
-	for _, fileWriter := range writer.writers {
-		fileWriter.SetHookLevel(level)
-	}
+	writer.hookLevel = level
 }
 
 // SetLevel set logging level threshold
@@ -189,6 +212,32 @@ func (writer *FileWriter) Close() {
 	writer.closed = true
 }
 
+func (writer *FileWriter) write(level Level, format string) {
+	defer func() {
+		// 异步调用log hook
+		if nil != writer.hook && !(level < writer.hookLevel) {
+			go func(level Level, format string) {
+				writer.hook.Fire(level, format)
+			}(level, format)
+		}
+	}()
+
+	writer.writers[level].write(level, format)
+}
+
+func (writer *FileWriter) writef(level Level, format string, args ...interface{}) {
+	defer func() {
+		// 异步调用log hook
+		if nil != writer.hook && !(level < writer.hookLevel) {
+			go func(level Level, format string, args ...interface{}) {
+				writer.hook.Fire(level, fmt.Sprintf(format, args...))
+			}(level, format, args...)
+		}
+	}()
+
+	writer.writers[level].writef(level, format, args...)
+}
+
 // Debug debug
 func (writer *FileWriter) Debug(format string) {
 	_, ok := writer.writers[DEBUG]
@@ -196,7 +245,7 @@ func (writer *FileWriter) Debug(format string) {
 		return
 	}
 
-	writer.writers[DEBUG].write(DEBUG, format)
+	writer.write(DEBUG, format)
 }
 
 // Debugf debugf
@@ -206,7 +255,7 @@ func (writer *FileWriter) Debugf(format string, args ...interface{}) {
 		return
 	}
 
-	writer.writers[DEBUG].writef(DEBUG, format, args...)
+	writer.writef(DEBUG, format, args...)
 }
 
 // Trace trace
@@ -216,7 +265,7 @@ func (writer *FileWriter) Trace(format string) {
 		return
 	}
 
-	writer.writers[TRACE].write(TRACE, format)
+	writer.write(TRACE, format)
 }
 
 // Tracef tracef
@@ -226,7 +275,7 @@ func (writer *FileWriter) Tracef(format string, args ...interface{}) {
 		return
 	}
 
-	writer.writers[TRACE].writef(TRACE, format, args...)
+	writer.writef(TRACE, format, args...)
 }
 
 // Info info
@@ -236,7 +285,7 @@ func (writer *FileWriter) Info(format string) {
 		return
 	}
 
-	writer.writers[INFO].write(INFO, format)
+	writer.write(INFO, format)
 }
 
 // Infof infof
@@ -246,7 +295,7 @@ func (writer *FileWriter) Infof(format string, args ...interface{}) {
 		return
 	}
 
-	writer.writers[INFO].writef(INFO, format, args...)
+	writer.writef(INFO, format, args...)
 }
 
 // Warn warn
@@ -256,7 +305,7 @@ func (writer *FileWriter) Warn(format string) {
 		return
 	}
 
-	writer.writers[WARNING].write(WARNING, format)
+	writer.write(WARNING, format)
 }
 
 // Warnf warnf
@@ -266,7 +315,7 @@ func (writer *FileWriter) Warnf(format string, args ...interface{}) {
 		return
 	}
 
-	writer.writers[WARNING].writef(WARNING, format, args...)
+	writer.writef(WARNING, format, args...)
 }
 
 // Error error
@@ -276,17 +325,17 @@ func (writer *FileWriter) Error(format string) {
 		return
 	}
 
-	writer.writers[ERROR].write(ERROR, format)
+	writer.write(ERROR, format)
 }
 
-// Errorf errorf
+// Errorf error
 func (writer *FileWriter) Errorf(format string, args ...interface{}) {
 	_, ok := writer.writers[ERROR]
 	if !ok || ERROR < writer.level {
 		return
 	}
 
-	writer.writers[ERROR].writef(ERROR, format, args...)
+	writer.writef(ERROR, format, args...)
 }
 
 // Critical critical
@@ -296,7 +345,7 @@ func (writer *FileWriter) Critical(format string) {
 		return
 	}
 
-	writer.writers[CRITICAL].write(CRITICAL, format)
+	writer.write(CRITICAL, format)
 }
 
 // Criticalf criticalf
@@ -306,5 +355,5 @@ func (writer *FileWriter) Criticalf(format string, args ...interface{}) {
 		return
 	}
 
-	writer.writers[CRITICAL].writef(CRITICAL, format, args...)
+	writer.writef(CRITICAL, format, args...)
 }

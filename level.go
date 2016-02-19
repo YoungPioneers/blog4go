@@ -109,8 +109,8 @@ func (level Level) String() string {
 	return LevelStrings[level]
 }
 
-// Prefix return formatted prefix string associate with a Level instance
-func (level Level) Prefix() string {
+// prefix return formatted prefix string associate with a Level instance
+func (level Level) prefix() string {
 	return Prefix[level]
 }
 

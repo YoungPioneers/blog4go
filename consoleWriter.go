@@ -23,6 +23,12 @@ type ConsoleWriter struct {
 
 // NewConsoleWriter initialize a console writer
 func NewConsoleWriter() (consoleWriter *ConsoleWriter, err error) {
+	singltonLock.Lock()
+	defer singltonLock.Unlock()
+	if nil != blog {
+		return
+	}
+
 	consoleWriter = new(ConsoleWriter)
 	consoleWriter.blog = NewBLog(os.Stdout)
 
@@ -36,6 +42,7 @@ func NewConsoleWriter() (consoleWriter *ConsoleWriter, err error) {
 
 	go consoleWriter.daemon()
 
+	blog = consoleWriter
 	return consoleWriter, nil
 }
 
@@ -94,9 +101,8 @@ func (writer *ConsoleWriter) Level() Level {
 }
 
 // SetLevel set logger level
-func (writer *ConsoleWriter) SetLevel(level Level) *ConsoleWriter {
+func (writer *ConsoleWriter) SetLevel(level Level) {
 	writer.blog.SetLevel(level)
-	return writer
 }
 
 // Colored return whether writer log with color
@@ -195,24 +201,6 @@ func (writer *ConsoleWriter) Infof(format string, args ...interface{}) {
 	writer.writef(INFO, format, args...)
 }
 
-// Error error
-func (writer *ConsoleWriter) Error(format string) {
-	if ERROR < writer.blog.Level() {
-		return
-	}
-
-	writer.write(ERROR, format)
-}
-
-// Errorf errorf
-func (writer *ConsoleWriter) Errorf(format string, args ...interface{}) {
-	if ERROR < writer.blog.Level() {
-		return
-	}
-
-	writer.writef(ERROR, format, args...)
-}
-
 // Warn warn
 func (writer *ConsoleWriter) Warn(format string) {
 	if WARNING < writer.blog.Level() {
@@ -229,6 +217,24 @@ func (writer *ConsoleWriter) Warnf(format string, args ...interface{}) {
 	}
 
 	writer.writef(WARNING, format, args...)
+}
+
+// Error error
+func (writer *ConsoleWriter) Error(format string) {
+	if ERROR < writer.blog.Level() {
+		return
+	}
+
+	writer.write(ERROR, format)
+}
+
+// Errorf error
+func (writer *ConsoleWriter) Errorf(format string, args ...interface{}) {
+	if ERROR < writer.blog.Level() {
+		return
+	}
+
+	writer.writef(ERROR, format, args...)
 }
 
 // Critical critical

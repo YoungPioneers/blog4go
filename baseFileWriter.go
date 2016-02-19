@@ -31,11 +31,11 @@ const (
 	DefaultRotateLines = 2000000 // 2 million
 )
 
-// BaseFileWriter defines a writer for single file.
+// baseFileWriter defines a writer for single file.
 // It suppurts partially write while formatting message, logging level filtering,
 // logrotate, user defined hook for every logging action, change configuration
 // on the fly and logging with colors.
-type BaseFileWriter struct {
+type baseFileWriter struct {
 	// configuration about file
 	// full path of the file
 	fileName string
@@ -85,20 +85,14 @@ type BaseFileWriter struct {
 
 	// sign decided logging with colors or not, default false
 	colored bool
-
-	// configuration about user defined logging hook
-	// actual hook instance
-	hook Hook
-	// hook is called when message level exceed level of logging action
-	hookLevel Level
 }
 
-// NewBaseFileWriter create a single file writer instance and return the poionter
+// NewbaseFileWriter create a single file writer instance and return the poionter
 // of it. When any errors happened during creation, a null writer and appropriate
 // will be returned.
 // fileName must be an absolute path to the destination log file
-func NewBaseFileWriter(fileName string) (fileWriter *BaseFileWriter, err error) {
-	fileWriter = new(BaseFileWriter)
+func newBaseFileWriter(fileName string) (fileWriter *baseFileWriter, err error) {
+	fileWriter = new(baseFileWriter)
 	fileWriter.fileName = fileName
 	// open file target file
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
@@ -127,22 +121,17 @@ func NewBaseFileWriter(fileName string) (fileWriter *BaseFileWriter, err error) 
 
 	fileWriter.colored = false
 
-	// log hook
-	fileWriter.hook = nil
-	fileWriter.hookLevel = DEBUG
-
 	go fileWriter.daemon()
 
-	blog = fileWriter
 	return fileWriter, nil
 }
 
-// daemon run in background as NewBaseFileWriter called.
+// daemon run in background as NewbaseFileWriter called.
 // It flushes writer buffer every 10 seconds.
 // It decides whether a time base when logrotate is needed.
 // It sums up lines && sizes already written. Alse it does the lines &&
 // size base logrotate
-func (writer *BaseFileWriter) daemon() {
+func (writer *baseFileWriter) daemon() {
 	// tick every seconds
 	// time base logrotate
 	t := time.Tick(1 * time.Second)
@@ -219,19 +208,12 @@ DaemonLoop:
 }
 
 // write writes pure message with specific level
-func (writer *BaseFileWriter) write(level Level, format string) {
+func (writer *baseFileWriter) write(level Level, format string) {
 	var size = 0
 	defer func() {
 		// logrotate
 		if writer.sizeRotated || writer.lineRotated {
 			writer.logSizeChan <- size
-		}
-
-		// 异步调用log hook
-		if nil != writer.hook && !(level < writer.hookLevel) {
-			go func(level Level, format string) {
-				writer.hook.Fire(level, format)
-			}(level, format)
 		}
 	}()
 
@@ -243,7 +225,7 @@ func (writer *BaseFileWriter) write(level Level, format string) {
 }
 
 // write formats message with specific level and write it
-func (writer *BaseFileWriter) writef(level Level, format string, args ...interface{}) {
+func (writer *baseFileWriter) writef(level Level, format string, args ...interface{}) {
 	// 格式化构造message
 	// 边解析边输出
 	// 使用 % 作占位符
@@ -256,13 +238,6 @@ func (writer *BaseFileWriter) writef(level Level, format string, args ...interfa
 		if writer.sizeRotated || writer.lineRotated {
 			writer.logSizeChan <- size
 		}
-
-		// 异步调用log hook
-		if nil != writer.hook && !(level < writer.hookLevel) {
-			go func(level Level, format string, args ...interface{}) {
-				writer.hook.Fire(level, fmt.Sprintf(format, args...))
-			}(level, format, args...)
-		}
 	}()
 
 	if writer.closed {
@@ -272,78 +247,8 @@ func (writer *BaseFileWriter) writef(level Level, format string, args ...interfa
 	size = writer.blog.writef(level, format, args...)
 }
 
-// SetTimeRotated toggle time base logrotate on the fly
-func (writer *BaseFileWriter) SetTimeRotated(timeRotated bool) {
-	writer.timeRotated = timeRotated
-}
-
-// RotateSize return size threshold when logrotate
-func (writer *BaseFileWriter) RotateSize() ByteSize {
-	return writer.rotateSize
-}
-
-// SetRotateSize set size when logroatate
-func (writer *BaseFileWriter) SetRotateSize(rotateSize ByteSize) {
-	if rotateSize > ByteSize(0) {
-		writer.sizeRotated = true
-		writer.rotateSize = rotateSize
-	} else {
-		writer.sizeRotated = false
-	}
-}
-
-// RotateLine return line threshold when logrotate
-func (writer *BaseFileWriter) RotateLine() int {
-	return writer.rotateLines
-}
-
-// SetRotateLines set line number when logrotate
-func (writer *BaseFileWriter) SetRotateLines(rotateLines int) {
-	if rotateLines > 0 {
-		writer.lineRotated = true
-		writer.rotateLines = rotateLines
-	} else {
-		writer.lineRotated = false
-	}
-}
-
-// Colored return whether writer log with color
-func (writer *BaseFileWriter) Colored() bool {
-	return writer.colored
-}
-
-// SetColored set logging color
-func (writer *BaseFileWriter) SetColored(colored bool) {
-	if colored == writer.colored {
-		return
-	}
-
-	writer.colored = colored
-	initPrefix(colored)
-}
-
-// SetHook set hook for every logging actions
-func (writer *BaseFileWriter) SetHook(hook Hook) {
-	writer.hook = hook
-}
-
-// SetHookLevel set when hook will be called
-func (writer *BaseFileWriter) SetHookLevel(level Level) {
-	writer.hookLevel = level
-}
-
-// Level return logging level threshold
-func (writer *BaseFileWriter) Level() Level {
-	return writer.blog.Level()
-}
-
-// SetLevel set logging level threshold
-func (writer *BaseFileWriter) SetLevel(level Level) {
-	writer.blog.SetLevel(level)
-}
-
 // Close close file writer
-func (writer *BaseFileWriter) Close() {
+func (writer *baseFileWriter) Close() {
 	if writer.closed {
 		return
 	}
@@ -353,110 +258,62 @@ func (writer *BaseFileWriter) Close() {
 	writer.closed = true
 }
 
-// Debug debug
-func (writer *BaseFileWriter) Debug(format string) {
-	if DEBUG < writer.blog.Level() {
-		return
-	}
-
-	writer.write(DEBUG, format)
+// SetTimeRotated toggle time base logrotate on the fly
+func (writer *baseFileWriter) SetTimeRotated(timeRotated bool) {
+	writer.timeRotated = timeRotated
 }
 
-// Debugf debugf
-func (writer *BaseFileWriter) Debugf(format string, args ...interface{}) {
-	if DEBUG < writer.blog.Level() {
-		return
-	}
-
-	writer.writef(DEBUG, format, args...)
+// RotateSize return size threshold when logrotate
+func (writer *baseFileWriter) RotateSize() ByteSize {
+	return writer.rotateSize
 }
 
-// Trace trace
-func (writer *BaseFileWriter) Trace(format string) {
-	if TRACE < writer.blog.Level() {
-		return
+// SetRotateSize set size when logroatate
+func (writer *baseFileWriter) SetRotateSize(rotateSize ByteSize) {
+	if rotateSize > ByteSize(0) {
+		writer.sizeRotated = true
+		writer.rotateSize = rotateSize
+	} else {
+		writer.sizeRotated = false
 	}
-
-	writer.write(TRACE, format)
 }
 
-// Tracef tracef
-func (writer *BaseFileWriter) Tracef(format string, args ...interface{}) {
-	if TRACE < writer.blog.Level() {
-		return
-	}
-
-	writer.writef(TRACE, format, args...)
+// RotateLine return line threshold when logrotate
+func (writer *baseFileWriter) RotateLine() int {
+	return writer.rotateLines
 }
 
-// Info info
-func (writer *BaseFileWriter) Info(format string) {
-	if INFO < writer.blog.Level() {
-		return
+// SetRotateLines set line number when logrotate
+func (writer *baseFileWriter) SetRotateLines(rotateLines int) {
+	if rotateLines > 0 {
+		writer.lineRotated = true
+		writer.rotateLines = rotateLines
+	} else {
+		writer.lineRotated = false
 	}
-
-	writer.write(INFO, format)
 }
 
-// Infof infof
-func (writer *BaseFileWriter) Infof(format string, args ...interface{}) {
-	if INFO < writer.blog.Level() {
-		return
-	}
-
-	writer.writef(INFO, format, args...)
+// Colored return whether writer log with color
+func (writer *baseFileWriter) Colored() bool {
+	return writer.colored
 }
 
-// Error error
-func (writer *BaseFileWriter) Error(format string) {
-	if ERROR < writer.blog.Level() {
+// SetColored set logging color
+func (writer *baseFileWriter) SetColored(colored bool) {
+	if colored == writer.colored {
 		return
 	}
 
-	writer.write(ERROR, format)
+	writer.colored = colored
+	initPrefix(colored)
 }
 
-// Errorf errorf
-func (writer *BaseFileWriter) Errorf(format string, args ...interface{}) {
-	if ERROR < writer.blog.Level() {
-		return
-	}
-
-	writer.writef(ERROR, format, args...)
+// Level return logging level threshold
+func (writer *baseFileWriter) Level() Level {
+	return writer.blog.Level()
 }
 
-// Warn warn
-func (writer *BaseFileWriter) Warn(format string) {
-	if WARNING < writer.blog.Level() {
-		return
-	}
-
-	writer.write(WARNING, format)
-}
-
-// Warnf warnf
-func (writer *BaseFileWriter) Warnf(format string, args ...interface{}) {
-	if WARNING < writer.blog.Level() {
-		return
-	}
-
-	writer.writef(WARNING, format, args...)
-}
-
-// Critical critical
-func (writer *BaseFileWriter) Critical(format string) {
-	if CRITICAL < writer.blog.Level() {
-		return
-	}
-
-	writer.write(CRITICAL, format)
-}
-
-// Criticalf criticalf
-func (writer *BaseFileWriter) Criticalf(format string, args ...interface{}) {
-	if CRITICAL < writer.blog.Level() {
-		return
-	}
-
-	writer.writef(CRITICAL, format, args...)
+// SetLevel set logging level threshold
+func (writer *baseFileWriter) SetLevel(level Level) {
+	writer.blog.SetLevel(level)
 }

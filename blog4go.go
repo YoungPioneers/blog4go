@@ -105,18 +105,18 @@ func NewBLog(in io.Writer) (blog *BLog) {
 
 // write writes pure message with specific level
 func (blog *BLog) write(level Level, format string) int {
-	// 统计日志size
-	var size = 0
-
 	blog.lock.Lock()
 	defer blog.lock.Unlock()
 
+	// 统计日志size
+	var size = 0
+
 	blog.writer.Write(timeCache.format)
-	blog.writer.WriteString(level.Prefix())
+	blog.writer.WriteString(level.prefix())
 	blog.writer.WriteString(format)
 	blog.writer.WriteByte(EOL)
 
-	size = len(timeCache.format) + len(level.Prefix()) + len(format) + 1
+	size = len(timeCache.format) + len(level.prefix()) + len(format) + 1
 	return size
 }
 
@@ -143,9 +143,9 @@ func (blog *BLog) writef(level Level, format string, args ...interface{}) int {
 	var s int
 
 	blog.writer.Write(timeCache.format)
-	blog.writer.WriteString(level.Prefix())
+	blog.writer.WriteString(level.prefix())
 
-	size += len(timeCache.format) + len(level.Prefix())
+	size += len(timeCache.format) + len(level.prefix())
 
 	for i, v := range format {
 		if tag {
@@ -232,4 +232,69 @@ func (blog *BLog) resetFile(in io.Writer) (err error) {
 	blog.writer.Reset(in)
 
 	return
+}
+
+// Debug static function for Debug
+func Debug(format string) {
+	blog.Debug(format)
+}
+
+// Debug static function for Debugf
+func Debugf(format string, args ...interface{}) {
+	blog.Debugf(format, args...)
+}
+
+// Trace static function for Trace
+func Trace(format string) {
+	blog.Trace(format)
+}
+
+// Trace static function for Tracef
+func Tracef(format string, args ...interface{}) {
+	blog.Tracef(format, args...)
+}
+
+// Info static function for Info
+func Info(format string) {
+	blog.Info(format)
+}
+
+// Info static function for Infof
+func Infof(format string, args ...interface{}) {
+	blog.Infof(format, args...)
+}
+
+// Warn static function for Warn
+func Warn(format string) {
+	blog.Warn(format)
+}
+
+// Warn static function for Warnf
+func Warnf(format string, args ...interface{}) {
+	blog.Warnf(format, args...)
+}
+
+// Error static function for Error
+func Error(format string) {
+	blog.Error(format)
+}
+
+// Error static function for Errorf
+func Errorf(format string, args ...interface{}) {
+	blog.Errorf(format, args...)
+}
+
+// Critical static function for Critical
+func Critical(format string) {
+	blog.Critical(format)
+}
+
+// Critical static function for Criticalf
+func Criticalf(format string, args ...interface{}) {
+	blog.Criticalf(format, args...)
+}
+
+// Close close the logger
+func Close() {
+	blog.Close()
 }

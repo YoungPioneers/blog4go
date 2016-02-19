@@ -27,6 +27,12 @@ type SocketWriter struct {
 
 // NewSocketWriter creates a socket writer
 func NewSocketWriter(network string, address string) (socketWriter *SocketWriter, err error) {
+	singltonLock.Lock()
+	defer singltonLock.Unlock()
+	if nil != blog {
+		return
+	}
+
 	socketWriter = new(SocketWriter)
 	socketWriter.level = DEBUG
 	socketWriter.closed = false
@@ -42,6 +48,7 @@ func NewSocketWriter(network string, address string) (socketWriter *SocketWriter
 	}
 	socketWriter.writer = conn
 
+	blog = socketWriter
 	return
 }
 
@@ -63,7 +70,7 @@ func (writer *SocketWriter) write(level Level, format string) {
 	}
 
 	buffer := bytes.NewBuffer(timeCache.format)
-	buffer.WriteString(level.Prefix())
+	buffer.WriteString(level.prefix())
 	buffer.WriteString(format)
 	writer.writer.Write(buffer.Bytes())
 }
@@ -87,7 +94,7 @@ func (writer *SocketWriter) writef(level Level, format string, args ...interface
 	}
 
 	buffer := bytes.NewBuffer(timeCache.format)
-	buffer.WriteString(level.Prefix())
+	buffer.WriteString(level.prefix())
 	buffer.WriteString(fmt.Sprintf(format, args...))
 	writer.writer.Write(buffer.Bytes())
 }
@@ -98,9 +105,8 @@ func (writer *SocketWriter) Level() Level {
 }
 
 // SetLevel set logger level
-func (writer *SocketWriter) SetLevel(level Level) *SocketWriter {
+func (writer *SocketWriter) SetLevel(level Level) {
 	writer.level = level
-	return writer
 }
 
 // SetHook set hook for logging action
@@ -180,24 +186,6 @@ func (writer *SocketWriter) Infof(format string, args ...interface{}) {
 	writer.writef(INFO, format, args...)
 }
 
-// Error error
-func (writer *SocketWriter) Error(format string) {
-	if ERROR < writer.level {
-		return
-	}
-
-	writer.write(ERROR, format)
-}
-
-// Errorf errorf
-func (writer *SocketWriter) Errorf(format string, args ...interface{}) {
-	if ERROR < writer.level {
-		return
-	}
-
-	writer.writef(ERROR, format, args...)
-}
-
 // Warn warn
 func (writer *SocketWriter) Warn(format string) {
 	if WARNING < writer.level {
@@ -214,6 +202,24 @@ func (writer *SocketWriter) Warnf(format string, args ...interface{}) {
 	}
 
 	writer.writef(WARNING, format, args...)
+}
+
+// Error error
+func (writer *SocketWriter) Error(format string) {
+	if ERROR < writer.level {
+		return
+	}
+
+	writer.write(ERROR, format)
+}
+
+// Errorf error
+func (writer *SocketWriter) Errorf(format string, args ...interface{}) {
+	if ERROR < writer.level {
+		return
+	}
+
+	writer.writef(ERROR, format, args...)
 }
 
 // Critical critical

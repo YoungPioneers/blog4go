@@ -61,3 +61,16 @@ All notable changes to this project will be documented in this file.
 - 通用的write方法抽象成BLog.
 - file, console writer使用通用BLog.
 - 删除const.go, 常量归于对应使用的文件中。
+
+## [0.5.0] - 2016-02-19
+### Removed
+- BaseFileWriter不再向外暴露。
+
+### Changed
+- 记录日志使用的实例改为全局实例，使用单例模式。
+
+### Added
+- Debug,Info等日志记录函数可通过静态方法调用。
+
+### Fixed
+- 修复example与测试用例，符合新的模式。
