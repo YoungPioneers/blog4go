@@ -19,7 +19,7 @@ type timeFormatCacheType struct {
 	format string
 }
 
-func BenchmarkBlog4goFormat(b *testing.B) {
+func BenchmarkBlog4go(b *testing.B) {
 	b.StopTimer()
 	err := blog4go.NewFileWriterFromConfigAsFile("blog4go_config.xml")
 	defer blog4go.Close()

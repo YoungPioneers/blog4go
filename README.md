@@ -10,6 +10,7 @@ Features
 ------------------
 * *Partially write* to the [bufio.Writer](https://golang.org/pkg/bufio/#Writer) as soon as posible while formatting message to improve performance
 * Support different logging output file for different logging level
+* Support configure with files in xml format
 * Configurable logrotate strategy
 * Call user defined hook in asynchronous mode for every logging action
 * Adjustable message formatting
