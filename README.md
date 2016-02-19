@@ -47,44 +47,20 @@ func (self *MyHook) Fire(level blog4go.Level, message string) {
 }
 
 func main() {
-	writer, err := blog4go.NewBaseFileWriter("output.log")
-	if nil != err {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-	defer writer.Close()
-	
-	// optionally set logrotate every day
-	writer.SetTimeRotated(true)
-	
-	// optionally set hook for logging
-	hook := new(MyHook)
-	writer.SetHook(hook)
-	writer.SetHookLevel(blog4go.INFO)
-	writer.Debugf("Good morning, %s", "eddie")	
-	
-	
 	// init a file write using xml config file
-	writersFromConfig, err := blog4go.NewFileWriterFromConfigAsFile("config.xml")
-	if nil != err {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-	defer writersFromConfig.Close()
-		
-	
+	err := blog4go.NewFileWriterFromConfigAsFile("config.xml")
 	// init a file writer just give it a logging base directory
-	writers, err := blog4go.blog4go.NewBaseFileWriter("output.log")
+	// err := blog4go.blog4go.NewBaseFileWriter("output.log")
 	if nil != err {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-	
-	defer writersFromConfig.Close()
-	writersFromConfig.SetHook(hook) // writersFromConfig can be replaced with writers
-	writersFromConfig.SetHookLevel(blog4go.INFO)
-	writersFromConfig.Debugf("Good morning, %s", "eddie")	
-	
+	defer blog4go.Close()
+
+	blog4go.SetHook(hook) // writersFromConfig can be replaced with writers
+	blog4go.SetHookLevel(blog4go.INFO)
+	blog4go.Debugf("Good morning, %s", "eddie")
+
 }
 ```
 

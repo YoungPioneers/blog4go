@@ -68,6 +68,10 @@ type Writer interface {
 	Errorf(format string, args ...interface{})
 	Critical(format string)
 	Criticalf(format string, args ...interface{})
+
+	// hook
+	SetHook(hook Hook)
+	SetHookLevel(level Level)
 }
 
 func init() {
