@@ -26,14 +26,14 @@ type SocketWriter struct {
 }
 
 // NewSocketWriter creates a socket writer
-func NewSocketWriter(network string, address string) (socketWriter *SocketWriter, err error) {
+func NewSocketWriter(network string, address string) (err error) {
 	singltonLock.Lock()
 	defer singltonLock.Unlock()
 	if nil != blog {
 		return
 	}
 
-	socketWriter = new(SocketWriter)
+	socketWriter := new(SocketWriter)
 	socketWriter.level = DEBUG
 	socketWriter.closed = false
 	socketWriter.lock = new(sync.Mutex)
@@ -44,7 +44,7 @@ func NewSocketWriter(network string, address string) (socketWriter *SocketWriter
 
 	conn, err := net.Dial(network, address)
 	if nil != err {
-		return nil, err
+		return err
 	}
 	socketWriter.writer = conn
 

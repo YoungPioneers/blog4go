@@ -22,14 +22,14 @@ type ConsoleWriter struct {
 }
 
 // NewConsoleWriter initialize a console writer
-func NewConsoleWriter() (consoleWriter *ConsoleWriter, err error) {
+func NewConsoleWriter() (err error) {
 	singltonLock.Lock()
 	defer singltonLock.Unlock()
 	if nil != blog {
 		return
 	}
 
-	consoleWriter = new(ConsoleWriter)
+	consoleWriter := new(ConsoleWriter)
 	consoleWriter.blog = NewBLog(os.Stdout)
 
 	consoleWriter.closed = false
@@ -43,7 +43,7 @@ func NewConsoleWriter() (consoleWriter *ConsoleWriter, err error) {
 	go consoleWriter.daemon()
 
 	blog = consoleWriter
-	return consoleWriter, nil
+	return nil
 }
 
 func (writer *ConsoleWriter) daemon() {

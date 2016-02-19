@@ -9,8 +9,8 @@ import (
 
 func BenchmarkSocketWriter(b *testing.B) {
 	b.StopTimer()
-	writer, err := NewSocketWriter("udp", "127.0.0.1:12124")
-	defer writer.Close()
+	err := NewSocketWriter("udp", "127.0.0.1:12124")
+	defer blog.Close()
 	if nil != err {
 		fmt.Println(err.Error())
 	}
@@ -18,6 +18,6 @@ func BenchmarkSocketWriter(b *testing.B) {
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		writer.Debugf("haha %s. en\\en, always %d and %f", "eddie", 18, 3.1415)
+		blog.Debugf("haha %s. en\\en, always %d and %f", "eddie", 18, 3.1415)
 	}
 }

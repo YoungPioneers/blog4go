@@ -40,7 +40,7 @@ func TestLevelStringFormat(t *testing.T) {
 		t.Error("CRITICAL Level to wrong string format.")
 	}
 
-	if " [CRITICAL] " != CRITICAL.Prefix() {
+	if " [CRITICAL] " != CRITICAL.prefix() {
 		t.Error("CRITICAL Level to wrong prefix string format.")
 	}
 
