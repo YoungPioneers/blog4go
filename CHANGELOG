@@ -71,6 +71,7 @@ All notable changes to this project will be documented in this file.
 
 ### Added
 - Debug,Info等日志记录函数可通过静态方法调用。
+- 增加fmt,logrus,seelog benchmark
 
 ### Fixed
 - 修复example与测试用例，符合新的模式。

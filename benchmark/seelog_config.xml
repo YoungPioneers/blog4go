@@ -1,0 +1,13 @@
+<seelog>
+	<outputs>
+
+		<filter levels="info,error" formatid="short">
+			<file path="seelog_output.log"/>
+
+		</filter>
+	</outputs>
+
+	<formats>
+		<format id="short" format="%Date %Time [%LEVEL] %Msg%n"/>
+	</formats>
+</seelog>

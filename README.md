@@ -115,7 +115,19 @@ go get -u github.com/YoungPioneers/blog4go
 Benchmark
 ------------------
 
-TODO
+I do some benchmark on a HDD disk comparing amoung fmt,blog4go,seelog,logrus. [Benchmark Code](https://github.com/YoungPioneers/blog4go/benchmark)
+
+```
+BenchmarkBlog4goFormat-4         	 1000000	      1056 ns/op
+BenchmarkFmtFormat-4             	  500000	      2491 ns/op
+BenchmarkFmtWithTimecacheFormat-4	  300000	      4566 ns/op
+BenchmarkLogrus-4                	  100000	     14216 ns/op
+BenchmarkLogrusWithTimecache-4   	  100000	     14541 ns/op
+BenchmarkSeelogFormat-4          	   50000	     34426 ns/op
+```
+
+It shows that blog4go can write log very fast~
+
 
 Documentation
 ------------------
