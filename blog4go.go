@@ -24,6 +24,12 @@ const (
 )
 
 var (
+	// blog is the singleton instance use for blog.write/writef
+	blog Writer
+
+	// global mutex log used for singlton
+	singltonLock *sync.Mutex
+
 	// DefaultBufferSize bufio buffer size
 	DefaultBufferSize = 4096 // default memory page size
 	// ErrInvalidFormat invalid format error
@@ -41,13 +47,31 @@ var (
 // Both write and writef may have an asynchronous call of user defined
 // function before write and writef function end..
 type Writer interface {
-	Close() // do anything end before program end
+	// Close do anything end before program end
+	Close()
 
-	write(level Level, format string)                       // write pure string
-	writef(level Level, format string, args ...interface{}) // format string and write it
+	// Level return logging level threshold
+	Level() Level
+	// SetLevel set logging level threshold
+	SetLevel(level Level)
+
+	// write/writef functions with different levels
+	Debug(format string)
+	Debugf(format string, args ...interface{})
+	Trace(format string)
+	Tracef(format string, args ...interface{})
+	Info(format string)
+	Infof(format string, args ...interface{})
+	Warn(format string)
+	Warnf(format string, args ...interface{})
+	Error(format string)
+	Errorf(format string, args ...interface{})
+	Critical(format string)
+	Criticalf(format string, args ...interface{})
 }
 
 func init() {
+	singltonLock = new(sync.Mutex)
 	DefaultBufferSize = os.Getpagesize()
 }
 

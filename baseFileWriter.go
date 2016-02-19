@@ -104,7 +104,7 @@ func NewBaseFileWriter(fileName string) (fileWriter *BaseFileWriter, err error) 
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 	fileWriter.file = file
 	if nil != err {
-		return nil, err
+		return fileWriter, err
 	}
 	fileWriter.blog = NewBLog(file)
 
@@ -133,6 +133,7 @@ func NewBaseFileWriter(fileName string) (fileWriter *BaseFileWriter, err error) 
 
 	go fileWriter.daemon()
 
+	blog = fileWriter
 	return fileWriter, nil
 }
 
@@ -337,9 +338,8 @@ func (writer *BaseFileWriter) Level() Level {
 }
 
 // SetLevel set logging level threshold
-func (writer *BaseFileWriter) SetLevel(level Level) *BaseFileWriter {
+func (writer *BaseFileWriter) SetLevel(level Level) {
 	writer.blog.SetLevel(level)
-	return writer
 }
 
 // Close close file writer

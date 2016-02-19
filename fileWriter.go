@@ -52,6 +52,7 @@ func NewFileWriter(baseDir string) (fileWriter *FileWriter, err error) {
 		fileWriter.writers[level] = writer
 	}
 
+	blog = fileWriter
 	return
 }
 
@@ -119,9 +120,9 @@ func NewFileWriterFromConfigAsFile(configFile string) (fileWriter *FileWriter, e
 			fileWriter.SetColored(filter.Colored)
 			fileWriter.writers[level] = writer
 		}
-
 	}
 
+	blog = fileWriter
 	return
 }
 
@@ -168,12 +169,11 @@ func (writer *FileWriter) SetHookLevel(level Level) {
 }
 
 // SetLevel set logging level threshold
-func (writer *FileWriter) SetLevel(level Level) *FileWriter {
+func (writer *FileWriter) SetLevel(level Level) {
 	writer.level = level
 	for _, fileWriter := range writer.writers {
 		fileWriter.SetLevel(level)
 	}
-	return writer
 }
 
 // Level return logging level threshold
