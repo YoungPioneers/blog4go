@@ -239,7 +239,7 @@ func Debug(format string) {
 	blog.Debug(format)
 }
 
-// Debug static function for Debugf
+// Debugf static function for Debugf
 func Debugf(format string, args ...interface{}) {
 	blog.Debugf(format, args...)
 }
@@ -249,7 +249,7 @@ func Trace(format string) {
 	blog.Trace(format)
 }
 
-// Trace static function for Tracef
+// Tracef static function for Tracef
 func Tracef(format string, args ...interface{}) {
 	blog.Tracef(format, args...)
 }
@@ -259,7 +259,7 @@ func Info(format string) {
 	blog.Info(format)
 }
 
-// Info static function for Infof
+// Infof static function for Infof
 func Infof(format string, args ...interface{}) {
 	blog.Infof(format, args...)
 }
@@ -269,7 +269,7 @@ func Warn(format string) {
 	blog.Warn(format)
 }
 
-// Warn static function for Warnf
+// Warnf static function for Warnf
 func Warnf(format string, args ...interface{}) {
 	blog.Warnf(format, args...)
 }
@@ -279,7 +279,7 @@ func Error(format string) {
 	blog.Error(format)
 }
 
-// Error static function for Errorf
+// Errorf static function for Errorf
 func Errorf(format string, args ...interface{}) {
 	blog.Errorf(format, args...)
 }
@@ -289,7 +289,7 @@ func Critical(format string) {
 	blog.Critical(format)
 }
 
-// Critical static function for Criticalf
+// Criticalf static function for Criticalf
 func Criticalf(format string, args ...interface{}) {
 	blog.Criticalf(format, args...)
 }
