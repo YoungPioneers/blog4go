@@ -115,7 +115,7 @@ go get -u github.com/YoungPioneers/blog4go
 Benchmark
 ------------------
 
-I do some benchmark on a HDD disk comparing amoung fmt,blog4go,seelog,logrus. [Benchmark Code](https://github.com/YoungPioneers/blog4go/benchmark)
+I do some benchmark on a HDD disk comparing amoung fmt,blog4go,seelog,logrus. [Benchmark Code](https://github.com/YoungPioneers/blog4go/tree/master/benchmark)
 
 ```
 BenchmarkBlog4goFormat-4         	 1000000	      1056 ns/op
