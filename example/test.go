@@ -24,7 +24,7 @@ func (self *MyHook) Fire(level blog4go.Level, message string) {
 func main() {
 	runtime.GOMAXPROCS(4)
 
-	err := blog4go.NewFileWriterFromConfigAsFile("config.xml")
+	err := blog4go.NewWriterFromConfigAsFile("config.xml")
 	if nil != err {
 		fmt.Println(err.Error())
 		os.Exit(1)

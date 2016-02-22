@@ -22,14 +22,14 @@ type ConsoleWriter struct {
 }
 
 // NewConsoleWriter initialize a console writer
-func NewConsoleWriter() (err error) {
+func NewConsoleWriter() (consoleWriter *ConsoleWriter, err error) {
 	singltonLock.Lock()
 	defer singltonLock.Unlock()
 	if nil != blog {
 		return
 	}
 
-	consoleWriter := new(ConsoleWriter)
+	consoleWriter = new(ConsoleWriter)
 	consoleWriter.blog = NewBLog(os.Stdout)
 
 	consoleWriter.closed = false
@@ -43,7 +43,7 @@ func NewConsoleWriter() (err error) {
 	go consoleWriter.daemon()
 
 	blog = consoleWriter
-	return nil
+	return consoleWriter, nil
 }
 
 func (writer *ConsoleWriter) daemon() {
@@ -140,6 +140,21 @@ func (writer *ConsoleWriter) Close() {
 	writer.blog.flush()
 	writer.blog = nil
 	writer.closed = true
+}
+
+// SetTimeRotated do nothing
+func (writer *ConsoleWriter) SetTimeRotated() {
+	return
+}
+
+// SetRotateSize do nothing
+func SetRotateSize(rotateSize ByteSize) {
+	return
+}
+
+// SetRotateLines do nothing
+func SetRotateLines(rotateLines int) {
+	return
 }
 
 // flush buffer to disk

@@ -72,6 +72,12 @@ type Writer interface {
 	// hook
 	SetHook(hook Hook)
 	SetHookLevel(level Level)
+
+	// logrotate
+	SetTimeRotated()
+	SetRotateSize(rotateSize ByteSize)
+	SetRotateLines(rotateLines int)
+	SetColored(colored bool)
 }
 
 func init() {
