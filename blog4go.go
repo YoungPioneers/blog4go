@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"sync"
 )
 
@@ -56,6 +57,8 @@ type Writer interface {
 	SetLevel(level Level)
 
 	// write/writef functions with different levels
+	write(level Level, format string)
+	writef(level Level, format string, args ...interface{})
 	Debug(format string)
 	Debugf(format string, args ...interface{})
 	Trace(format string)
@@ -74,7 +77,7 @@ type Writer interface {
 	SetHookLevel(level Level)
 
 	// logrotate
-	SetTimeRotated()
+	SetTimeRotated(timeRotated bool)
 	SetRotateSize(rotateSize ByteSize)
 	SetRotateLines(rotateLines int)
 	SetColored(colored bool)
@@ -83,6 +86,120 @@ type Writer interface {
 func init() {
 	singltonLock = new(sync.Mutex)
 	DefaultBufferSize = os.Getpagesize()
+}
+
+// NewWriterFromConfigAsFile initialize a writer according to given config file
+// configFile must be the path to the config file
+func NewWriterFromConfigAsFile(configFile string) (err error) {
+	singltonLock.Lock()
+	defer singltonLock.Unlock()
+	if nil != blog {
+		return
+	}
+
+	// read config from file
+	config, err := readConfig(configFile)
+	if nil != err {
+		return
+	}
+
+	fmt.Printf("\n\n%+v\n\n", config)
+
+	multiWriter := new(MultiWriter)
+
+	multiWriter.level = DEBUG
+	if level := LevelFromString(config.MinLevel); level.valid() {
+		multiWriter.level = level
+	}
+
+	multiWriter.closed = false
+	multiWriter.writers = make(map[Level]Writer)
+
+	for _, filter := range config.Filters {
+		fmt.Printf("%+v\n", filter)
+		var rotate = false
+		var isConsole = false
+		var isSocket = false
+
+		// get file path
+		var filePath string
+		if nil != &filter.File && "" != filter.File.Path {
+			// single file
+			filePath = filter.File.Path
+			rotate = false
+		} else if nil != &filter.RotateFile && "" != filter.RotateFile.Path {
+			// multi files
+			filePath = filter.RotateFile.Path
+			rotate = true
+		} else if nil != &filter.Console {
+			isConsole = true
+
+		} else if nil != &filter.Socket {
+			isSocket = true
+		} else {
+			// config error
+			return ErrFilePathNotFound
+		}
+
+		levels := strings.Split(filter.Levels, ",")
+		fmt.Printf("%+v, %t, %t\n", levels, isConsole, isSocket)
+		for _, levelStr := range levels {
+			var level Level
+			if level = LevelFromString(levelStr); !level.valid() {
+				return ErrInvalidLevel
+			}
+
+			if isConsole {
+				// console writer
+				writer, err := newConsoleWriter()
+				if nil != err {
+					return err
+				}
+
+				multiWriter.writers[level] = writer
+				continue
+			}
+
+			if isSocket {
+				// socket writer
+				writer, err := newSocketWriter(filter.Socket.Network, filter.Socket.Address)
+				if nil != err {
+					return err
+				}
+
+				multiWriter.writers[level] = writer
+				continue
+			}
+
+			// init a base file writer
+			writer, err := newBaseFileWriter(filePath)
+			if nil != err {
+				return err
+			}
+
+			if rotate {
+				// set logrotate strategy
+				switch filter.RotateFile.Type {
+				case TypeTimeBaseRotate:
+					writer.SetTimeRotated(true)
+				case TypeSizeBaseRotate:
+					writer.SetRotateSize(filter.RotateFile.RotateSize)
+					writer.SetRotateLines(filter.RotateFile.RotateLines)
+				default:
+					return ErrInvalidRotateType
+				}
+			}
+
+			// set color
+			multiWriter.SetColored(filter.Colored)
+			multiWriter.writers[level] = writer
+			fmt.Printf("%+v, %+v\n", writer, level)
+		}
+	}
+
+	blog = multiWriter
+	//fmt.Printf("%+v\n", blog)
+	return
 }
 
 // BLog struct is a threadsafe log writer inherit bufio.Writer

@@ -21,7 +21,7 @@ type ConsoleWriter struct {
 	hookLevel Level
 }
 
-// NewConsoleWriter initialize a console writer
+// NewConsoleWriter initialize a console writer, singlton
 func NewConsoleWriter() (consoleWriter *ConsoleWriter, err error) {
 	singltonLock.Lock()
 	defer singltonLock.Unlock()
@@ -29,6 +29,18 @@ func NewConsoleWriter() (consoleWriter *ConsoleWriter, err error) {
 		return
 	}
 
+	consoleWriter, err = newConsoleWriter()
+	if nil != err {
+		return nil, err
+	}
+
+	blog = consoleWriter
+	go consoleWriter.daemon()
+	return consoleWriter, nil
+}
+
+// newConsoleWriter initialize a console writer, not singlton
+func newConsoleWriter() (consoleWriter *ConsoleWriter, err error) {
 	consoleWriter = new(ConsoleWriter)
 	consoleWriter.blog = NewBLog(os.Stdout)
 
@@ -143,17 +155,17 @@ func (writer *ConsoleWriter) Close() {
 }
 
 // SetTimeRotated do nothing
-func (writer *ConsoleWriter) SetTimeRotated() {
+func (writer *ConsoleWriter) SetTimeRotated(timeRotated bool) {
 	return
 }
 
 // SetRotateSize do nothing
-func SetRotateSize(rotateSize ByteSize) {
+func (writer *ConsoleWriter) SetRotateSize(rotateSize ByteSize) {
 	return
 }
 
 // SetRotateLines do nothing
-func SetRotateLines(rotateLines int) {
+func (writer *ConsoleWriter) SetRotateLines(rotateLines int) {
 	return
 }
 
@@ -243,7 +255,7 @@ func (writer *ConsoleWriter) Error(format string) {
 	writer.write(ERROR, format)
 }
 
-// Errorf error
+// Errorf errorf
 func (writer *ConsoleWriter) Errorf(format string, args ...interface{}) {
 	if ERROR < writer.blog.Level() {
 		return

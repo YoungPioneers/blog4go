@@ -29,6 +29,7 @@ func main() {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
+	fmt.Println("Create writer success")
 	defer blog4go.Close()
 	blog4go.Debug("Debug")
 	blog4go.Trace("Trace")

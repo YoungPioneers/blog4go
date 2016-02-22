@@ -4,6 +4,9 @@ package blog4go
 
 import (
 	"errors"
+	"fmt"
+	"path"
+	"strings"
 )
 
 var (
@@ -29,6 +32,38 @@ type MultiWriter struct {
 	hook Hook
 	// hook is called when message level exceed level of logging action
 	hookLevel Level
+}
+
+// NewFileWriter initialize a file writer
+// baseDir must be base directory of log files
+func NewMultiWriter(baseDir string) (err error) {
+	singltonLock.Lock()
+	defer singltonLock.Unlock()
+	if nil != blog {
+		return
+	}
+
+	fmt.Println("here")
+	fileWriter := new(MultiWriter)
+	fileWriter.level = DEBUG
+	fileWriter.closed = false
+
+	fileWriter.writers = make(map[Level]Writer)
+	for _, level := range Levels {
+		fileName := fmt.Sprintf("%s.log", strings.ToLower(level.String()))
+		writer, err := newBaseFileWriter(path.Join(baseDir, fileName))
+		if nil != err {
+			return err
+		}
+		fileWriter.writers[level] = writer
+	}
+
+	// log hook
+	fileWriter.hook = nil
+	fileWriter.hookLevel = DEBUG
+
+	blog = fileWriter
+	return
 }
 
 // SetTimeRotated toggle time base logrotate

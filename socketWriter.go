@@ -25,14 +25,22 @@ type SocketWriter struct {
 	lock *sync.Mutex
 }
 
-// NewSocketWriter creates a socket writer
+// NewSocketWriter creates a socket writer, singlton
 func NewSocketWriter(network string, address string) (socketWriter *SocketWriter, err error) {
 	singltonLock.Lock()
 	defer singltonLock.Unlock()
-	if nil != blog {
-		return
+
+	socketWriter, err = newSocketWriter(network, address)
+	if nil != err {
+		return nil, err
 	}
 
+	blog = socketWriter
+	return socketWriter, nil
+}
+
+// newSocketWriter creates a socket writer, not singlton
+func newSocketWriter(network string, address string) (socketWriter *SocketWriter, err error) {
 	socketWriter = new(SocketWriter)
 	socketWriter.level = DEBUG
 	socketWriter.closed = false
@@ -117,6 +125,26 @@ func (writer *SocketWriter) SetHook(hook Hook) {
 // SetHookLevel set when hook will be called
 func (writer *SocketWriter) SetHookLevel(level Level) {
 	writer.hookLevel = level
+}
+
+// SetTimeRotated do nothing
+func (writer *SocketWriter) SetTimeRotated(timeRotated bool) {
+	return
+}
+
+// SetRotateSize do nothing
+func (writer *SocketWriter) SetRotateSize(rotateSize ByteSize) {
+	return
+}
+
+// SetRotateLines do nothing
+func (writer *SocketWriter) SetRotateLines(rotateLines int) {
+	return
+}
+
+// SetColored do nothing
+func (writer *SocketWriter) SetColored(colored bool) {
+	return
 }
 
 // Close will close the writer

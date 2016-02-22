@@ -317,3 +317,73 @@ func (writer *baseFileWriter) Level() Level {
 func (writer *baseFileWriter) SetLevel(level Level) {
 	writer.blog.SetLevel(level)
 }
+
+// SetHook do nothing
+func (writer *baseFileWriter) SetHook(hook Hook) {
+	return
+}
+
+// SetHookLevel do nothing
+func (writer *baseFileWriter) SetHookLevel(level Level) {
+	return
+}
+
+// Debug do nothing
+func (writer *baseFileWriter) Debug(format string) {
+	return
+}
+
+// Debugf do nothing
+func (writer *baseFileWriter) Debugf(format string, args ...interface{}) {
+	return
+}
+
+// Trace do nothing
+func (writer *baseFileWriter) Trace(format string) {
+	return
+}
+
+// Tracef do nothing
+func (writer *baseFileWriter) Tracef(format string, args ...interface{}) {
+	return
+}
+
+// Info do nothing
+func (writer *baseFileWriter) Info(format string) {
+	return
+}
+
+// Infof do nothing
+func (writer *baseFileWriter) Infof(format string, args ...interface{}) {
+	return
+}
+
+// Warn do nothing
+func (writer *baseFileWriter) Warn(format string) {
+	return
+}
+
+// Warnf do nothing
+func (writer *baseFileWriter) Warnf(format string, args ...interface{}) {
+	return
+}
+
+// Error do nothing
+func (writer *baseFileWriter) Error(format string) {
+	return
+}
+
+// Errorf do nothing
+func (writer *baseFileWriter) Errorf(format string, args ...interface{}) {
+	return
+}
+
+// Critical do nothing
+func (writer *baseFileWriter) Critical(format string) {
+	return
+}
+
+// Criticalf do nothing
+func (writer *baseFileWriter) Criticalf(format string, args ...interface{}) {
+	return
+}
