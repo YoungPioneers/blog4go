@@ -2,12 +2,12 @@
 	<filter levels="trace">
 		<rotatefile path="trace.log" type="time"></rotatefile>
 	</filter>
-	<filter levels="debug" colored="true">
+	<filter levels="debug,info" colored="true">
 		<file path="debug.log"></file>
 	</filter>
-	<filter levels="info" colored="true">
-		<console></console>
-	</filter>
+	<!--<filter levels="info" colored="true">-->
+		<!--<console></console>-->
+	<!--</filter>-->
 	<filter levels="warn,error">
 		<rotatefile path="error.log" type="size" rotateSize="50000000"></rotatefile>
 	</filter>

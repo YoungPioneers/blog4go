@@ -118,7 +118,6 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 	for _, filter := range config.Filters {
 		fmt.Printf("%+v\n", filter)
 		var rotate = false
-		var isConsole = false
 		var isSocket = false
 
 		// get file path
@@ -131,10 +130,7 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 			// multi files
 			filePath = filter.RotateFile.Path
 			rotate = true
-		} else if nil != &filter.Console {
-			isConsole = true
-
-		} else if nil != &filter.Socket {
+		} else if nil != &filter.Socket && "" != filter.Socket.Address && "" != filter.Socket.Network {
 			isSocket = true
 		} else {
 			// config error
@@ -142,22 +138,10 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 		}
 
 		levels := strings.Split(filter.Levels, ",")
-		fmt.Printf("%+v, %t, %t\n", levels, isConsole, isSocket)
 		for _, levelStr := range levels {
 			var level Level
 			if level = LevelFromString(levelStr); !level.valid() {
 				return ErrInvalidLevel
-			}
-
-			if isConsole {
-				// console writer
-				writer, err := newConsoleWriter()
-				if nil != err {
-					return err
-				}
-
-				multiWriter.writers[level] = writer
-				continue
 			}
 
 			if isSocket {

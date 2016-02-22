@@ -62,7 +62,7 @@ All notable changes to this project will be documented in this file.
 - file, console writer使用通用BLog.
 - 删除const.go, 常量归于对应使用的文件中。
 
-## [0.5.0] - 2016-02-19
+## [0.5.0] - 2016-02-22
 ### Removed
 - BaseFileWriter不再向外暴露。
 
@@ -72,6 +72,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Debug,Info等日志记录函数可通过静态方法调用。
 - 增加fmt,logrus,seelog benchmark
+- 配置文件初始话writer支持所有writer类型(除console)。
 
 ### Fixed
 - 修复example与测试用例，符合新的模式。

@@ -29,8 +29,8 @@ type filter struct {
 	Colored    bool       `xml:"colored,attr"`
 	File       file       `xml:"file"`
 	RotateFile rotateFile `xml:"rotatefile"`
-	Console    console    `xml:"console"`
-	Socket     socket     `xml:"socket"`
+	//Console    console    `xml:"console"`
+	Socket socket `xml:"socket"`
 }
 
 type file struct {
@@ -46,9 +46,9 @@ type rotateFile struct {
 	RotateSize  ByteSize `xml:"rotateSize,attr"`
 }
 
-type console struct {
-	XMLName xml.Name `xml:"console"`
-}
+//type console struct {
+//XMLName xml.Name `xml:"console"`
+//}
 
 type socket struct {
 	XMLName xml.Name `xml:"socket"`
@@ -56,6 +56,12 @@ type socket struct {
 	Address string   `xml:"address,attr"`
 }
 
+// check if config is valid
+func (config *Config) valid() bool {
+	return true
+}
+
+// read config from a xml file
 func readConfig(fileName string) (*Config, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
