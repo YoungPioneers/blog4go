@@ -9,7 +9,7 @@ import (
 
 func BenchmarkFileWriters(b *testing.B) {
 	b.StopTimer()
-	err := NewMultiWriter("/tmp")
+	err := NewFileWriter("/tmp")
 	defer blog.Close()
 	if nil != err {
 		fmt.Println(err.Error())

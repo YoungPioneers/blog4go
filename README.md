@@ -27,11 +27,11 @@ Features
 Quick-start
 ------------------
 
-```go
+```
 package main
 
 import (
-	"github.com/YoungPioneers/blog4go"
+	log "github.com/YoungPioneers/blog4go"
 	"fmt"
 	"os"
 )
@@ -42,24 +42,31 @@ type MyHook struct {
 }
 
 // when log-level exceed level, call the hook
-func (self *MyHook) Fire(level blog4go.Level, message string) {
+// level is the level associate with that logging action.
+// message is the formatted string already written.
+func (self *MyHook) Fire(level log.Level, message string) {
 	fmt.Println(message)
 }
 
 func main() {
 	// init a file write using xml config file
-	err := blog4go.NewFileWriterFromConfigAsFile("config.xml")
-	// init a file writer just give it a logging base directory
-	// err := blog4go.blog4go.NewBaseFileWriter("output.log")
+	err := log.NewFileWriterFromConfigAsFile("config.xml")
 	if nil != err {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
-	defer blog4go.Close()
+	defer log.Close()
 
-	blog4go.SetHook(hook) // writersFromConfig can be replaced with writers
-	blog4go.SetHookLevel(blog4go.INFO)
-	blog4go.Debugf("Good morning, %s", "eddie")
+	// initialize your hook instance
+	hook := new(MyHook)
+	log.SetHook(hook) // writersFromConfig can be replaced with writers
+	log.SetHookLevel(log.INFO)
+
+	// optionally set output colored
+	log.SetColored(true)
+
+	log.Debugf("Good morning, %s", "eddie")
+	log.Warn("It's time to have breakfast")
 
 }
 ```
@@ -115,7 +122,7 @@ TODO
 Examples
 ---------------
 
-[EXAMPLES](https://github.com/YoungPioneers/blog4go/tree/master/examples)
+Full examples please view [EXAMPLES](https://github.com/YoungPioneers/blog4go/tree/master/examples)
 
 
 Changelog
