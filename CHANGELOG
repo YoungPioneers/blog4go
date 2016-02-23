@@ -69,6 +69,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - 记录日志使用的实例改为全局实例，使用单例模式。
 - 完善examples,按种类分目录存放。
+- 完善benchmark,使用timeCache及比较100 goroutines下的运行情况。
 
 ### Added
 - Debug,Info等日志记录函数可通过静态方法调用。
