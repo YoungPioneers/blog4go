@@ -4,7 +4,8 @@ package blog4go
 
 import (
 	"fmt"
-	"github.com/YoungPioneers/blog4go"
+	log "github.com/YoungPioneers/blog4go"
+	"sync"
 	"testing"
 	"time"
 )
@@ -19,10 +20,10 @@ type timeFormatCacheType struct {
 	format string
 }
 
-func BenchmarkBlog4go(b *testing.B) {
+func BenchmarkBlog4goSingleGoroutine(b *testing.B) {
 	b.StopTimer()
-	err := blog4go.NewFileWriterFromConfigAsFile("blog4go_config.xml")
-	defer blog4go.Close()
+	err := log.NewWriterFromConfigAsFile("blog4go_config.xml")
+	defer log.Close()
 	if nil != err {
 		fmt.Println(err.Error())
 	}
@@ -32,7 +33,44 @@ func BenchmarkBlog4go(b *testing.B) {
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		blog4go.Infof("haha %s. en\\en, always %d and %f, %t, %+v", "eddie", 18, 3.1415, true, t)
-		blog4go.Errorf("haha %s. en\\en, always %d and %f, %t, %+v", "eddie", 18, 3.1415, true, t)
+		log.Infof("haha %s. en\\en, always %d and %f, %t, %+v", "eddie", 18, 3.1415, true, t)
+		log.Errorf("haha %s. en\\en, always %d and %f, %t, %+v", "eddie", 18, 3.1415, true, t)
 	}
+}
+
+func BenchmarkBlog4goMultiGoroutine(b *testing.B) {
+	b.StopTimer()
+	err := log.NewWriterFromConfigAsFile("blog4go_config.xml")
+	defer log.Close()
+	if nil != err {
+		fmt.Println(err.Error())
+	}
+
+	t := T{123, "test"}
+
+	var wg sync.WaitGroup
+	var beginWg sync.WaitGroup
+
+	f := func() {
+		defer wg.Done()
+		beginWg.Wait()
+		for i := 0; i < b.N; i++ {
+			log.Infof("haha %s. en\\en, always %d and %f, %t, %+v", "eddie", 18, 3.1415, true, t)
+			log.Errorf("haha %s. en\\en, always %d and %f, %t, %+v", "eddie", 18, 3.1415, true, t)
+		}
+	}
+
+	for i := 0; i < 100; i++ {
+		wg.Add(1)
+		beginWg.Add(1)
+	}
+
+	b.StartTimer()
+
+	for i := 0; i < 100; i++ {
+		go f()
+		beginWg.Done()
+	}
+
+	wg.Wait()
 }
