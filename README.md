@@ -21,7 +21,7 @@ Features
 * Different output writers
 	* Console writer
 	* File writer
-	* Socket writer 
+	* Socket writer
 
 
 Quick-start
