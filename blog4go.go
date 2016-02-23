@@ -103,8 +103,6 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 		return
 	}
 
-	fmt.Printf("\n\n%+v\n\n", config)
-
 	multiWriter := new(MultiWriter)
 
 	multiWriter.level = DEBUG
@@ -116,7 +114,6 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 	multiWriter.writers = make(map[Level]Writer)
 
 	for _, filter := range config.Filters {
-		fmt.Printf("%+v\n", filter)
 		var rotate = false
 		var isSocket = false
 
@@ -177,12 +174,10 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 			// set color
 			multiWriter.SetColored(filter.Colored)
 			multiWriter.writers[level] = writer
-			fmt.Printf("%+v, %+v\n", writer, level)
 		}
 	}
 
 	blog = multiWriter
-	//fmt.Printf("%+v\n", blog)
 	return
 }
 
@@ -343,6 +338,21 @@ func (blog *BLog) resetFile(in io.Writer) (err error) {
 	blog.writer.Reset(in)
 
 	return
+}
+
+// SetHook set hook for logging action
+func SetHook(hook Hook) {
+	blog.SetHook(hook)
+}
+
+// SetHookLevel set when hook will be called
+func SetHookLevel(level Level) {
+	blog.SetHookLevel(level)
+}
+
+// SetColored set logging color
+func SetColored(colored bool) {
+	blog.SetColored(colored)
 }
 
 // Debug static function for Debug

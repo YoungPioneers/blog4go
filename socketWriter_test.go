@@ -9,7 +9,7 @@ import (
 
 func BenchmarkSocketWriter(b *testing.B) {
 	b.StopTimer()
-	err := NewSocketWriter("udp", "127.0.0.1:12124")
+	_, err := NewSocketWriter("udp", "127.0.0.1:12124")
 	defer blog.Close()
 	if nil != err {
 		fmt.Println(err.Error())

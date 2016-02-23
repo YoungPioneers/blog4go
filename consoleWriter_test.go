@@ -9,7 +9,7 @@ import (
 
 func BenchmarkConsoleWriter(b *testing.B) {
 	b.StopTimer()
-	err := NewConsoleWriter()
+	_, err := NewConsoleWriter()
 	defer blog.Close()
 	if nil != err {
 		fmt.Println(err.Error())

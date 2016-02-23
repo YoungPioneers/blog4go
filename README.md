@@ -115,7 +115,7 @@ TODO
 Examples
 ---------------
 
-[EXAMPLES](https://github.com/YoungPioneers/blog4go/tree/master/example)
+[EXAMPLES](https://github.com/YoungPioneers/blog4go/tree/master/examples)
 
 
 Changelog

@@ -5,6 +5,8 @@ package blog4go
 import (
 	"fmt"
 	"os"
+	"path"
+	"strings"
 	"sync"
 	"time"
 )
@@ -124,6 +126,37 @@ func newBaseFileWriter(fileName string) (fileWriter *baseFileWriter, err error) 
 	go fileWriter.daemon()
 
 	return fileWriter, nil
+}
+
+// NewFileWriter initialize a file writer
+// baseDir must be base directory of log files
+func NewFileWriter(baseDir string) (err error) {
+	singltonLock.Lock()
+	defer singltonLock.Unlock()
+	if nil != blog {
+		return
+	}
+
+	fileWriter := new(MultiWriter)
+	fileWriter.level = DEBUG
+	fileWriter.closed = false
+
+	fileWriter.writers = make(map[Level]Writer)
+	for _, level := range Levels {
+		fileName := fmt.Sprintf("%s.log", strings.ToLower(level.String()))
+		writer, err := newBaseFileWriter(path.Join(baseDir, fileName))
+		if nil != err {
+			return err
+		}
+		fileWriter.writers[level] = writer
+	}
+
+	// log hook
+	fileWriter.hook = nil
+	fileWriter.hookLevel = DEBUG
+
+	blog = fileWriter
+	return
 }
 
 // daemon run in background as NewbaseFileWriter called.
