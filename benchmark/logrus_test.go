@@ -13,7 +13,6 @@ import (
 )
 
 func BenchmarkLogrusSingleGoroutine(b *testing.B) {
-	b.StopTimer()
 	file, err := os.OpenFile("output_logrus.log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 	if nil != err {
 		fmt.Println(err.Error())
@@ -23,8 +22,7 @@ func BenchmarkLogrusSingleGoroutine(b *testing.B) {
 
 	t := T{123, "test"}
 
-	b.StartTimer()
-
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		log.Printf("%s [%s] haha %s. en\\en, always %d and %f, %t, %+v\n", time.Now().Format("2006-01-02 15:04:05"), "INFO", "eddie", 18, 3.1415, true, t)
 		log.Printf("%s [%s] haha %s. en\\en, always %d and %f, %t, %+v\n", time.Now().Format("2006-01-02 15:04:05"), "ERROR", "eddie", 18, 3.1415, true, t)
@@ -32,7 +30,6 @@ func BenchmarkLogrusSingleGoroutine(b *testing.B) {
 }
 
 func BenchmarkLogrusWithTimecacheSingleGoroutine(b *testing.B) {
-	b.StopTimer()
 	now := time.Now()
 
 	timeCache := timeFormatCacheType{
@@ -65,8 +62,7 @@ func BenchmarkLogrusWithTimecacheSingleGoroutine(b *testing.B) {
 
 	t := T{123, "test"}
 
-	b.StartTimer()
-
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		log.Printf("%s [%s] haha %s. en\\en, always %d and %f, %t, %+v\n", timeCache.format, "INFO", "eddie", 18, 3.1415, true, t)
 		log.Printf("%s [%s] haha %s. en\\en, always %d and %f, %t, %+v\n", timeCache.format, "ERROR", "eddie", 18, 3.1415, true, t)
@@ -74,7 +70,6 @@ func BenchmarkLogrusWithTimecacheSingleGoroutine(b *testing.B) {
 }
 
 func BenchmarkLogrusWithTimecacheMultiGoroutine(b *testing.B) {
-	b.StopTimer()
 	now := time.Now()
 
 	timeCache := timeFormatCacheType{
@@ -124,8 +119,7 @@ func BenchmarkLogrusWithTimecacheMultiGoroutine(b *testing.B) {
 		beginWg.Add(1)
 	}
 
-	b.StartTimer()
-
+	b.ResetTimer()
 	for i := 0; i < 100; i++ {
 		go f()
 		beginWg.Done()

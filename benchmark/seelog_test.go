@@ -11,7 +11,6 @@ import (
 )
 
 func BenchmarkSeelogSingleGoroutine(b *testing.B) {
-	b.StopTimer()
 	logger, err := log.LoggerFromConfigAsFile("seelog_config.xml")
 	if nil != err {
 		fmt.Println(err.Error())
@@ -19,8 +18,7 @@ func BenchmarkSeelogSingleGoroutine(b *testing.B) {
 
 	t := T{123, "test"}
 
-	b.StartTimer()
-
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		logger.Infof("haha %s. en\\en, always %d and %f, %t, %+v", "eddie", 18, 3.1415, true, t)
 		logger.Errorf("haha %s. en\\en, always %d and %f, %t, %+v", "eddie", 18, 3.1415, true, t)
@@ -28,7 +26,6 @@ func BenchmarkSeelogSingleGoroutine(b *testing.B) {
 }
 
 func BenchmarkSeelogMultiGoroutine(b *testing.B) {
-	b.StopTimer()
 	logger, err := log.LoggerFromConfigAsFile("seelog_config.xml")
 	if nil != err {
 		fmt.Println(err.Error())
@@ -53,8 +50,7 @@ func BenchmarkSeelogMultiGoroutine(b *testing.B) {
 		beginWg.Add(1)
 	}
 
-	b.StartTimer()
-
+	b.ResetTimer()
 	for i := 0; i < 100; i++ {
 		go f()
 		beginWg.Done()

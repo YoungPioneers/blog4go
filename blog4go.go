@@ -72,6 +72,9 @@ type Writer interface {
 	Critical(format string)
 	Criticalf(format string, args ...interface{})
 
+	// flush log to disk
+	flush()
+
 	// hook
 	SetHook(hook Hook)
 	SetHookLevel(level Level)
@@ -353,6 +356,11 @@ func SetHookLevel(level Level) {
 // SetColored set logging color
 func SetColored(colored bool) {
 	blog.SetColored(colored)
+}
+
+// Flush flush logs to disk
+func Flush() {
+	blog.flush()
 }
 
 // Debug static function for Debug

@@ -62,7 +62,7 @@ All notable changes to this project will be documented in this file.
 - file, console writer使用通用BLog.
 - 删除const.go, 常量归于对应使用的文件中。
 
-## [0.5.0] - 2016-02-22
+## [0.5.0] - 2016-02-25
 ### Removed
 - BaseFileWriter不再向外暴露。
 
@@ -70,11 +70,15 @@ All notable changes to this project will be documented in this file.
 - 记录日志使用的实例改为全局实例，使用单例模式。
 - 完善examples,按种类分目录存放。
 - 完善benchmark,使用timeCache及比较100 goroutines下的运行情况。
+- 合并原baseFileWriter.go和FileWriter.go.
+- 测试用例StopTimer,StartTimer合并为RestartTimer.
 
 ### Added
 - Debug,Info等日志记录函数可通过静态方法调用。
 - 增加fmt,logrus,seelog benchmark
 - 配置文件初始话writer支持所有writer类型(除console)。
+- 写文件测试，检验有没漏写。
+- Writer interface增加flush方法，刷内存至磁盘。
 
 ### Fixed
 - 修复example与测试用例，符合新的模式。

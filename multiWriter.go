@@ -117,6 +117,13 @@ func (writer *MultiWriter) writef(level Level, format string, args ...interface{
 	writer.writers[level].writef(level, format, args...)
 }
 
+// flush flush logs to disk
+func (writer *MultiWriter) flush() {
+	for _, writer := range writer.writers {
+		writer.flush()
+	}
+}
+
 // Debug debug
 func (writer *MultiWriter) Debug(format string) {
 	_, ok := writer.writers[DEBUG]

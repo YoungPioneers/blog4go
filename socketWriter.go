@@ -160,6 +160,11 @@ func (writer *SocketWriter) Close() {
 	writer.closed = true
 }
 
+// flush do nothing
+func (writer *SocketWriter) flush() {
+	return
+}
+
 // Debug debug
 func (writer *SocketWriter) Debug(format string) {
 	if DEBUG < writer.level {

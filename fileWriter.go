@@ -361,6 +361,11 @@ func (writer *baseFileWriter) SetHookLevel(level Level) {
 	return
 }
 
+// flush flush logs to disk
+func (writer *baseFileWriter) flush() {
+	writer.blog.flush()
+}
+
 // Debug do nothing
 func (writer *baseFileWriter) Debug(format string) {
 	return

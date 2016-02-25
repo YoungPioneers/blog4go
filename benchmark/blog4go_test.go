@@ -21,7 +21,6 @@ type timeFormatCacheType struct {
 }
 
 func BenchmarkBlog4goSingleGoroutine(b *testing.B) {
-	b.StopTimer()
 	err := log.NewWriterFromConfigAsFile("blog4go_config.xml")
 	defer log.Close()
 	if nil != err {
@@ -30,8 +29,7 @@ func BenchmarkBlog4goSingleGoroutine(b *testing.B) {
 
 	t := T{123, "test"}
 
-	b.StartTimer()
-
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		log.Infof("haha %s. en\\en, always %d and %f, %t, %+v", "eddie", 18, 3.1415, true, t)
 		log.Errorf("haha %s. en\\en, always %d and %f, %t, %+v", "eddie", 18, 3.1415, true, t)
@@ -39,7 +37,6 @@ func BenchmarkBlog4goSingleGoroutine(b *testing.B) {
 }
 
 func BenchmarkBlog4goMultiGoroutine(b *testing.B) {
-	b.StopTimer()
 	err := log.NewWriterFromConfigAsFile("blog4go_config.xml")
 	defer log.Close()
 	if nil != err {
@@ -65,8 +62,7 @@ func BenchmarkBlog4goMultiGoroutine(b *testing.B) {
 		beginWg.Add(1)
 	}
 
-	b.StartTimer()
-
+	b.ResetTimer()
 	for i := 0; i < 100; i++ {
 		go f()
 		beginWg.Done()

@@ -64,20 +64,19 @@ func (config *Config) valid() bool {
 // read config from a xml file
 func readConfig(fileName string) (*Config, error) {
 	file, err := os.Open(fileName)
-	if err != nil {
+	if nil != err {
 		return nil, err
 	}
 	defer file.Close()
 
 	in, err := ioutil.ReadAll(file)
-	if err != nil {
+	if nil != err {
 		return nil, err
-
 	}
 
 	config := new(Config)
 	err = xml.Unmarshal(in, config)
-	if err != nil {
+	if nil != err {
 		return nil, err
 	}
 

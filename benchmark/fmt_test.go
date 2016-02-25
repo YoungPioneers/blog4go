@@ -13,7 +13,6 @@ import (
 )
 
 func BenchmarkFmtFormatSingleGoroutine(b *testing.B) {
-	b.StopTimer()
 	file, err := os.OpenFile("fmt_output.log", os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 	if nil != err {
 		fmt.Println(err.Error())
@@ -22,8 +21,7 @@ func BenchmarkFmtFormatSingleGoroutine(b *testing.B) {
 
 	t := T{123, "test"}
 
-	b.StartTimer()
-
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		writer.WriteString(fmt.Sprintf("%s [%s] haha %s. en\\en, always %d and %f, %t, %+v", time.Now().Format("2006-01-02 15:04:05"), "DEBUG", "eddie", 18, 3.1415, true, t))
 		writer.WriteString(fmt.Sprintf("%s [%s] haha %s. en\\en, always %d and %f, %t, %+v", time.Now().Format("2006-01-02 15:04:05"), "ERROR", "eddie", 18, 3.1415, true, t))
@@ -32,7 +30,6 @@ func BenchmarkFmtFormatSingleGoroutine(b *testing.B) {
 }
 
 func BenchmarkFmtFormatWithTimecacheSingleGoroutine(b *testing.B) {
-	b.StopTimer()
 	now := time.Now()
 
 	timeCache := timeFormatCacheType{
@@ -64,8 +61,7 @@ func BenchmarkFmtFormatWithTimecacheSingleGoroutine(b *testing.B) {
 
 	t := T{123, "test"}
 
-	b.StartTimer()
-
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		writer.WriteString(fmt.Sprintf("%s %s haha %s. en\\en, always %d and %f, %t, %+v", timeCache.format, "INFO", "eddie", 18, 3.1415, true, t))
 		writer.WriteString(fmt.Sprintf("%s %s haha %s. en\\en, always %d and %f, %t, %+v", timeCache.format, "ERROR", "eddie", 18, 3.1415, true, t))
@@ -74,7 +70,6 @@ func BenchmarkFmtFormatWithTimecacheSingleGoroutine(b *testing.B) {
 }
 
 func BenchmarkFmtFormatWithTimecacheMultiGoroutine(b *testing.B) {
-	b.StopTimer()
 	now := time.Now()
 
 	timeCache := timeFormatCacheType{
@@ -128,8 +123,7 @@ func BenchmarkFmtFormatWithTimecacheMultiGoroutine(b *testing.B) {
 		beginWg.Add(1)
 	}
 
-	b.StartTimer()
-
+	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 	}
 
