@@ -72,6 +72,7 @@ All notable changes to this project will be documented in this file.
 - 完善benchmark,使用timeCache及比较100 goroutines下的运行情况。
 - 合并原baseFileWriter.go和FileWriter.go.
 - 测试用例StopTimer,StartTimer合并为RestartTimer.
+- fileWriter改为每秒flush一次。
 
 ### Added
 - Debug,Info等日志记录函数可通过静态方法调用。

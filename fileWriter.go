@@ -160,7 +160,7 @@ func NewFileWriter(baseDir string) (err error) {
 }
 
 // daemon run in background as NewbaseFileWriter called.
-// It flushes writer buffer every 10 seconds.
+// It flushes writer buffer every 1 second.
 // It decides whether a time base when logrotate is needed.
 // It sums up lines && sizes already written. Alse it does the lines &&
 // size base logrotate
@@ -168,9 +168,9 @@ func (writer *baseFileWriter) daemon() {
 	// tick every seconds
 	// time base logrotate
 	t := time.Tick(1 * time.Second)
-	// tick every 10 seconds
+	// tick every 1 second
 	// auto flush writer buffer
-	f := time.Tick(10 * time.Second)
+	f := time.Tick(1 * time.Second)
 
 DaemonLoop:
 	for {
