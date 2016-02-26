@@ -14,8 +14,9 @@ before_install:
 install:
         - go get github.com/golang/lint/golint
 
-env:
-        - GIMME_OS=linux GIMME_ARCH=amd64
+#env:
+        #- GIMME_OS=linux GIMME_ARCH=amd64
+        - COVERALLS_REPO_TOKEN=huangjunwei
 
 script:
         - $HOME/gopath/bin/goveralls
