@@ -1,60 +1,180 @@
 <!DOCTYPE html>
 <html>
-
   <head>
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="description" content="Blog4go : Partial Logger">
-
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
-
-    <title>Blog4go</title>
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>Blog4go by YoungPioneers</title>
   </head>
 
   <body>
+    <div id="container">
+      <div class="inner">
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/YoungPioneers/blog4go">View on GitHub</a>
-
-          <h1 id="project_title">Blog4go</h1>
-          <h2 id="project_tagline">Partial Logger</h2>
-
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/YoungPioneers/blog4go/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/YoungPioneers/blog4go/tarball/master">Download this project as a tar.gz file</a>
-            </section>
+        <header>
+          <h1>Blog4go</h1>
+          <h2>Partial Logger</h2>
         </header>
-    </div>
 
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-        <h1>
-<a id="blog4go" class="anchor" href="#blog4go" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>blog4go</h1>
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/YoungPioneers/blog4go/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/YoungPioneers/blog4go/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/YoungPioneers/blog4go" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
 
-<p><a href="https://travis-ci.org/YoungPioneers/blog4go"><img src="https://travis-ci.org/YoungPioneers/blog4go.svg?branch=master" alt="Build Status"></a></p>
+        <hr>
 
-<p>一个轻量级的，很装逼的log lib(现在还超级烂)
-现在还在初步开发阶段中，初步的benchmark比 fmt+bufio 快接近50%，比seelog快大约4倍，logrus快4倍</p>
+        <section id="main_content">
+          <h1>
+<a id="introduction" class="anchor" href="#introduction" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Introduction</h1>
+
+<p>BLog4go is authorized by <a href="https://www.youmi.net/">YOUMI</a>. It is an efficient logging library written in the <a href="http://golang.org/">Go</a> programming language, providing logging hook, log rotate, filtering and formatting log message. </p>
+
+<p><a href="https://travis-ci.org/YoungPioneers/blog4go"><img src="https://travis-ci.org/YoungPioneers/blog4go.svg?branch=master" alt="Build Status"></a>
+<a href="https://coveralls.io/github/YoungPioneers/blog4go?branch=master"><img src="https://coveralls.io/repos/github/YoungPioneers/blog4go/badge.svg?branch=master" alt="Coverage Status"></a></p>
 
 <h2>
-<a id="change-log" class="anchor" href="#change-log" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Change log</h2>
+<a id="features" class="anchor" href="#features" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Features</h2>
+
+<ul>
+<li>
+<em>Partially write</em> to the <a href="https://golang.org/pkg/bufio/#Writer">bufio.Writer</a> as soon as posible while formatting message to improve performance</li>
+<li>Support different logging output file for different logging level</li>
+<li>Support configure with files in xml format</li>
+<li>Configurable logrotate strategy</li>
+<li>Call user defined hook in asynchronous mode for every logging action</li>
+<li>Adjustable message formatting</li>
+<li>Configurable logging behavier when looging <em>on the fly</em> without restarting</li>
+<li>Suit configuration to the environment when logging start</li>
+<li>Try best to get every done in background</li>
+<li>File writer can be configured according to given config file</li>
+<li>Different output writers
+
+<ul>
+<li>Console writer</li>
+<li>File writer</li>
+<li>Socket writer</li>
+</ul>
+</li>
+</ul>
+
+<h2>
+<a id="quick-start" class="anchor" href="#quick-start" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Quick-start</h2>
+
+<pre><code>package main
+
+import (
+    log "github.com/YoungPioneers/blog4go"
+    "fmt"
+    "os"
+)
+
+// optionally set user defined hook for logging
+type MyHook struct {
+    something string
+}
+
+// when log-level exceed level, call the hook
+// level is the level associate with that logging action.
+// message is the formatted string already written.
+func (self *MyHook) Fire(level log.Level, message string) {
+    fmt.Println(message)
+}
+
+func main() {
+    // init a file write using xml config file
+    err := log.NewFileWriterFromConfigAsFile("config.xml")
+    if nil != err {
+        fmt.Println(err.Error())
+        os.Exit(1)
+    }
+    defer log.Close()
+
+    // initialize your hook instance
+    hook := new(MyHook)
+    log.SetHook(hook) // writersFromConfig can be replaced with writers
+    log.SetHookLevel(log.INFO)
+
+    // optionally set output colored
+    log.SetColored(true)
+
+    log.Debugf("Good morning, %s", "eddie")
+    log.Warn("It's time to have breakfast")
+
+}
+</code></pre>
+
+<p>config.xml</p>
+
+<div class="highlight highlight-text-xml"><pre>&lt;<span class="pl-ent">blog4go</span> <span class="pl-e">minlevel</span>=<span class="pl-s"><span class="pl-pds">"</span>info<span class="pl-pds">"</span></span>&gt;
+    &lt;<span class="pl-ent">filter</span> <span class="pl-e">levels</span>=<span class="pl-s"><span class="pl-pds">"</span>trace<span class="pl-pds">"</span></span>&gt;
+        &lt;<span class="pl-ent">rotatefile</span> <span class="pl-e">path</span>=<span class="pl-s"><span class="pl-pds">"</span>trace.log<span class="pl-pds">"</span></span> <span class="pl-e">type</span>=<span class="pl-s"><span class="pl-pds">"</span>time<span class="pl-pds">"</span></span>&gt;&lt;/<span class="pl-ent">rotatefile</span>&gt;
+    &lt;/<span class="pl-ent">filter</span>&gt;
+    &lt;<span class="pl-ent">filter</span> <span class="pl-e">levels</span>=<span class="pl-s"><span class="pl-pds">"</span>debug,info<span class="pl-pds">"</span></span> <span class="pl-e">colored</span>=<span class="pl-s"><span class="pl-pds">"</span>true<span class="pl-pds">"</span></span>&gt;
+        &lt;<span class="pl-ent">file</span> <span class="pl-e">path</span>=<span class="pl-s"><span class="pl-pds">"</span>debug.log<span class="pl-pds">"</span></span>&gt;&lt;/<span class="pl-ent">file</span>&gt;
+    &lt;/<span class="pl-ent">filter</span>&gt;
+    &lt;<span class="pl-ent">filter</span> <span class="pl-e">levels</span>=<span class="pl-s"><span class="pl-pds">"</span>error,critical<span class="pl-pds">"</span></span>&gt;
+        &lt;<span class="pl-ent">rotatefile</span> <span class="pl-e">path</span>=<span class="pl-s"><span class="pl-pds">"</span>error.log<span class="pl-pds">"</span></span> <span class="pl-e">type</span>=<span class="pl-s"><span class="pl-pds">"</span>size<span class="pl-pds">"</span></span> <span class="pl-e">rotateSize</span>=<span class="pl-s"><span class="pl-pds">"</span>50000000<span class="pl-pds">"</span></span> <span class="pl-e">rotateLines</span>=<span class="pl-s"><span class="pl-pds">"</span>8000000<span class="pl-pds">"</span></span>&gt;&lt;/<span class="pl-ent">rotatefile</span>&gt;
+    &lt;/<span class="pl-ent">filter</span>&gt;
+&lt;/<span class="pl-ent">blog4go</span>&gt;</pre></div>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h2>
+
+<p>If you don't have the Go development environment installed, visit the 
+<a href="http://golang.org/doc/install.html">Getting Started</a> document and follow the instructions. Once you're ready, execute the following command:</p>
+
+<pre><code>go get -u github.com/YoungPioneers/blog4go
+</code></pre>
+
+<h2>
+<a id="benchmark" class="anchor" href="#benchmark" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Benchmark</h2>
+
+<p>I do some benchmark on a HDD disk comparing amoung fmt,blog4go,seelog,logrus. <a href="https://github.com/YoungPioneers/blog4go/tree/master/benchmark">Benchmark Code</a></p>
+
+<pre><code>BenchmarkBlog4goSingleGoroutine-4                    1000000          1087 ns/op
+BenchmarkBlog4goMultiGoroutine-4                       30000         56569 ns/op
+BenchmarkFmtFormatSingleGoroutine-4                   300000          5104 ns/op
+BenchmarkFmtFormatWithTimecacheSingleGoroutine-4      300000          4256 ns/op
+BenchmarkFmtFormatWithTimecacheMultiGoroutine-4         3000        509579 ns/op
+BenchmarkLogrusSingleGoroutine-4                      100000         13757 ns/op
+BenchmarkLogrusWithTimecacheSingleGoroutine-4         100000         12752 ns/op
+BenchmarkLogrusWithTimecacheMultiGoroutine-4            1000       2049809 ns/op
+BenchmarkSeelogSingleGoroutine-4                       50000         32846 ns/op
+BenchmarkSeelogMultiGoroutine-4                         1000       3191334 ns/op
+</code></pre>
+
+<p>It shows that blog4go can write log very fast, especially in situation with multi goroutines running at the same time~</p>
+
+<h2>
+<a id="documentation" class="anchor" href="#documentation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Documentation</h2>
+
+<p>TODO</p>
+
+<h2>
+<a id="examples" class="anchor" href="#examples" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Examples</h2>
+
+<p>Full examples please view <a href="https://github.com/YoungPioneers/blog4go/tree/master/examples">EXAMPLES</a></p>
+
+<h2>
+<a id="changelog" class="anchor" href="#changelog" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Changelog</h2>
 
 <p><a href="https://raw.githubusercontent.com/YoungPioneers/blog4go/master/CHANGELOG">CHANGELOG</a></p>
-      </section>
+        </section>
+
+        <footer>
+          Blog4go is maintained by <a href="https://github.com/YoungPioneers">YoungPioneers</a><br>
+          This page was generated by <a href="https://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+        
+      </div>
     </div>
-
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p class="copyright">Blog4go maintained by <a href="https://github.com/YoungPioneers">YoungPioneers</a></p>
-        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
-      </footer>
-    </div>
-
-    
-
   </body>
 </html>
