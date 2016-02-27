@@ -59,7 +59,7 @@ func TestFileWriterSingleGoroutine(t *testing.T) {
 	}
 
 	if 100*100 != lines {
-		t.Error("it loses %d lines.", 100*100-lines)
+		t.Errorf("it loses %d lines.", 100*100-lines)
 	}
 
 	// clean logs
