@@ -13,14 +13,14 @@ type MyHook struct {
 	message string
 }
 
-func (self *MyHook) add() {
-	self.cnt++
+func (hook *MyHook) add() {
+	hook.cnt++
 }
 
-func (self *MyHook) Fire(level Level, message string) {
-	self.add()
-	self.level = level
-	self.message = message
+func (hook *MyHook) Fire(level Level, message string) {
+	hook.add()
+	hook.level = level
+	hook.message = message
 }
 
 func TestHook(t *testing.T) {
