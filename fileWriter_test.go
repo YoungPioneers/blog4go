@@ -14,7 +14,7 @@ import (
 
 // test if log lose in single goroutine mode
 func TestFileWriterSingleGoroutine(t *testing.T) {
-	err := NewFileWriter("/tmp")
+	err := NewFileWriter("/tmp", false)
 	defer blog.Close()
 	if nil != err {
 		t.Errorf("initialize file writer faied. err: %s", err.Error())
@@ -70,7 +70,7 @@ func TestFileWriterSingleGoroutine(t *testing.T) {
 }
 
 func BenchmarkFileWriters(b *testing.B) {
-	err := NewFileWriter("/tmp")
+	err := NewFileWriter("/tmp", false)
 	defer blog.Close()
 	if nil != err {
 		fmt.Println(err.Error())
