@@ -194,7 +194,7 @@ DaemonLoop:
 				// need time base logrotate
 				writer.sizeRotateTimes = 0
 
-				fileName := fmt.Sprintf("%s.%s", writer.fileName, timeCache.dateYesterday)
+				fileName := fmt.Sprintf("%s.%s", writer.fileName, timeCache.date)
 				file, _ := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 
 				writer.file.Close()
