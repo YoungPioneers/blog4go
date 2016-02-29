@@ -32,7 +32,7 @@ const (
 	// DefaultRotateLines is default lines when lines base logrotate needed
 	DefaultRotateLines = 2000000 // 2 million
 
-	// DefaultLogExpireDays
+	// DefaultLogExpireDays is the default days of logs to be keeped
 	DefaultLogExpireDays = 7
 )
 
