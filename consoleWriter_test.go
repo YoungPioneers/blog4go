@@ -3,7 +3,6 @@
 package blog4go
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -11,7 +10,7 @@ func BenchmarkConsoleWriter(b *testing.B) {
 	_, err := NewConsoleWriter()
 	defer blog.Close()
 	if nil != err {
-		fmt.Println(err.Error())
+		b.Error(err.Error())
 	}
 
 	b.ResetTimer()

@@ -156,7 +156,7 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 			}
 
 			// init a base file writer
-			writer, err := newBaseFileWriter(filePath)
+			writer, err := newBaseFileWriter(filePath, rotate)
 			if nil != err {
 				return err
 			}

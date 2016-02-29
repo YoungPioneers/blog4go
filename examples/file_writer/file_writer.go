@@ -23,7 +23,7 @@ type T struct {
 func main() {
 	hook := new(MyHook)
 
-	err := log.NewFileWriter("./")
+	err := log.NewFileWriter("./", true)
 	if nil != err {
 		fmt.Println(err.Error())
 		os.Exit(1)

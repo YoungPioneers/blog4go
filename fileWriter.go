@@ -93,10 +93,14 @@ type baseFileWriter struct {
 // of it. When any errors happened during creation, a null writer and appropriate
 // will be returned.
 // fileName must be an absolute path to the destination log file
-func newBaseFileWriter(fileName string) (fileWriter *baseFileWriter, err error) {
+// rotate determine if it will logrotate
+func newBaseFileWriter(fileName string, rotate bool) (fileWriter *baseFileWriter, err error) {
 	fileWriter = new(baseFileWriter)
 	fileWriter.fileName = fileName
 	// open file target file
+	if rotate {
+		fileName = fmt.Sprintf("%s.%s", fileName, timeCache.date)
+	}
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 	fileWriter.file = file
 	if nil != err {
@@ -130,7 +134,8 @@ func newBaseFileWriter(fileName string) (fileWriter *baseFileWriter, err error) 
 
 // NewFileWriter initialize a file writer
 // baseDir must be base directory of log files
-func NewFileWriter(baseDir string) (err error) {
+// rotate determine if it will logrotate
+func NewFileWriter(baseDir string, rotate bool) (err error) {
 	singltonLock.Lock()
 	defer singltonLock.Unlock()
 	if nil != blog {
@@ -144,7 +149,7 @@ func NewFileWriter(baseDir string) (err error) {
 	fileWriter.writers = make(map[Level]Writer)
 	for _, level := range Levels {
 		fileName := fmt.Sprintf("%s.log", strings.ToLower(level.String()))
-		writer, err := newBaseFileWriter(path.Join(baseDir, fileName))
+		writer, err := newBaseFileWriter(path.Join(baseDir, fileName), rotate)
 		if nil != err {
 			return err
 		}
@@ -168,7 +173,7 @@ func (writer *baseFileWriter) daemon() {
 	// tick every seconds
 	// time base logrotate
 	t := time.Tick(1 * time.Second)
-	// tick every 1 second
+	// tick every second
 	// auto flush writer buffer
 	f := time.Tick(1 * time.Second)
 
@@ -188,11 +193,12 @@ DaemonLoop:
 
 			writer.rotateLock.Lock()
 
-			date := time.Now().Format(DateFormat)
-
-			if writer.timeRotated && date != timeCache.date {
-				// need time base logrotate
-				writer.sizeRotateTimes = 0
+			if writer.timeRotated {
+				date := time.Now().Format(DateFormat)
+				if date != timeCache.date {
+					// need time base logrotate
+					writer.sizeRotateTimes = 0
+				}
 
 				fileName := fmt.Sprintf("%s.%s", writer.fileName, timeCache.date)
 				file, _ := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))

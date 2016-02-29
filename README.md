@@ -4,6 +4,7 @@ Introduction
 BLog4go is authorized by [YOUMI](https://www.youmi.net/). It is an efficient logging library written in the [Go](http://golang.org/) programming language, providing logging hook, log rotate, filtering and formatting log message. 
 
 [![Build Status](https://travis-ci.org/YoungPioneers/blog4go.svg?branch=master)](https://travis-ci.org/YoungPioneers/blog4go)
+[![Coverage Status](https://coveralls.io/repos/github/YoungPioneers/blog4go/badge.svg?branch=master)](https://coveralls.io/github/YoungPioneers/blog4go?branch=master)
 
 
 Features

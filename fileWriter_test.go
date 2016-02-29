@@ -4,7 +4,6 @@ package blog4go
 
 import (
 	"fmt"
-	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -12,13 +11,12 @@ import (
 	"testing"
 )
 
-// test if log lose in single goroutine mode
-func TestFileWriterSingleGoroutine(t *testing.T) {
-	err := NewFileWriter("/tmp")
+// test if log lose in multi goroutine mode
+func TestFileWriterMultiGoroutine(t *testing.T) {
+	err := NewFileWriter("/tmp", false)
 	defer blog.Close()
 	if nil != err {
 		t.Errorf("initialize file writer faied. err: %s", err.Error())
-		os.Exit(1)
 	}
 
 	var wg sync.WaitGroup
@@ -59,7 +57,7 @@ func TestFileWriterSingleGoroutine(t *testing.T) {
 	}
 
 	if 100*100 != lines {
-		t.Error("it loses %d lines.", 100*100-lines)
+		t.Errorf("it loses %d lines.", 100*100-lines)
 	}
 
 	// clean logs
@@ -70,11 +68,10 @@ func TestFileWriterSingleGoroutine(t *testing.T) {
 }
 
 func BenchmarkFileWriters(b *testing.B) {
-	err := NewFileWriter("/tmp")
+	err := NewFileWriter("/tmp", false)
 	defer blog.Close()
 	if nil != err {
 		fmt.Println(err.Error())
-		os.Exit(1)
 	}
 
 	b.ResetTimer()

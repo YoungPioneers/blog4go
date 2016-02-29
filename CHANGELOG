@@ -83,3 +83,14 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - 修复example与测试用例，符合新的模式。
+
+## [0.5.1] - 2016-02-27
+### Added
+- coveralls检查。
+- hook testing.
+
+### Changed
+- fileWriter初始化时设置是否logrotate.
+
+### Fixed
+- 重启后无法logrotate.
