@@ -84,10 +84,11 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - 修复example与测试用例，符合新的模式。
 
-## [0.5.1] - 2016-02-27
+## [0.5.1] - 2016-02-29
 ### Added
 - coveralls检查。
 - hook testing.
+- 可设置日志过期时间，并自动删除过期日志。
 
 ### Changed
 - fileWriter初始化时设置是否logrotate.

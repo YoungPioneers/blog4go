@@ -61,7 +61,7 @@ func TestFileWriterMultiGoroutine(t *testing.T) {
 	}
 
 	// clean logs
-	_, err = exec.Command("/bin/sh", "-c", "/bin/rm /tmp/*.log").Output()
+	_, err = exec.Command("/bin/sh", "-c", "/bin/rm /tmp/info.log").Output()
 	if nil != err {
 		t.Errorf("clean files failed. err: %s", err.Error())
 	}

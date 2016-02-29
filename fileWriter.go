@@ -31,6 +31,9 @@ const (
 	DefaultRotateSize = 500 * MB
 	// DefaultRotateLines is default lines when lines base logrotate needed
 	DefaultRotateLines = 2000000 // 2 million
+
+	// DefaultLogExpireDays
+	DefaultLogExpireDays = 7
 )
 
 // baseFileWriter defines a writer for single file.
@@ -39,8 +42,10 @@ const (
 // on the fly and logging with colors.
 type baseFileWriter struct {
 	// configuration about file
-	// full path of the file
+	// full path of the file, the same as configuration
 	fileName string
+	// current file name of the writer, may be changed with logrotate
+	currentFileName string
 	// the file object
 	file *os.File
 
@@ -59,6 +64,8 @@ type baseFileWriter struct {
 	// sign of time base logrotate, default false
 	// set this tag true if logrotate in time base mode
 	timeRotated bool
+	// logs retention days when time base logrotate
+	expireDays int64
 	// signal send when time base rotate needed
 	timeRotateSig chan bool
 
@@ -103,6 +110,7 @@ func newBaseFileWriter(fileName string, rotate bool) (fileWriter *baseFileWriter
 	}
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 	fileWriter.file = file
+	fileWriter.currentFileName = fileName
 	if nil != err {
 		return fileWriter, err
 	}
@@ -113,6 +121,7 @@ func newBaseFileWriter(fileName string, rotate bool) (fileWriter *baseFileWriter
 	// about logrotate
 	fileWriter.rotateLock = new(sync.Mutex)
 	fileWriter.timeRotated = false
+	fileWriter.expireDays = DefaultLogExpireDays
 	fileWriter.timeRotateSig = make(chan bool)
 	fileWriter.sizeRotateSig = make(chan bool)
 	fileWriter.logSizeChan = make(chan int, 4096)
@@ -191,8 +200,6 @@ DaemonLoop:
 				break DaemonLoop
 			}
 
-			writer.rotateLock.Lock()
-
 			if writer.timeRotated {
 				date := time.Now().Format(DateFormat)
 				if date != timeCache.date {
@@ -200,15 +207,30 @@ DaemonLoop:
 					writer.sizeRotateTimes = 0
 				}
 
-				fileName := fmt.Sprintf("%s.%s", writer.fileName, timeCache.date)
-				file, _ := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
+				// if fileName not equal to currentFileName, it needs a time base logrotate
+				if fileName := fmt.Sprintf("%s.%s", writer.fileName, timeCache.date); writer.currentFileName != fileName {
+					// lock at this place may cause logrotate not accurate, but reduce lock acquire
+					// TODO have any better solution?
+					writer.rotateLock.Lock()
+					file, _ := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 
-				writer.file.Close()
-				writer.blog.resetFile(file)
-				writer.file = file
+					writer.file.Close()
+					writer.blog.resetFile(file)
+					writer.file = file
+					writer.currentFileName = fileName
+					writer.rotateLock.Unlock()
+
+					// TODO expire logs
+					// format the expired log file name
+					date := timeCache.now.Add(time.Duration(-24 * (writer.expireDays + 1))).Format(DateFormat)
+					expiredFileName := fmt.Sprintf("%s.%s", writer.fileName, date)
+					// check if expired log exists
+					if _, err := os.Stat(expiredFileName); os.IsNotExist(err) {
+						os.Remove(expiredFileName)
+					}
+				}
 			}
 
-			writer.rotateLock.Unlock()
 		// analyse lines && size written
 		// do lines && size base logrotate
 		case size := <-writer.logSizeChan:
