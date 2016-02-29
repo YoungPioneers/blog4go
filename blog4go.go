@@ -81,6 +81,7 @@ type Writer interface {
 
 	// logrotate
 	SetTimeRotated(timeRotated bool)
+	SetExpireDays(expireDays int64)
 	SetRotateSize(rotateSize ByteSize)
 	SetRotateLines(rotateLines int)
 	SetColored(colored bool)
@@ -356,6 +357,26 @@ func SetHookLevel(level Level) {
 // SetColored set logging color
 func SetColored(colored bool) {
 	blog.SetColored(colored)
+}
+
+// SetTimeRotated toggle time base logrotate on the fly
+func SetTimeRotated(timeRotated bool) {
+	blog.SetTimeRotated(timeRotated)
+}
+
+// SetExpireDays set how many days of logs will keep
+func SetExpireDays(expireDays int64) {
+	blog.SetExpireDays(expireDays)
+}
+
+// SetRotateSize set size when logroatate
+func SetRotateSize(rotateSize ByteSize) {
+	blog.SetRotateSize(rotateSize)
+}
+
+// SetRotateLines set line number when logrotate
+func SetRotateLines(rotateLines int) {
+	blog.SetRotateLines(rotateLines)
 }
 
 // Flush flush logs to disk

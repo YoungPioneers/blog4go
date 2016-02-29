@@ -89,6 +89,7 @@ All notable changes to this project will be documented in this file.
 - coveralls检查。
 - hook testing.
 - 可设置日志过期时间，并自动删除过期日志。
+- blog暴露关于logrotate的静态方法。
 
 ### Changed
 - fileWriter初始化时设置是否logrotate.

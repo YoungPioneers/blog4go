@@ -220,7 +220,6 @@ DaemonLoop:
 					writer.currentFileName = fileName
 					writer.rotateLock.Unlock()
 
-					// TODO expire logs
 					// format the expired log file name
 					date := timeCache.now.Add(time.Duration(-24 * (writer.expireDays + 1))).Format(DateFormat)
 					expiredFileName := fmt.Sprintf("%s.%s", writer.fileName, date)
@@ -322,6 +321,11 @@ func (writer *baseFileWriter) Close() {
 // SetTimeRotated toggle time base logrotate on the fly
 func (writer *baseFileWriter) SetTimeRotated(timeRotated bool) {
 	writer.timeRotated = timeRotated
+}
+
+// SetExpiredDays set how many days of logs will keep
+func (writer *baseFileWriter) SetExpireDays(expireDays int64) {
+	writer.expireDays = expireDays
 }
 
 // RotateSize return size threshold when logrotate

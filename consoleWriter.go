@@ -159,6 +159,11 @@ func (writer *ConsoleWriter) SetTimeRotated(timeRotated bool) {
 	return
 }
 
+// SetExpireDays do nothing
+func (writer *ConsoleWriter) SetExpireDays(expireDays int64) {
+	return
+}
+
 // SetRotateSize do nothing
 func (writer *ConsoleWriter) SetRotateSize(rotateSize ByteSize) {
 	return

@@ -39,6 +39,13 @@ func (writer *MultiWriter) SetTimeRotated(timeRotated bool) {
 	}
 }
 
+// SetExpireDays set how many days of logs will keep
+func (writer *MultiWriter) SetExpireDays(expireDays int64) {
+	for _, fileWriter := range writer.writers {
+		fileWriter.SetExpireDays(expireDays)
+	}
+}
+
 // SetRotateSize set size when logroatate
 func (writer *MultiWriter) SetRotateSize(rotateSize ByteSize) {
 	for _, fileWriter := range writer.writers {

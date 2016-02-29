@@ -132,6 +132,11 @@ func (writer *SocketWriter) SetTimeRotated(timeRotated bool) {
 	return
 }
 
+// SetExpireDays do nothing
+func (writer *SocketWriter) SetExpireDays(expireDays int64) {
+	return
+}
+
 // SetRotateSize do nothing
 func (writer *SocketWriter) SetRotateSize(rotateSize ByteSize) {
 	return
