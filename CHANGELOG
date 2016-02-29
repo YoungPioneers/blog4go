@@ -3,64 +3,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.1.0] - 2015-12-08
+## [0.5.1] - 2016-02-29
 ### Added
-- 实现简单的雏形，使用bufio写文件
-- 简陋的字符串格式化函数，做到边解析边输出。
-- 增加各个日志级别的外部函数。
-- 增加logrotate代码。
-- 增加version.go文件记录版本号。
+- coveralls检查。
+- hook testing.
+- 可设置日志过期时间，并自动删除过期日志。
+- blog暴露关于logrotate的静态方法。
 
 ### Changed
-- 使用读写锁简单保证日志输出的完整性，不会因为程序退出而导致部分日志信息被截断。
-- 独立goroutine进行格式化前缀时间字符串。
-- 写日志时使用互斥锁防止bufio竞争报错以支持多CPU调用。
-- 日志等级“常数化”，减少字符串拼接带来的开销。
-- 使用fmt实现%v, %f占位符(待改进!!!)。
-- 格式化的时间字符串使用[]byte形式写好像效率更好。
+- fileWriter初始化时设置是否logrotate.
 
 ### Fixed
-- 修复部分代码错误。
-
-## [0.2.0] - 2015-12-13
-### Added
-- logrotate雏形。
-
-## [0.2.1] - 2016-01-11
-### Changed
-- 使用fmt支持所有占位符。
-- size 统计在rotate模式下才累加。
-- 聚合0.1.0版本前的changelog.
-
-## [0.3.0] - 2016-01-26
-### Added
-- 增加ConsoleWriter，更直接支持控制台输出。
-- 文件输出支持不同日志等级区分文件输出。对应于FileWriter。
-- 增加ConsoleWriter, FileWriter对应的Benmark测试。
-- level_test.go测试用例
-- travis ci
-- 支持socket
-- 现有文件增加详细的注释
-
-### Changed
-- 原BLog4go结构体改名为FileWriter.
-- 比较通用的方法及定义放在blog4go.go.
-- 日志等级判断从writer, writerf函数中分离，放到上一层函数调用。
-- 去除function handler信息获取。
-
-### Fixed
-- 部分有误注释。
-
-## [0.4.0] - 2016-02-13
-### Added
-- 增加timeCache测试。
-- 支持xml配置文件初始化file writer.
-- file writer添加SetHookLevel设置自定义钩子函数。
-
-### Changed
-- 通用的write方法抽象成BLog.
-- file, console writer使用通用BLog.
-- 删除const.go, 常量归于对应使用的文件中。
+- 重启后无法logrotate.
 
 ## [0.5.0] - 2016-02-25
 ### Removed
@@ -84,15 +38,60 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - 修复example与测试用例，符合新的模式。
 
-## [0.5.1] - 2016-02-29
+## [0.4.0] - 2016-02-13
 ### Added
-- coveralls检查。
-- hook testing.
-- 可设置日志过期时间，并自动删除过期日志。
-- blog暴露关于logrotate的静态方法。
+- 增加timeCache测试。
+- 支持xml配置文件初始化file writer.
+- file writer添加SetHookLevel设置自定义钩子函数。
 
 ### Changed
-- fileWriter初始化时设置是否logrotate.
+- 通用的write方法抽象成BLog.
+- file, console writer使用通用BLog.
+- 删除const.go, 常量归于对应使用的文件中。
+
+## [0.3.0] - 2016-01-26
+### Added
+- 增加ConsoleWriter，更直接支持控制台输出。
+- 文件输出支持不同日志等级区分文件输出。对应于FileWriter。
+- 增加ConsoleWriter, FileWriter对应的Benmark测试。
+- level_test.go测试用例
+- travis ci
+- 支持socket
+- 现有文件增加详细的注释
+
+### Changed
+- 原BLog4go结构体改名为FileWriter.
+- 比较通用的方法及定义放在blog4go.go.
+- 日志等级判断从writer, writerf函数中分离，放到上一层函数调用。
+- 去除function handler信息获取。
 
 ### Fixed
-- 重启后无法logrotate.
+- 部分有误注释。
+
+## [0.2.0] - 2016-01-11
+### Added
+- logrotate雏形。
+
+### Changed
+- 使用fmt支持所有占位符。
+- size 统计在rotate模式下才累加。
+- 聚合0.1.0版本前的changelog.
+
+## [0.1.0] - 2015-12-08
+### Added
+- 实现简单的雏形，使用bufio写文件
+- 简陋的字符串格式化函数，做到边解析边输出。
+- 增加各个日志级别的外部函数。
+- 增加logrotate代码。
+- 增加version.go文件记录版本号。
+
+### Changed
+- 使用读写锁简单保证日志输出的完整性，不会因为程序退出而导致部分日志信息被截断。
+- 独立goroutine进行格式化前缀时间字符串。
+- 写日志时使用互斥锁防止bufio竞争报错以支持多CPU调用。
+- 日志等级“常数化”，减少字符串拼接带来的开销。
+- 使用fmt实现%v, %f占位符(待改进!!!)。
+- 格式化的时间字符串使用[]byte形式写好像效率更好。
+
+### Fixed
+- 修复部分代码错误。
