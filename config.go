@@ -17,14 +17,12 @@ const (
 
 // Config struct define the config struct used for file wirter
 type Config struct {
-	//XMLName  xml.Name `xml:"blog4go"`
 	Filters  []filter `xml:"filter"`
 	MinLevel string   `xml:"minlevel,attr"`
 }
 
 // log filter
 type filter struct {
-	XMLName    xml.Name   `xml:"filter"`
 	Levels     string     `xml:"levels,attr"`
 	Colored    bool       `xml:"colored,attr"`
 	File       file       `xml:"file"`
@@ -34,16 +32,15 @@ type filter struct {
 }
 
 type file struct {
-	XMLName xml.Name `xml:"file"`
-	Path    string   `xml:"path,attr"`
+	Path string `xml:"path,attr"`
 }
 
 type rotateFile struct {
-	XMLName     xml.Name `xml:"rotatefile"`
 	Path        string   `xml:"path,attr"`
 	Type        string   `xml:"type,attr"`
 	RotateLines int      `xml:"rotateLines,attr"`
 	RotateSize  ByteSize `xml:"rotateSize,attr"`
+	ExpireDays  int64    `xml:"exprieDays,attr"`
 }
 
 //type console struct {
@@ -51,9 +48,8 @@ type rotateFile struct {
 //}
 
 type socket struct {
-	XMLName xml.Name `xml:"socket"`
-	Network string   `xml:"network,attr"`
-	Address string   `xml:"address,attr"`
+	Network string `xml:"network,attr"`
+	Address string `xml:"address,attr"`
 }
 
 // check if config is valid

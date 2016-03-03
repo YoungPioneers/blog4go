@@ -220,12 +220,15 @@ DaemonLoop:
 					writer.currentFileName = fileName
 					writer.rotateLock.Unlock()
 
-					// format the expired log file name
-					date := timeCache.now.Add(time.Duration(-24 * (writer.expireDays + 1))).Format(DateFormat)
-					expiredFileName := fmt.Sprintf("%s.%s", writer.fileName, date)
-					// check if expired log exists
-					if _, err := os.Stat(expiredFileName); os.IsNotExist(err) {
-						os.Remove(expiredFileName)
+					// when it needs to expire logs
+					if writer.expireDays > 0 {
+						// format the expired log file name
+						date := timeCache.now.Add(time.Duration(-24 * (writer.expireDays + 1))).Format(DateFormat)
+						expiredFileName := fmt.Sprintf("%s.%s", writer.fileName, date)
+						// check if expired log exists
+						if _, err := os.Stat(expiredFileName); os.IsNotExist(err) {
+							os.Remove(expiredFileName)
+						}
 					}
 				}
 			}
@@ -325,6 +328,9 @@ func (writer *baseFileWriter) SetTimeRotated(timeRotated bool) {
 
 // SetExpiredDays set how many days of logs will keep
 func (writer *baseFileWriter) SetExpireDays(expireDays int64) {
+	if expireDays < 1 {
+		return
+	}
 	writer.expireDays = expireDays
 }
 

@@ -3,12 +3,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.5.1] - 2016-02-29
+## [0.5.1] - 2016-03-03
 ### Added
 - coveralls检查。
 - hook testing.
 - 可设置日志过期时间，并自动删除过期日志。
 - blog暴露关于logrotate的静态方法。
+- 支持配置文件设置log expire day.
 
 ### Changed
 - fileWriter初始化时设置是否logrotate.

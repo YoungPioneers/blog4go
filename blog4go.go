@@ -170,6 +170,7 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 				case TypeSizeBaseRotate:
 					writer.SetRotateSize(filter.RotateFile.RotateSize)
 					writer.SetRotateLines(filter.RotateFile.RotateLines)
+					writer.SetExpireDays(filter.RotateFile.ExpireDays)
 				default:
 					return ErrInvalidRotateType
 				}

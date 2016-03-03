@@ -1,6 +1,6 @@
 <blog4go minlevel="info">
 	<filter levels="trace">
-		<rotatefile path="trace.log" type="time"></rotatefile>
+		<rotatefile path="trace.log" type="time" expireDays="5"></rotatefile>
 	</filter>
 	<filter levels="debug,info" colored="true">
 		<file path="debug.log"></file>
