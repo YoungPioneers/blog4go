@@ -17,11 +17,11 @@ before_install:
 install:
         - go get github.com/golang/lint/golint
 
-env:
-        - GIMME_OS=linux GIMME_ARCH=amd64
+#env:
+        #- GIMME_OS=linux GIMME_ARCH=amd64
 
 script:
-        #- $HOME/gopath/bin/goveralls
+        - $HOME/gopath/bin/goveralls
         - test -z "$(go fmt ./...)"
         - test -z "$(go vet ./...)"
         - test -z "$(golint)"
