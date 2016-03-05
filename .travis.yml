@@ -9,10 +9,10 @@ go:
         - 1.5
         - tip
 
-before_install:
-        - go get github.com/axw/gocov/gocov
-        - go get github.com/mattn/goveralls
-        - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
+#before_install:
+        #- go get github.com/axw/gocov/gocov
+        #- go get github.com/mattn/goveralls
+        #- if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
 
 install:
         - go get github.com/golang/lint/golint
@@ -21,7 +21,7 @@ install:
         #- GIMME_OS=linux GIMME_ARCH=amd64
 
 script:
-        - $HOME/gopath/bin/goveralls
+        #- $HOME/gopath/bin/goveralls
         - test -z "$(go fmt ./...)"
         - test -z "$(go vet ./...)"
         - test -z "$(golint)"
