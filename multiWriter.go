@@ -39,14 +39,14 @@ func (writer *MultiWriter) SetTimeRotated(timeRotated bool) {
 	}
 }
 
-// SetExpireDays set how many days of logs will keep
-func (writer *MultiWriter) SetExpireDays(expireDays int64) {
-	if expireDays < 1 {
+// SetRetentions set how many logs will keep after logrotate
+func (writer *MultiWriter) SetRetentions(retentions int64) {
+	if retentions < 1 {
 		return
 	}
 
 	for _, fileWriter := range writer.writers {
-		fileWriter.SetExpireDays(expireDays)
+		fileWriter.SetRetentions(retentions)
 	}
 }
 

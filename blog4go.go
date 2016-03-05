@@ -81,9 +81,9 @@ type Writer interface {
 
 	// logrotate
 	SetTimeRotated(timeRotated bool)
-	SetExpireDays(expireDays int64)
 	SetRotateSize(rotateSize ByteSize)
 	SetRotateLines(rotateLines int)
+	SetRetentions(retentions int64)
 	SetColored(colored bool)
 }
 
@@ -170,7 +170,7 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 				case TypeSizeBaseRotate:
 					writer.SetRotateSize(filter.RotateFile.RotateSize)
 					writer.SetRotateLines(filter.RotateFile.RotateLines)
-					writer.SetExpireDays(filter.RotateFile.ExpireDays)
+					writer.SetRetentions(filter.RotateFile.Retentions)
 				default:
 					return ErrInvalidRotateType
 				}
@@ -365,9 +365,9 @@ func SetTimeRotated(timeRotated bool) {
 	blog.SetTimeRotated(timeRotated)
 }
 
-// SetExpireDays set how many days of logs will keep
-func SetExpireDays(expireDays int64) {
-	blog.SetExpireDays(expireDays)
+// SetRetentions set how many logs will keep after logrotate
+func SetRetentions(retentions int64) {
+	blog.SetRetentions(retentions)
 }
 
 // SetRotateSize set size when logroatate

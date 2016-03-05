@@ -159,8 +159,8 @@ func (writer *ConsoleWriter) SetTimeRotated(timeRotated bool) {
 	return
 }
 
-// SetExpireDays do nothing
-func (writer *ConsoleWriter) SetExpireDays(expireDays int64) {
+// SetRetentions do nothing
+func (writer *ConsoleWriter) SetRetentions(retentions int64) {
 	return
 }
 

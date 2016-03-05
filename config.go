@@ -40,7 +40,7 @@ type rotateFile struct {
 	Type        string   `xml:"type,attr"`
 	RotateLines int      `xml:"rotateLines,attr"`
 	RotateSize  ByteSize `xml:"rotateSize,attr"`
-	ExpireDays  int64    `xml:"exprieDays,attr"`
+	Retentions  int64    `xml:"retentions,attr"`
 }
 
 //type console struct {
