@@ -447,6 +447,9 @@ func Criticalf(format string, args ...interface{}) {
 
 // Close close the logger
 func Close() {
+	singltonLock.Lock()
+	defer singltonLock.Unlock()
+
 	blog.Close()
 	blog = nil
 }
