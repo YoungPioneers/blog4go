@@ -448,4 +448,5 @@ func Criticalf(format string, args ...interface{}) {
 // Close close the logger
 func Close() {
 	blog.Close()
+	blog = nil
 }

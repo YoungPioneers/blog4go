@@ -3,6 +3,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.2] - 2016-03-06
+### Added
+- logrotate测试用例。
+
+### Fixed
+- 测试用例中不完整关闭writer。
+
 ## [0.5.1] - 2016-03-05
 ### Added
 - coveralls检查。

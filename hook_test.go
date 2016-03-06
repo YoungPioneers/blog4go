@@ -3,6 +3,7 @@
 package blog4go
 
 import (
+	"os/exec"
 	"testing"
 	"time"
 )
@@ -28,7 +29,7 @@ func TestHook(t *testing.T) {
 	hook.cnt = 0
 
 	err := NewFileWriter("/tmp", false)
-	defer blog.Close()
+	defer Close()
 	if nil != err {
 		t.Errorf("initialize file writer faied. err: %s", err.Error())
 	}
@@ -56,5 +57,11 @@ func TestHook(t *testing.T) {
 
 	if INFO != hook.level || "yes" != hook.message {
 		t.Errorf("hook parameters wrong. level: %d, message: %s", hook.level, hook.message)
+	}
+
+	// clean logs
+	_, err = exec.Command("/bin/sh", "-c", "/bin/rm /tmp/*.log*").Output()
+	if nil != err {
+		t.Errorf("clean files failed. err: %s", err.Error())
 	}
 }

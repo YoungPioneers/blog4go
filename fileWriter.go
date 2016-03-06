@@ -33,7 +33,7 @@ const (
 	DefaultRotateLines = 2000000 // 2 million
 
 	// DefaultLogRetentionCount is the default days of logs to be keeped
-	DefaultLogRetentionCount = 0
+	DefaultLogRetentionCount = 7
 )
 
 // baseFileWriter defines a writer for single file.
@@ -241,7 +241,7 @@ DaemonLoop:
 			writer.currentSize += ByteSize(size)
 			writer.currentLines++
 
-			if (writer.sizeRotated && writer.currentSize > writer.rotateSize) || (writer.lineRotated && writer.currentLines > writer.rotateLines) {
+			if (writer.sizeRotated && writer.currentSize >= writer.rotateSize) || (writer.lineRotated && writer.currentLines >= writer.rotateLines) {
 				// need lines && size base logrotate
 				var oldName, newName string
 				oldName = fmt.Sprintf("%s.%d", writer.currentFileName, writer.retentions)
@@ -256,13 +256,12 @@ DaemonLoop:
 						newName = fmt.Sprintf("%s.%d", writer.currentFileName, i+1)
 						os.Rename(oldName, newName)
 					}
+					os.Rename(writer.currentFileName, oldName)
+
+					writer.resetFile()
+					writer.currentSize = 0
+					writer.currentLines = 0
 				}
-				os.Rename(writer.currentFileName, oldName)
-
-				writer.resetFile()
-
-				writer.currentSize = 0
-				writer.currentLines = 0
 			}
 			writer.rotateLock.Unlock()
 		}
@@ -323,6 +322,7 @@ func (writer *baseFileWriter) Close() {
 		return
 	}
 
+	writer.blog.flush()
 	writer.blog.Close()
 	writer.blog = nil
 	writer.closed = true

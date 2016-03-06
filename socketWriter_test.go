@@ -8,7 +8,7 @@ import (
 
 func BenchmarkSocketWriter(b *testing.B) {
 	_, err := NewSocketWriter("udp", "127.0.0.1:12124")
-	defer blog.Close()
+	defer Close()
 	if nil != err {
 		b.Error(err.Error())
 	}

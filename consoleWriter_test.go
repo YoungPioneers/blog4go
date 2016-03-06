@@ -8,7 +8,7 @@ import (
 
 func BenchmarkConsoleWriter(b *testing.B) {
 	_, err := NewConsoleWriter()
-	defer blog.Close()
+	defer Close()
 	if nil != err {
 		b.Error(err.Error())
 	}

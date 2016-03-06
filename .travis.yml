@@ -25,4 +25,4 @@ script:
         - test -z "$(go fmt ./...)"
         - test -z "$(go vet ./...)"
         - test -z "$(golint)"
-        - go test .
+        - go test -test.v .

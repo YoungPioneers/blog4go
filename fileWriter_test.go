@@ -3,18 +3,28 @@
 package blog4go
 
 import (
-	"fmt"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 // test if log lose in multi goroutine mode
 func TestFileWriterMultiGoroutine(t *testing.T) {
 	err := NewFileWriter("/tmp", false)
-	defer blog.Close()
+	defer func() {
+		Close()
+
+		// clean logs
+		_, err = exec.Command("/bin/sh", "-c", "/bin/rm /tmp/*.log*").Output()
+		if nil != err {
+			t.Errorf("clean files failed. err: %s", err.Error())
+		}
+	}()
+
 	if nil != err {
 		t.Errorf("initialize file writer faied. err: %s", err.Error())
 	}
@@ -42,7 +52,7 @@ func TestFileWriterMultiGoroutine(t *testing.T) {
 	}
 
 	wg.Wait()
-	blog.flush()
+	Flush()
 
 	out, err := exec.Command("/bin/sh", "-c", "/usr/bin/wc -l /tmp/info.log").Output()
 	if nil != err {
@@ -59,23 +69,150 @@ func TestFileWriterMultiGoroutine(t *testing.T) {
 	if 100*100 != lines {
 		t.Errorf("it loses %d lines.", 100*100-lines)
 	}
+}
 
-	// clean logs
-	_, err = exec.Command("/bin/sh", "-c", "/bin/rm /tmp/info.log").Output()
+func TestFileWriterSizeBaseLogrotate(t *testing.T) {
+	err := NewFileWriter("/tmp", false)
+	defer func() {
+		Close()
+
+		// clean logs
+		_, err = exec.Command("/bin/sh", "-c", "/bin/rm /tmp/*.log*").Output()
+		if nil != err {
+			t.Errorf("clean files failed. err: %s", err.Error())
+		}
+	}()
+
 	if nil != err {
-		t.Errorf("clean files failed. err: %s", err.Error())
+		t.Errorf("initialize file writer faied. err: %s", err.Error())
+	}
+	blog.SetRotateSize(2)
+
+	blog.Info("1")
+	Flush()
+	time.Sleep(1 * time.Millisecond)
+
+	if _, err = os.Stat("/tmp/info.log.1"); os.IsExist(err) {
+		t.Errorf("size base logrotate failed, log should not exist. err: %s", err.Error())
+	}
+
+	blog.Info("2")
+	Flush()
+	time.Sleep(1 * time.Millisecond)
+
+	blog.Info("3")
+	Flush()
+	time.Sleep(1 * time.Millisecond)
+
+	if _, err = os.Stat("/tmp/info.log.1"); os.IsNotExist(err) {
+		t.Errorf("size base logrotate failed., err: %s", err.Error())
+	}
+}
+
+func TestFileWriterLinesBaseLogrotate(t *testing.T) {
+	err := NewFileWriter("/tmp", false)
+	defer func() {
+		Close()
+
+		// clean logs
+		_, err = exec.Command("/bin/sh", "-c", "/bin/rm /tmp/*.log*").Output()
+		if nil != err {
+			t.Errorf("clean files failed. err: %s", err.Error())
+		}
+	}()
+
+	if nil != err {
+		t.Errorf("initialize file writer faied. err: %s", err.Error())
+	}
+
+	blog.SetRotateLines(2)
+	blog.Info("some")
+	Flush()
+	time.Sleep(1 * time.Millisecond)
+
+	if _, err = os.Stat("/tmp/info.log.1"); os.IsExist(err) {
+		t.Errorf("line base logrotate failed, log should not exist. err: %s", err.Error())
+	}
+
+	blog.Info("some")
+	Flush()
+	time.Sleep(1 * time.Millisecond)
+
+	blog.Info("some")
+	Flush()
+	time.Sleep(1 * time.Millisecond)
+
+	if _, err = os.Stat("/tmp/info.log.1"); os.IsNotExist(err) {
+		t.Errorf("line base logrotate failed. err: %s", err.Error())
+	}
+}
+
+func TestFileWriterLogrorateRetentionCount(t *testing.T) {
+	err := NewFileWriter("/tmp", false)
+	defer func() {
+		Close()
+
+		// clean logs
+		_, err = exec.Command("/bin/sh", "-c", "/bin/rm /tmp/*.log*").Output()
+		if nil != err {
+			t.Errorf("clean files failed. err: %s", err.Error())
+		}
+	}()
+
+	if nil != err {
+		t.Errorf("initialize file writer faied. err: %s", err.Error())
+	}
+
+	blog.SetRotateLines(2)
+	blog.SetRetentions(1)
+
+	blog.Info("1")
+	Flush()
+	time.Sleep(1 * time.Millisecond)
+
+	if _, err = os.Stat("/tmp/info.log.1"); os.IsExist(err) {
+		t.Errorf("logrotate retention failed, log should not exist. err: %s", err.Error())
+	}
+
+	blog.Info("2")
+	Flush()
+	time.Sleep(1 * time.Millisecond)
+
+	blog.Info("3")
+	Flush()
+	time.Sleep(1 * time.Millisecond)
+
+	blog.Info("4")
+	Flush()
+	time.Sleep(1 * time.Millisecond)
+
+	blog.Info("5")
+	Flush()
+	time.Sleep(1 * time.Millisecond)
+	if _, err = os.Stat("/tmp/info.log.2"); os.IsExist(err) {
+		t.Errorf("logrotate retention failed. err: %s", err.Error())
 	}
 }
 
 func BenchmarkFileWriters(b *testing.B) {
 	err := NewFileWriter("/tmp", false)
-	defer blog.Close()
+	defer func() {
+		Close()
+
+		// clean logs
+		_, err = exec.Command("/bin/sh", "-c", "/bin/rm /tmp/*.log*").Output()
+		if nil != err {
+			b.Errorf("clean files failed. err: %s", err.Error())
+		}
+	}()
+
 	if nil != err {
-		fmt.Println(err.Error())
+		b.Error(err.Error())
 	}
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		blog.Debugf("haha %s. en\\en, always %d and %f", "eddie", 18, 3.1415)
 	}
+	Flush()
 }
