@@ -5,6 +5,7 @@ BLog4go is an efficient logging library written in the [Go](http://golang.org/) 
 
 [![Build Status](https://travis-ci.org/YoungPioneers/blog4go.svg?branch=master)](https://travis-ci.org/YoungPioneers/blog4go)
 [![Coverage Status](https://coveralls.io/repos/github/YoungPioneers/blog4go/badge.svg?branch=master)](https://coveralls.io/github/YoungPioneers/blog4go?branch=master)
+[![GoDoc](https://godoc.org/github.com/YoungPioneers/blog4go?status.svg)](https://godoc.org/github.com/YoungPioneers/blog4go)
 
 
 Features
