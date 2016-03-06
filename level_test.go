@@ -15,6 +15,7 @@ func TestLevelValidation(t *testing.T) {
 		t.Error("DEBUG Level Validation Failed.")
 	}
 }
+
 func TestLevelStringFormat(t *testing.T) {
 	if "DEBUG" != DEBUG.String() {
 		t.Error("DEBUG Level to wrong string format.")
@@ -46,6 +47,32 @@ func TestLevelStringFormat(t *testing.T) {
 
 	if "UNKNOWN" != Level(-1).String() {
 		t.Error("Wrong Level to wrong string format.")
+	}
+
+	initPrefix(true)
+
+	if " [\x1b[37mTRACE\x1b[0m] " != TRACE.prefix() {
+		t.Error("TRACE Level with color to wrong prefix string format.")
+	}
+
+	if " [\x1b[32mDEBUG\x1b[0m] " != DEBUG.prefix() {
+		t.Error("DEBUG Level with color to wrong prefix string format.")
+	}
+
+	if " [\x1b[34mINFO\x1b[0m] " != INFO.prefix() {
+		t.Error("INFO Level with color to wrong prefix string format.")
+	}
+
+	if " [\x1b[33mWARN\x1b[0m] " != WARNING.prefix() {
+		t.Error("WARN Level with color to wrong prefix string format.")
+	}
+
+	if " [\x1b[31mERROR\x1b[0m] " != ERROR.prefix() {
+		t.Error("ERROR Level with color to wrong prefix string format.")
+	}
+
+	if " [\x1b[31mCRITICAL\x1b[0m] " != CRITICAL.prefix() {
+		t.Error("CRITICAL Level with color to wrong prefix string format.")
 	}
 }
 

@@ -37,15 +37,15 @@ func TestHook(t *testing.T) {
 	blog.SetHook(hook)
 	blog.SetHookLevel(INFO)
 
-	blog.Trace("something")
+	blog.Debug("something")
 	// wait for hook called
 	time.Sleep(10 * time.Millisecond)
 	if 0 != hook.cnt {
 		t.Error("hook called not valid")
 	}
 
-	if TRACE == hook.level || "something" == hook.message {
-		t.Errorf("hook parameters wrong. level: %d, message: %s", hook.level, hook.message)
+	if DEBUG == hook.level || "something" == hook.message {
+		t.Errorf("hook parameters wrong. level: %s, message: %s", hook.level.String(), hook.message)
 	}
 
 	blog.Info("yes")

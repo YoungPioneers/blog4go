@@ -35,6 +35,8 @@ var (
 	DefaultBufferSize = 4096 // default memory page size
 	// ErrInvalidFormat invalid format error
 	ErrInvalidFormat = errors.New("Invalid format type.")
+	// ErrAlreadyInit show that blog is already initialized once
+	ErrAlreadyInit = errors.New("blog4go has been already initialized.")
 )
 
 // Writer interface is a common definition of any writers in this package.

@@ -95,7 +95,7 @@ type baseFileWriter struct {
 	colored bool
 }
 
-// NewbaseFileWriter create a single file writer instance and return the poionter
+// newbaseFileWriter create a single file writer instance and return the poionter
 // of it. When any errors happened during creation, a null writer and appropriate
 // will be returned.
 // fileName must be an absolute path to the destination log file
@@ -147,7 +147,7 @@ func NewFileWriter(baseDir string, rotate bool) (err error) {
 	singltonLock.Lock()
 	defer singltonLock.Unlock()
 	if nil != blog {
-		return
+		return ErrAlreadyInit
 	}
 
 	fileWriter := new(MultiWriter)

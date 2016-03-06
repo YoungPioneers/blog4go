@@ -194,6 +194,28 @@ func TestFileWriterLogrorateRetentionCount(t *testing.T) {
 	}
 }
 
+func TestFileWriterSinglton(t *testing.T) {
+	err := NewFileWriter("/tmp", false)
+	defer func() {
+		Close()
+
+		// clean logs
+		_, err = exec.Command("/bin/sh", "-c", "/bin/rm /tmp/*.log*").Output()
+		if nil != err {
+			t.Errorf("clean files failed. err: %s", err.Error())
+		}
+	}()
+
+	if nil != err {
+		t.Errorf("initialize file writer faied. err: %s", err.Error())
+	}
+
+	err = NewFileWriter("/tmp", false)
+	if ErrAlreadyInit != err {
+		t.Errorf("file writer singlton failed. err: %s", err.Error())
+	}
+}
+
 func BenchmarkFileWriters(b *testing.B) {
 	err := NewFileWriter("/tmp", false)
 	defer func() {

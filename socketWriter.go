@@ -29,6 +29,10 @@ type SocketWriter struct {
 func NewSocketWriter(network string, address string) (socketWriter *SocketWriter, err error) {
 	singltonLock.Lock()
 	defer singltonLock.Unlock()
+	if nil != blog {
+		socketWriter, _ := blog.(*SocketWriter)
+		return socketWriter, ErrAlreadyInit
+	}
 
 	socketWriter, err = newSocketWriter(network, address)
 	if nil != err {

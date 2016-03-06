@@ -14,10 +14,10 @@ type Level int
 const (
 	// level enum
 
-	// DEBUG debug level
-	DEBUG Level = iota
 	// TRACE trace level
-	TRACE
+	TRACE Level = iota
+	// DEBUG debug level
+	DEBUG
 	// INFO info level
 	INFO
 	// WARNING warn level
@@ -55,13 +55,13 @@ const (
 
 var (
 	// LevelStrings is string present for each level
-	LevelStrings = [...]string{"DEBUG", "TRACE", "INFO", "WARN", "ERROR", "CRITICAL"}
+	LevelStrings = [...]string{"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "CRITICAL"}
 
 	// StringLevels is map, level strings to levels
-	StringLevels = map[string]Level{"DEBUG": DEBUG, "TRACE": TRACE, "INFO": INFO, "WARN": WARNING, "ERROR": ERROR, "CRITICAL": CRITICAL}
+	StringLevels = map[string]Level{"TRACE": TRACE, "DEBUG": DEBUG, "INFO": INFO, "WARN": WARNING, "ERROR": ERROR, "CRITICAL": CRITICAL}
 
 	// Levels is a slice consist of all levels
-	Levels = [...]Level{DEBUG, TRACE, INFO, WARNING, ERROR, CRITICAL}
+	Levels = [...]Level{TRACE, DEBUG, INFO, WARNING, ERROR, CRITICAL}
 
 	// Prefix is preformatted level prefix string
 	// help reduce string formatted burden in realtime logging
@@ -77,15 +77,15 @@ func init() {
 // if colored is true, preformat level prefix string in colored format
 func initPrefix(colored bool) {
 	if colored {
-		Prefix[DEBUG] = fmt.Sprintf(ColoredPrefixFormat, GRAY, DEBUG.String())
-		Prefix[TRACE] = fmt.Sprintf(ColoredPrefixFormat, GREEN, TRACE.String())
+		Prefix[TRACE] = fmt.Sprintf(ColoredPrefixFormat, GRAY, TRACE.String())
+		Prefix[DEBUG] = fmt.Sprintf(ColoredPrefixFormat, GREEN, DEBUG.String())
 		Prefix[INFO] = fmt.Sprintf(ColoredPrefixFormat, BLUE, INFO.String())
 		Prefix[WARNING] = fmt.Sprintf(ColoredPrefixFormat, YELLOW, WARNING.String())
 		Prefix[ERROR] = fmt.Sprintf(ColoredPrefixFormat, RED, ERROR.String())
 		Prefix[CRITICAL] = fmt.Sprintf(ColoredPrefixFormat, RED, CRITICAL.String())
 	} else {
-		Prefix[DEBUG] = fmt.Sprintf(PrefixFormat, DEBUG.String())
 		Prefix[TRACE] = fmt.Sprintf(PrefixFormat, TRACE.String())
+		Prefix[DEBUG] = fmt.Sprintf(PrefixFormat, DEBUG.String())
 		Prefix[INFO] = fmt.Sprintf(PrefixFormat, INFO.String())
 		Prefix[WARNING] = fmt.Sprintf(PrefixFormat, WARNING.String())
 		Prefix[ERROR] = fmt.Sprintf(PrefixFormat, ERROR.String())
@@ -95,7 +95,7 @@ func initPrefix(colored bool) {
 
 // valid determines whether a Level instance is valid or not
 func (level Level) valid() bool {
-	if DEBUG > level || CRITICAL < level {
+	if TRACE > level || CRITICAL < level {
 		return false
 	}
 	return true

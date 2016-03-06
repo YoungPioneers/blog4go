@@ -26,7 +26,8 @@ func NewConsoleWriter() (consoleWriter *ConsoleWriter, err error) {
 	singltonLock.Lock()
 	defer singltonLock.Unlock()
 	if nil != blog {
-		return
+		consoleWriter, _ := blog.(*ConsoleWriter)
+		return consoleWriter, ErrAlreadyInit
 	}
 
 	consoleWriter, err = newConsoleWriter()
