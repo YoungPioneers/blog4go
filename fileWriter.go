@@ -218,7 +218,7 @@ DaemonLoop:
 						date := timeCache.now.Add(time.Duration(-24 * (writer.retentions + 1))).Format(DateFormat)
 						expiredFileName := fmt.Sprintf("%s.%s", writer.fileName, date)
 						// check if expired log exists
-						if _, err := os.Stat(expiredFileName); os.IsNotExist(err) {
+						if _, err := os.Stat(expiredFileName); os.IsExist(err) {
 							os.Remove(expiredFileName)
 						}
 					}
