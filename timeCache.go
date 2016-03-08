@@ -44,6 +44,7 @@ func init() {
 		for {
 			select {
 			case <-t:
+				// get current time and update timeCache
 				now := time.Now()
 				timeCache.now = now
 				timeCache.format = []byte(now.Format(PrefixTimeFormat))
