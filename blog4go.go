@@ -166,14 +166,14 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 
 			if rotate {
 				// set logrotate strategy
-				switch filter.RotateFile.Type {
-				case TypeTimeBaseRotate:
+				if TypeTimeBaseRotate == filter.RotateFile.Type {
 					writer.SetTimeRotated(true)
-				case TypeSizeBaseRotate:
+					writer.SetRetentions(filter.RotateFile.Retentions)
+				} else if TypeSizeBaseRotate == filter.RotateFile.Type {
 					writer.SetRotateSize(filter.RotateFile.RotateSize)
 					writer.SetRotateLines(filter.RotateFile.RotateLines)
 					writer.SetRetentions(filter.RotateFile.Retentions)
-				default:
+				} else {
 					return ErrInvalidRotateType
 				}
 			}

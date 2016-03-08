@@ -200,7 +200,6 @@ DaemonLoop:
 			}
 
 			if writer.timeRotated {
-
 				// if fileName not equal to currentFileName, it needs a time base logrotate
 				if fileName := fmt.Sprintf("%s.%s", writer.fileName, timeCache.date); writer.currentFileName != fileName {
 					// lock at this place may cause logrotate not accurate, but reduce lock acquire
