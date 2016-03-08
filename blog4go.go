@@ -123,16 +123,27 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 		var rotate = false
 		var isSocket = false
 
+		var file *os.File
+		var blog *BLog
+		var rotateLock *sync.Mutex
+
 		// get file path
 		var filePath string
 		if nil != &filter.File && "" != filter.File.Path {
-			// single file
+			// file do not need logrotate
 			filePath = filter.File.Path
 			rotate = false
 		} else if nil != &filter.RotateFile && "" != filter.RotateFile.Path {
-			// multi files
+			// file need logrotate
 			filePath = filter.RotateFile.Path
 			rotate = true
+
+			file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
+			if nil != err {
+				return err
+			}
+			blog = NewBLog(file)
+			rotateLock = new(sync.Mutex)
 		} else if nil != &filter.Socket && "" != filter.Socket.Address && "" != filter.Socket.Network {
 			isSocket = true
 		} else {
@@ -176,11 +187,16 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 				} else {
 					return ErrInvalidRotateType
 				}
+				writer.blog = blog
+				writer.file = file
+				writer.currentFileName = filePath
+				writer.rotateLock = rotateLock
 			}
 
 			// set color
 			multiWriter.SetColored(filter.Colored)
 			multiWriter.writers[level] = writer
+			fmt.Printf("\n\n%+v\n\n", writer)
 		}
 	}
 
