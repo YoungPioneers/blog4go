@@ -1,4 +1,5 @@
 *.log
 *.log.*
 *.swp
+*.swo
 benchmark.sh

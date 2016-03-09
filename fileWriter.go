@@ -58,7 +58,7 @@ type baseFileWriter struct {
 
 	// configuration about logrotate
 	// exclusive lock use in logrotate
-	rotateLock *sync.Mutex
+	lock *sync.Mutex
 
 	// configuration about time base logrotate
 	// sign of time base logrotate, default false
@@ -118,7 +118,7 @@ func newBaseFileWriter(fileName string, rotate bool) (fileWriter *baseFileWriter
 	fileWriter.closed = false
 
 	// about logrotate
-	fileWriter.rotateLock = new(sync.Mutex)
+	fileWriter.lock = new(sync.Mutex)
 	fileWriter.timeRotated = false
 	fileWriter.timeRotateSig = make(chan bool)
 	fileWriter.sizeRotateSig = make(chan bool)
@@ -204,12 +204,12 @@ DaemonLoop:
 				if fileName := fmt.Sprintf("%s.%s", writer.fileName, timeCache.date); writer.currentFileName != fileName {
 					// lock at this place may cause logrotate not accurate, but reduce lock acquire
 					// TODO have any better solution?
-					writer.rotateLock.Lock()
+					writer.lock.Lock()
 
 					writer.resetFile()
 					writer.currentFileName = fileName
 
-					writer.rotateLock.Unlock()
+					writer.lock.Unlock()
 
 					// when it needs to expire logs
 					if writer.retentions > 0 {
@@ -235,7 +235,7 @@ DaemonLoop:
 				continue
 			}
 
-			writer.rotateLock.Lock()
+			writer.lock.Lock()
 
 			writer.currentSize += ByteSize(size)
 			writer.currentLines++
@@ -262,7 +262,7 @@ DaemonLoop:
 					writer.currentLines = 0
 				}
 			}
-			writer.rotateLock.Unlock()
+			writer.lock.Unlock()
 		}
 	}
 }
@@ -317,14 +317,17 @@ func (writer *baseFileWriter) writef(level Level, format string, args ...interfa
 
 // Close close file writer
 func (writer *baseFileWriter) Close() {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
+
 	if writer.closed {
 		return
 	}
 
+	writer.closed = true
 	writer.blog.flush()
 	writer.blog.Close()
 	writer.blog = nil
-	writer.closed = true
 }
 
 // SetTimeRotated toggle time base logrotate on the fly
