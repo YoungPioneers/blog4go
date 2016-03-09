@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.5.2] - 2016-03-08
+## [0.5.2] - 2016-03-09
 ### Added
 - logrotate测试用例。
 - 重复初始化blog, 返回ErrAlreadyInit.
@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - 测试用例中不完整关闭writer。
 - time base logrotate逻辑错误。
+- multiWriter中，不同level的writer写同一文件出现内容错乱。
 
 ## [0.5.1] - 2016-03-05
 ### Added

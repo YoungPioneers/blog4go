@@ -123,16 +123,34 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 		var rotate = false
 		var isSocket = false
 
+		var file *os.File
+		var blog *BLog
+		var fileLock *sync.Mutex
+
 		// get file path
 		var filePath string
 		if nil != &filter.File && "" != filter.File.Path {
-			// single file
+			// file do not need logrotate
 			filePath = filter.File.Path
 			rotate = false
+
+			file, err = os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
+			if nil != err {
+				return err
+			}
+			blog = NewBLog(file)
+			fileLock = new(sync.Mutex)
 		} else if nil != &filter.RotateFile && "" != filter.RotateFile.Path {
-			// multi files
+			// file need logrotate
 			filePath = filter.RotateFile.Path
 			rotate = true
+
+			file, err = os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
+			if nil != err {
+				return err
+			}
+			blog = NewBLog(file)
+			fileLock = new(sync.Mutex)
 		} else if nil != &filter.Socket && "" != filter.Socket.Address && "" != filter.Socket.Network {
 			isSocket = true
 		} else {
@@ -177,10 +195,14 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 					return ErrInvalidRotateType
 				}
 			}
+			writer.file = file
+			writer.blog = blog
+			writer.lock = fileLock
 
 			// set color
 			multiWriter.SetColored(filter.Colored)
 			multiWriter.writers[level] = writer
+			fmt.Printf("\n\n%+v\n\n", writer)
 		}
 	}
 
@@ -202,6 +224,9 @@ type BLog struct {
 
 	// exclusive lock while calling write function of bufio.Writer
 	lock *sync.Mutex
+
+	// closed tag
+	closed bool
 }
 
 // NewBLog create a BLog instance and return the pointer of it.
@@ -211,6 +236,7 @@ func NewBLog(in io.Writer) (blog *BLog) {
 	blog.in = in
 	blog.level = DEBUG
 	blog.lock = new(sync.Mutex)
+	blog.closed = false
 
 	blog.writer = bufio.NewWriterSize(in, DefaultBufferSize)
 	return
@@ -307,6 +333,11 @@ func (blog *BLog) writef(level Level, format string, args ...interface{}) int {
 func (blog *BLog) flush() {
 	blog.lock.Lock()
 	defer blog.lock.Unlock()
+
+	if blog.closed {
+		return
+	}
+
 	blog.writer.Flush()
 }
 
@@ -315,6 +346,11 @@ func (blog *BLog) Close() {
 	blog.lock.Lock()
 	defer blog.lock.Unlock()
 
+	if blog.closed {
+		return
+	}
+
+	blog.closed = true
 	blog.writer.Flush()
 	blog.writer = nil
 }
