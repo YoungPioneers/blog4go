@@ -100,11 +100,11 @@ type baseFileWriter struct {
 // will be returned.
 // fileName must be an absolute path to the destination log file
 // rotate determine if it will logrotate
-func newBaseFileWriter(fileName string, rotate bool) (fileWriter *baseFileWriter, err error) {
+func newBaseFileWriter(fileName string, timeRotate bool) (fileWriter *baseFileWriter, err error) {
 	fileWriter = new(baseFileWriter)
 	fileWriter.fileName = fileName
 	// open file target file
-	if rotate {
+	if timeRotate {
 		fileName = fmt.Sprintf("%s.%s", fileName, timeCache.date)
 	}
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))

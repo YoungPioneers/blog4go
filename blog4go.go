@@ -121,37 +121,43 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 
 	for _, filter := range config.Filters {
 		var rotate = false
+		var timeRotate = false
 		var isSocket = false
 
-		var file *os.File
+		var f *os.File
 		var blog *BLog
 		var fileLock *sync.Mutex
 
 		// get file path
 		var filePath string
-		if nil != &filter.File && "" != filter.File.Path {
+		if (file{}) != filter.File {
 			// file do not need logrotate
 			filePath = filter.File.Path
 			rotate = false
 
-			file, err = os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
+			f, err = os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 			if nil != err {
 				return err
 			}
-			blog = NewBLog(file)
+			blog = NewBLog(f)
 			fileLock = new(sync.Mutex)
-		} else if nil != &filter.RotateFile && "" != filter.RotateFile.Path {
+		} else if (rotateFile{}) != filter.RotateFile {
 			// file need logrotate
 			filePath = filter.RotateFile.Path
 			rotate = true
+			timeRotate = TypeTimeBaseRotate == filter.RotateFile.Type
 
-			file, err = os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
+			fileName := filePath
+			if timeRotate {
+				fileName = fmt.Sprintf("%s.%s", fileName, timeCache.date)
+			}
+			f, err = os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 			if nil != err {
 				return err
 			}
-			blog = NewBLog(file)
+			blog = NewBLog(f)
 			fileLock = new(sync.Mutex)
-		} else if nil != &filter.Socket && "" != filter.Socket.Address && "" != filter.Socket.Network {
+		} else if (socket{}) != filter.Socket {
 			isSocket = true
 		} else {
 			// config error
@@ -177,7 +183,7 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 			}
 
 			// init a base file writer
-			writer, err := newBaseFileWriter(filePath, rotate)
+			writer, err := newBaseFileWriter(filePath, timeRotate)
 			if nil != err {
 				return err
 			}
@@ -195,7 +201,8 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 					return ErrInvalidRotateType
 				}
 			}
-			writer.file = file
+
+			writer.file = f
 			writer.blog = blog
 			writer.lock = fileLock
 

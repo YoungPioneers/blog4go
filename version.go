@@ -4,5 +4,5 @@ package blog4go
 
 const (
 	// VERSION shows the current version for this package
-	VERSION = "0.5.2"
+	VERSION = "0.5.3"
 )

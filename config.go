@@ -4,6 +4,8 @@ package blog4go
 
 import (
 	"encoding/xml"
+	"errors"
+	//"fmt"
 	"io/ioutil"
 	"os"
 )
@@ -13,6 +15,24 @@ const (
 	TypeTimeBaseRotate = "time"
 	// TypeSizeBaseRotate is size base logrotate tag
 	TypeSizeBaseRotate = "size"
+)
+
+var (
+	// ErrConfigFiltersNotFound not found filters
+	ErrConfigFiltersNotFound = errors.New("Please define at least one filter")
+	// ErrConfigBadAttributes wrong attribute
+	ErrConfigBadAttributes = errors.New("Bad attributes setting")
+	// ErrConfigLevelsNotFound not found levels
+	ErrConfigLevelsNotFound = errors.New("Please define levels attribution")
+	// ErrConfigFilePathNotFound not found file path
+	ErrConfigFilePathNotFound       = errors.New("Please define the file path")
+	ErrConfigFileRotateTypeNotFound = errors.New("Please define the file rotate type")
+	// ErrConfigSocketAddressNotFound not found socket address
+	ErrConfigSocketAddressNotFound = errors.New("Please define a socket address")
+	// ErrConfigSocketNetworkNotFound not found socket port
+	ErrConfigSocketNetworkNotFound = errors.New("Please define a socket network type")
+	// ErrConfigMissingFilterType miss a filter configuration
+	ErrConfigMissingFilterType = errors.New("Missing filter configuration")
 )
 
 // Config struct define the config struct used for file wirter
@@ -53,8 +73,49 @@ type socket struct {
 }
 
 // check if config is valid
-func (config *Config) valid() bool {
-	return true
+func (config *Config) valid() error {
+	// check minlevel validation
+	if "" != config.MinLevel && !LevelFromString(config.MinLevel).valid() {
+		return ErrConfigBadAttributes
+	}
+
+	// check filters len
+	if len(config.Filters) < 1 {
+		return ErrConfigFiltersNotFound
+	}
+
+	// check filter one by one
+	for _, filter := range config.Filters {
+		if "" == filter.Levels {
+			return ErrConfigLevelsNotFound
+		}
+
+		if (file{}) != filter.File {
+			if "" == filter.File.Path {
+				return ErrConfigFilePathNotFound
+			}
+		} else if (rotateFile{}) != filter.RotateFile {
+			if "" == filter.RotateFile.Path {
+				return ErrConfigFilePathNotFound
+			}
+
+			if "" == filter.RotateFile.Type {
+				return ErrConfigFileRotateTypeNotFound
+			}
+		} else if (socket{}) != filter.Socket {
+			if "" == filter.Socket.Address {
+				return ErrConfigSocketAddressNotFound
+			}
+
+			if "" == filter.Socket.Network {
+				return ErrConfigSocketNetworkNotFound
+			}
+		} else {
+			return ErrConfigMissingFilterType
+		}
+	}
+
+	return nil
 }
 
 // read config from a xml file

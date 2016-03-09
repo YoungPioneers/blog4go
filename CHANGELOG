@@ -3,6 +3,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [0.5.3] - 2016-03-10
+### Added
+- config valid方法实现。
+
+### Changed
+- 优化config判断条件。
+
+### Fixed
+- multiWriter通过配置文件会创建多余错误文件。
+
 ## [0.5.2] - 2016-03-09
 ### Added
 - logrotate测试用例。

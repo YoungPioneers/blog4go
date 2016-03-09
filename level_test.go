@@ -86,4 +86,9 @@ func TestStringToLevel(t *testing.T) {
 	if LevelFromString(str).valid() {
 		t.Errorf("String to level invalid. str: %s", str)
 	}
+
+	str = ""
+	if LevelFromString(str).valid() {
+		t.Error("Empty string to level invalid.")
+	}
 }
