@@ -494,6 +494,10 @@ func Close() {
 	singltonLock.Lock()
 	defer singltonLock.Unlock()
 
+	if nil == blog {
+		return
+	}
+
 	blog.Close()
 	blog = nil
 }

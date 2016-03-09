@@ -18,6 +18,25 @@ type T struct {
 	B string
 }
 
+func TestSingleFileWriter(t *testing.T) {
+	err := NewFileWriter("/tmp", false)
+	defer func() {
+		Close()
+
+		// clean logs
+		_, err = exec.Command("/bin/sh", "-c", "/bin/rm /tmp/*.log*").Output()
+		if nil != err {
+			t.Errorf("clean files failed. err: %s", err.Error())
+		}
+	}()
+
+	// should be closed
+	Close()
+	if nil != blog {
+		t.Error("blog should be closed.")
+	}
+}
+
 // test if log lose in multi goroutine mode
 func TestFileWriterMultiGoroutine(t *testing.T) {
 	err := NewFileWriter("/tmp", false)

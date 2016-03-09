@@ -25,7 +25,8 @@ var (
 	// ErrConfigLevelsNotFound not found levels
 	ErrConfigLevelsNotFound = errors.New("Please define levels attribution")
 	// ErrConfigFilePathNotFound not found file path
-	ErrConfigFilePathNotFound       = errors.New("Please define the file path")
+	ErrConfigFilePathNotFound = errors.New("Please define the file path")
+	// ErrConfigFileRotateTypeNotFound not found rotate type
 	ErrConfigFileRotateTypeNotFound = errors.New("Please define the file rotate type")
 	// ErrConfigSocketAddressNotFound not found socket address
 	ErrConfigSocketAddressNotFound = errors.New("Please define a socket address")
