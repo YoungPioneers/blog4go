@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - logrotate测试用例。
 - 重复初始化blog, 返回ErrAlreadyInit.
+- fileWriter测试检查日志内容正确性。
 
 ### Fixed
 - 测试用例中不完整关闭writer。

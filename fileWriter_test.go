@@ -3,6 +3,7 @@
 package blog4go
 
 import (
+	"bufio"
 	"os"
 	"os/exec"
 	"strconv"
@@ -11,6 +12,11 @@ import (
 	"testing"
 	"time"
 )
+
+type T struct {
+	A int
+	B string
+}
 
 // test if log lose in multi goroutine mode
 func TestFileWriterMultiGoroutine(t *testing.T) {
@@ -24,6 +30,7 @@ func TestFileWriterMultiGoroutine(t *testing.T) {
 			t.Errorf("clean files failed. err: %s", err.Error())
 		}
 	}()
+	temp := T{123, "test"}
 
 	if nil != err {
 		t.Errorf("initialize file writer faied. err: %s", err.Error())
@@ -36,7 +43,7 @@ func TestFileWriterMultiGoroutine(t *testing.T) {
 		defer wg.Done()
 		beginWg.Wait()
 		for i := 0; i < 100; i++ {
-			blog.Infof("haha %s. en\\en, always %d and %f, %t, %+v", "eddie", 18, 3.1415, true, t)
+			blog.Infof("haha %s. en\\en, always %d and %f, %t, %+v", "eddie", 18, 3.1415, true, temp)
 		}
 	}
 
@@ -68,6 +75,33 @@ func TestFileWriterMultiGoroutine(t *testing.T) {
 
 	if 100*100 != lines {
 		t.Errorf("it loses %d lines.", 100*100-lines)
+	}
+
+	// check log message line by line
+	file, err := os.Open("/tmp/info.log")
+	if err != nil {
+		t.Error(err.Error())
+
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	line := 0
+	for scanner.Scan() {
+		line++
+		lineStr := scanner.Text()
+		arrs := strings.Split(lineStr, "[INFO] ")
+		if len(arrs) != 2 {
+			t.Errorf("line %d detect inconsistent line. not formatted. lineStr: %s", line, lineStr)
+		}
+
+		if "haha eddie. en\\en, always 18 and 3.141500, true, {A:123 B:test}" != arrs[1] {
+			t.Errorf("line %d detect inconsistent line. message not correct. lineStr: %s", line, lineStr)
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		t.Error(err.Error())
 	}
 }
 

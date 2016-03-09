@@ -202,7 +202,6 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 			// set color
 			multiWriter.SetColored(filter.Colored)
 			multiWriter.writers[level] = writer
-			fmt.Printf("\n\n%+v\n\n", writer)
 		}
 	}
 
