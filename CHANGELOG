@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - file writer close测试。
 - socket writer测试用例。
 - console writer测试用例。
+- 从配置文件初始化writer测试用例。
 
 ### Changed
 - 优化config判断条件。

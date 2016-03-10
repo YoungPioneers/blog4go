@@ -71,6 +71,30 @@ func TestSingleFileWriter(t *testing.T) {
 	}
 }
 
+func TestFileWriterAsConfigFile(t *testing.T) {
+	err := NewWriterFromConfigAsFile("examples/writer_from_configfile/config.example.xml")
+	defer func() {
+		Close()
+
+		// clean logs
+		_, err = exec.Command("/bin/sh", "-c", "/bin/rm /tmp/*.log*").Output()
+		if nil != err {
+			t.Errorf("clean files failed. err: %s", err.Error())
+		}
+	}()
+
+	if nil != err {
+		t.Error(err.Error())
+	}
+
+	blog.Debug("Debug")
+	blog.Trace("Trace")
+	blog.Info("Info")
+	blog.Warn("Warn")
+	blog.Error("Error")
+	blog.Critical("Critical")
+}
+
 // test if log lose in multi goroutine mode
 func TestFileWriterMultiGoroutine(t *testing.T) {
 	err := NewFileWriter("/tmp", false)
