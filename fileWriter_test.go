@@ -18,7 +18,7 @@ type T struct {
 	B string
 }
 
-func TestSingleFileWriter(t *testing.T) {
+func TestFileWriterBasicOperation(t *testing.T) {
 	err := NewFileWriter("/tmp", false)
 	defer func() {
 		Close()
@@ -59,6 +59,41 @@ func TestSingleFileWriter(t *testing.T) {
 		t.Errorf("hook parameters wrong. level: %d, message: %s", hook.level, hook.message)
 	}
 
+	// test basic operations
+	blog.SetColored(true)
+	blog.SetTimeRotated(true)
+	blog.SetLevel(INFO)
+	blog.SetRetentions(7)
+	blog.SetRotateLines(100000)
+	blog.SetRotateSize(ByteSize(1024 * 1024 * 500))
+
+	blog.Debug("Debug")
+	blog.Debugf("%s", "Debug")
+	blog.Trace("Trace")
+	blog.Tracef("%s", "Trace")
+	blog.Info("Info")
+	blog.Infof("%s", "Info")
+	blog.Warn("Warn")
+	blog.Warnf("%s", "Warn")
+	blog.Error("Error")
+	blog.Errorf("%s", "Error")
+	blog.Critical("Critical")
+	blog.Criticalf("%s", "Critical")
+}
+
+func TestSingleFileWriter(t *testing.T) {
+	err := NewFileWriter("/tmp", false)
+	defer func() {
+		Close()
+
+		// clean logs
+		_, err = exec.Command("/bin/sh", "-c", "/bin/rm /tmp/*.log*").Output()
+		if nil != err {
+			t.Errorf("clean files failed. err: %s", err.Error())
+		}
+	}()
+
+	// duplicate initialization test
 	err = NewFileWriter("/tmp", false)
 	if ErrAlreadyInit != err {
 		t.Error("duplicate init check fail")

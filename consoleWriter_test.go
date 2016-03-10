@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func TestSingleConsoleWriter(t *testing.T) {
+func TestConsoleWriterBasicOperation(t *testing.T) {
 	_, err := NewConsoleWriter()
 	defer Close()
 	if nil != err {
@@ -41,6 +41,35 @@ func TestSingleConsoleWriter(t *testing.T) {
 
 	if INFO != hook.level || "yes" != hook.message {
 		t.Errorf("hook parameters wrong. level: %d, message: %s", hook.level, hook.message)
+	}
+
+	// test basic operations
+	blog.SetColored(true)
+	blog.SetTimeRotated(true)
+	blog.SetLevel(INFO)
+	blog.SetRetentions(7)
+	blog.SetRotateLines(100000)
+	blog.SetRotateSize(ByteSize(1024 * 1024 * 500))
+
+	blog.Debug("Debug")
+	blog.Debugf("%s", "Debug")
+	blog.Trace("Trace")
+	blog.Tracef("%s", "Trace")
+	blog.Info("Info")
+	blog.Infof("%s", "Info")
+	blog.Warn("Warn")
+	blog.Warnf("%s", "Warn")
+	blog.Error("Error")
+	blog.Errorf("%s", "Error")
+	blog.Critical("Critical")
+	blog.Criticalf("%s", "Critical")
+}
+
+func TestSingleConsoleWriter(t *testing.T) {
+	_, err := NewConsoleWriter()
+	defer Close()
+	if nil != err {
+		t.Error(err.Error())
 	}
 
 	// duplicate init check

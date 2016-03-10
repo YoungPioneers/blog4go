@@ -389,6 +389,11 @@ func (blog *BLog) resetFile(in io.Writer) (err error) {
 	return
 }
 
+// SetLevel set level for logging action
+func SetLevel(level Level) {
+	blog.SetLevel(level)
+}
+
 // SetHook set hook for logging action
 func SetHook(hook Hook) {
 	blog.SetHook(hook)
