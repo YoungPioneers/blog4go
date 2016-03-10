@@ -111,11 +111,6 @@ func (writer *SocketWriter) writef(level Level, format string, args ...interface
 	writer.writer.Write(buffer.Bytes())
 }
 
-// Level return logger level
-func (writer *SocketWriter) Level() Level {
-	return writer.level
-}
-
 // SetLevel set logger level
 func (writer *SocketWriter) SetLevel(level Level) {
 	writer.level = level

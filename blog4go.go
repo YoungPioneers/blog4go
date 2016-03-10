@@ -53,8 +53,6 @@ type Writer interface {
 	// Close do anything end before program end
 	Close()
 
-	// Level return logging level threshold
-	Level() Level
 	// SetLevel set logging level threshold
 	SetLevel(level Level)
 
