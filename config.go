@@ -5,7 +5,6 @@ package blog4go
 import (
 	"encoding/xml"
 	"errors"
-	//"fmt"
 	"io/ioutil"
 	"os"
 )
@@ -92,9 +91,10 @@ func (config *Config) valid() error {
 		}
 
 		if (file{}) != filter.File {
-			if "" == filter.File.Path {
-				return ErrConfigFilePathNotFound
-			}
+			// seem not needed now
+			//if "" == filter.File.Path {
+			//return ErrConfigFilePathNotFound
+			//}
 		} else if (rotateFile{}) != filter.RotateFile {
 			if "" == filter.RotateFile.Path {
 				return ErrConfigFilePathNotFound

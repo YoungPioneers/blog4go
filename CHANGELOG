@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - config valid方法实现。
 - file writer close测试。
+- socket writer测试用例。
 
 ### Changed
 - 优化config判断条件。

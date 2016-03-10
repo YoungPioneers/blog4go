@@ -39,7 +39,7 @@ func TestHook(t *testing.T) {
 
 	blog.Debug("something")
 	// wait for hook called
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(1 * time.Millisecond)
 	if 0 != hook.cnt {
 		t.Error("hook called not valid")
 	}
@@ -50,7 +50,7 @@ func TestHook(t *testing.T) {
 
 	blog.Info("yes")
 	// wait for hook called
-	time.Sleep(10 * time.Millisecond)
+	time.Sleep(1 * time.Millisecond)
 	if 1 != hook.cnt {
 		t.Error("hook not called")
 	}
