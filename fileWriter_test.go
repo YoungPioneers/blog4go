@@ -4,6 +4,7 @@ package blog4go
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"os/exec"
 	"strconv"
@@ -252,6 +253,42 @@ func TestFileWriterSizeBaseLogrotate(t *testing.T) {
 
 	if _, err = os.Stat("/tmp/info.log.1"); os.IsNotExist(err) {
 		t.Errorf("size base logrotate failed., err: %s", err.Error())
+	}
+}
+
+// TODO how to test time base logratate ?
+func TestFileWriterTimeBaseLogrotate(t *testing.T) {
+	err := NewFileWriter("/tmp", true)
+	defer func() {
+		Close()
+
+		// clean logs
+		_, err = exec.Command("/bin/sh", "-c", "/bin/rm /tmp/*.log*").Output()
+		if nil != err {
+			t.Errorf("clean files failed. err: %s", err.Error())
+		}
+	}()
+
+	SetRetentions(1)
+
+	// check if formatted file name exist
+	if _, err = os.Stat(fmt.Sprintf("/tmp/trace.log.%s", timeCache.date)); os.IsNotExist(err) {
+		t.Error("time base logrotate formatted file name incorrect.")
+	}
+	if _, err = os.Stat(fmt.Sprintf("/tmp/debug.log.%s", timeCache.date)); os.IsNotExist(err) {
+		t.Error("time base logrotate formatted file name incorrect.")
+	}
+	if _, err = os.Stat(fmt.Sprintf("/tmp/info.log.%s", timeCache.date)); os.IsNotExist(err) {
+		t.Error("time base logrotate formatted file name incorrect.")
+	}
+	if _, err = os.Stat(fmt.Sprintf("/tmp/warn.log.%s", timeCache.date)); os.IsNotExist(err) {
+		t.Error("time base logrotate formatted file name incorrect.")
+	}
+	if _, err = os.Stat(fmt.Sprintf("/tmp/error.log.%s", timeCache.date)); os.IsNotExist(err) {
+		t.Error("time base logrotate formatted file name incorrect.")
+	}
+	if _, err = os.Stat(fmt.Sprintf("/tmp/critical.log.%s", timeCache.date)); os.IsNotExist(err) {
+		t.Error("time base logrotate formatted file name incorrect.")
 	}
 }
 

@@ -347,11 +347,6 @@ func (writer *baseFileWriter) SetRetentions(retentions int64) {
 	writer.retentions = retentions
 }
 
-// RotateSize return size threshold when logrotate
-func (writer *baseFileWriter) RotateSize() ByteSize {
-	return writer.rotateSize
-}
-
 // SetRotateSize set size when logroatate
 func (writer *baseFileWriter) SetRotateSize(rotateSize ByteSize) {
 	if rotateSize > ByteSize(0) {
@@ -360,11 +355,6 @@ func (writer *baseFileWriter) SetRotateSize(rotateSize ByteSize) {
 	} else {
 		writer.sizeRotated = false
 	}
-}
-
-// RotateLine return line threshold when logrotate
-func (writer *baseFileWriter) RotateLine() int {
-	return writer.rotateLines
 }
 
 // SetRotateLines set line number when logrotate
@@ -377,11 +367,6 @@ func (writer *baseFileWriter) SetRotateLines(rotateLines int) {
 	}
 }
 
-// Colored return whether writer log with color
-func (writer *baseFileWriter) Colored() bool {
-	return writer.colored
-}
-
 // SetColored set logging color
 func (writer *baseFileWriter) SetColored(colored bool) {
 	if colored == writer.colored {
@@ -390,11 +375,6 @@ func (writer *baseFileWriter) SetColored(colored bool) {
 
 	writer.colored = colored
 	initPrefix(colored)
-}
-
-// Level return logging level threshold
-func (writer *baseFileWriter) Level() Level {
-	return writer.blog.Level()
 }
 
 // SetLevel set logging level threshold
