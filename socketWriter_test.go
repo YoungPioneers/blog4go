@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 func TestSignleSocketWriter(t *testing.T) {
@@ -15,6 +16,35 @@ func TestSignleSocketWriter(t *testing.T) {
 	defer Close()
 	if nil != err {
 		t.Error(err.Error())
+	}
+
+	// test socket writer hook
+	hook := new(MyHook)
+	hook.cnt = 0
+
+	blog.SetHook(hook)
+	blog.SetHookLevel(INFO)
+
+	blog.Debugf("%s", "something")
+	// wait for hook called
+	time.Sleep(1 * time.Millisecond)
+	if 0 != hook.cnt {
+		t.Error("hook called not valid")
+	}
+
+	if DEBUG == hook.level || "something" == hook.message {
+		t.Errorf("hook parameters wrong. level: %s, message: %s", hook.level.String(), hook.message)
+	}
+
+	blog.Info("yes")
+	// wait for hook called
+	time.Sleep(1 * time.Millisecond)
+	if 1 != hook.cnt {
+		t.Error("hook not called")
+	}
+
+	if INFO != hook.level || "yes" != hook.message {
+		t.Errorf("hook parameters wrong. level: %d, message: %s", hook.level, hook.message)
 	}
 
 	var wg sync.WaitGroup
@@ -37,7 +67,6 @@ func TestSignleSocketWriter(t *testing.T) {
 		wgListen.Done()
 
 		var bytes = make([]byte, 1024)
-		//_, _, err = conn.ReadFromUDP(bytes)
 		_, err = conn.Read(bytes)
 		if nil != err {
 			fmt.Println(err.Error())
@@ -61,6 +90,13 @@ func TestSignleSocketWriter(t *testing.T) {
 	wgListen.Wait()
 	blog.Debug("haha")
 	wg.Wait()
+
+	// chekc init socket writer multi time
+	_, err = NewSocketWriter("udp", "127.0.0.1:12124")
+	defer Close()
+	if ErrAlreadyInit != err {
+		t.Error("duplicate init check fail")
+	}
 }
 
 func BenchmarkSocketWriter(b *testing.B) {

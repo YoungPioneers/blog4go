@@ -59,6 +59,11 @@ func TestSingleFileWriter(t *testing.T) {
 		t.Errorf("hook parameters wrong. level: %d, message: %s", hook.level, hook.message)
 	}
 
+	err = NewFileWriter("/tmp", false)
+	if ErrAlreadyInit != err {
+		t.Error("duplicate init check fail")
+	}
+
 	// should be closed
 	Close()
 	if nil != blog {
