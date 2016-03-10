@@ -100,11 +100,11 @@ type baseFileWriter struct {
 // will be returned.
 // fileName must be an absolute path to the destination log file
 // rotate determine if it will logrotate
-func newBaseFileWriter(fileName string, timeRotate bool) (fileWriter *baseFileWriter, err error) {
+func newBaseFileWriter(fileName string, timeRotated bool) (fileWriter *baseFileWriter, err error) {
 	fileWriter = new(baseFileWriter)
 	fileWriter.fileName = fileName
 	// open file target file
-	if timeRotate {
+	if timeRotated {
 		fileName = fmt.Sprintf("%s.%s", fileName, timeCache.date)
 	}
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
@@ -119,7 +119,7 @@ func newBaseFileWriter(fileName string, timeRotate bool) (fileWriter *baseFileWr
 
 	// about logrotate
 	fileWriter.lock = new(sync.Mutex)
-	fileWriter.timeRotated = false
+	fileWriter.timeRotated = timeRotated
 	fileWriter.timeRotateSig = make(chan bool)
 	fileWriter.sizeRotateSig = make(chan bool)
 	fileWriter.logSizeChan = make(chan int, 4096)
@@ -269,7 +269,11 @@ DaemonLoop:
 
 // resetFile reset current writing file
 func (writer *baseFileWriter) resetFile() {
-	file, _ := os.OpenFile(writer.fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
+	fileName := writer.fileName
+	if writer.timeRotated {
+		fileName = fmt.Sprintf("%s.%s", fileName, timeCache.date)
+	}
+	file, _ := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 	writer.file.Close()
 	writer.blog.resetFile(file)
 	writer.file = file
