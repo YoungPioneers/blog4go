@@ -224,23 +224,23 @@ func TestFileWriterSizeBaseLogrotate(t *testing.T) {
 		Close()
 
 		// clean logs
-		_, err = exec.Command("/bin/sh", "-c", "/bin/rm /tmp/*.log*").Output()
-		if nil != err {
-			t.Errorf("clean files failed. err: %s", err.Error())
-		}
+		//_, err = exec.Command("/bin/sh", "-c", "/bin/rm /tmp/*.log*").Output()
+		//if nil != err {
+		//t.Errorf("clean files failed. err: %s", err.Error())
+		//}
 	}()
 
 	if nil != err {
 		t.Errorf("initialize file writer faied. err: %s", err.Error())
 	}
-	blog.SetRotateSize(2)
+	blog.SetRotateSize(60)
 
 	blog.Info("1")
 	Flush()
 	time.Sleep(1 * time.Millisecond)
 
 	if _, err = os.Stat("/tmp/info.log.1"); nil == err {
-		t.Errorf("size base logrotate failed, log should not exist. err: %s", err.Error())
+		t.Error("size base logrotate failed, log should not exist.")
 	}
 
 	blog.Info("2")
@@ -252,7 +252,7 @@ func TestFileWriterSizeBaseLogrotate(t *testing.T) {
 	time.Sleep(1 * time.Millisecond)
 
 	if _, err = os.Stat("/tmp/info.log.1"); os.IsNotExist(err) {
-		t.Errorf("size base logrotate failed., err: %s", err.Error())
+		t.Errorf("size base logrotate failed. err: %s", err.Error())
 	}
 }
 
@@ -314,7 +314,7 @@ func TestFileWriterLinesBaseLogrotate(t *testing.T) {
 	time.Sleep(1 * time.Millisecond)
 
 	if _, err = os.Stat("/tmp/info.log.1"); nil == err {
-		t.Errorf("line base logrotate failed, log should not exist. err: %s", err.Error())
+		t.Error("line base logrotate failed, log should not exist.")
 	}
 
 	blog.Info("some")
@@ -354,7 +354,7 @@ func TestFileWriterLogrorateRetentionCount(t *testing.T) {
 	time.Sleep(1 * time.Millisecond)
 
 	if _, err = os.Stat("/tmp/info.log.1"); nil == err {
-		t.Errorf("logrotate retention failed, log should not exist. err: %s", err.Error())
+		t.Error("logrotate retention failed, log should not exist.")
 	}
 
 	blog.Info("2")
@@ -373,7 +373,7 @@ func TestFileWriterLogrorateRetentionCount(t *testing.T) {
 	Flush()
 	time.Sleep(1 * time.Millisecond)
 	if _, err = os.Stat("/tmp/info.log.2"); nil == err {
-		t.Errorf("logrotate retention failed. err: %s", err.Error())
+		t.Error("logrotate retention failed.")
 	}
 }
 
