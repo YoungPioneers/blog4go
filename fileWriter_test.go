@@ -239,7 +239,7 @@ func TestFileWriterSizeBaseLogrotate(t *testing.T) {
 	Flush()
 	time.Sleep(1 * time.Millisecond)
 
-	if _, err = os.Stat("/tmp/info.log.1"); os.IsExist(err) {
+	if _, err = os.Stat("/tmp/info.log.1"); nil == err {
 		t.Errorf("size base logrotate failed, log should not exist. err: %s", err.Error())
 	}
 
@@ -313,7 +313,7 @@ func TestFileWriterLinesBaseLogrotate(t *testing.T) {
 	Flush()
 	time.Sleep(1 * time.Millisecond)
 
-	if _, err = os.Stat("/tmp/info.log.1"); os.IsExist(err) {
+	if _, err = os.Stat("/tmp/info.log.1"); nil == err {
 		t.Errorf("line base logrotate failed, log should not exist. err: %s", err.Error())
 	}
 
@@ -353,7 +353,7 @@ func TestFileWriterLogrorateRetentionCount(t *testing.T) {
 	Flush()
 	time.Sleep(1 * time.Millisecond)
 
-	if _, err = os.Stat("/tmp/info.log.1"); os.IsExist(err) {
+	if _, err = os.Stat("/tmp/info.log.1"); nil == err {
 		t.Errorf("logrotate retention failed, log should not exist. err: %s", err.Error())
 	}
 
@@ -372,7 +372,7 @@ func TestFileWriterLogrorateRetentionCount(t *testing.T) {
 	blog.Info("5")
 	Flush()
 	time.Sleep(1 * time.Millisecond)
-	if _, err = os.Stat("/tmp/info.log.2"); os.IsExist(err) {
+	if _, err = os.Stat("/tmp/info.log.2"); nil == err {
 		t.Errorf("logrotate retention failed. err: %s", err.Error())
 	}
 }

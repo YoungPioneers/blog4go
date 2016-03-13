@@ -214,10 +214,10 @@ DaemonLoop:
 					// when it needs to expire logs
 					if writer.retentions > 0 {
 						// format the expired log file name
-						date := timeCache.now.Add(time.Duration(-24 * (writer.retentions + 1))).Format(DateFormat)
+						date := timeCache.now.Add(time.Duration(-24*(writer.retentions+1)) * time.Hour).Format(DateFormat)
 						expiredFileName := fmt.Sprintf("%s.%s", writer.fileName, date)
 						// check if expired log exists
-						if _, err := os.Stat(expiredFileName); os.IsExist(err) {
+						if _, err := os.Stat(expiredFileName); nil == err {
 							os.Remove(expiredFileName)
 						}
 					}
