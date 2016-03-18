@@ -204,11 +204,10 @@ DaemonLoop:
 				if fileName := fmt.Sprintf("%s.%s", writer.fileName, timeCache.date); writer.currentFileName != fileName {
 					// lock at this place may cause logrotate not accurate, but reduce lock acquire
 					// TODO have any better solution?
+					// use func to ensure writer.lock will be released
 					writer.lock.Lock()
-
 					writer.resetFile()
 					writer.currentFileName = fileName
-
 					writer.lock.Unlock()
 
 					// when it needs to expire logs
@@ -332,6 +331,10 @@ func (writer *baseFileWriter) Close() {
 	writer.blog.flush()
 	writer.blog.Close()
 	writer.blog = nil
+	writer.file.Close()
+	close(writer.logSizeChan)
+	close(writer.timeRotateSig)
+	close(writer.sizeRotateSig)
 }
 
 // SetTimeRotated toggle time base logrotate on the fly

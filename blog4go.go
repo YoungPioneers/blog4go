@@ -107,6 +107,10 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 		return
 	}
 
+	if err = config.valid(); nil != err {
+		return
+	}
+
 	multiWriter := new(MultiWriter)
 
 	multiWriter.level = DEBUG
