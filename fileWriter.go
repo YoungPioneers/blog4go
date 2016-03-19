@@ -122,7 +122,7 @@ func newBaseFileWriter(fileName string, timeRotated bool) (fileWriter *baseFileW
 	fileWriter.timeRotated = timeRotated
 	fileWriter.timeRotateSig = make(chan bool)
 	fileWriter.sizeRotateSig = make(chan bool)
-	fileWriter.logSizeChan = make(chan int, 4096)
+	fileWriter.logSizeChan = make(chan int, 8192)
 
 	fileWriter.lineRotated = false
 	fileWriter.rotateSize = DefaultRotateSize
