@@ -3,6 +3,7 @@
 package blog4go
 
 import (
+	"fmt"
 	"os/exec"
 	"testing"
 	"time"
@@ -18,10 +19,10 @@ func (hook *MyHook) add() {
 	hook.cnt++
 }
 
-func (hook *MyHook) Fire(level Level, message string) {
+func (hook *MyHook) Fire(level Level, args ...interface{}) {
 	hook.add()
 	hook.level = level
-	hook.message = message
+	hook.message = fmt.Sprint(args...)
 }
 
 func TestHook(t *testing.T) {

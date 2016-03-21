@@ -75,23 +75,27 @@ DaemonLoop:
 	}
 }
 
-func (writer *ConsoleWriter) write(level Level, format string) {
-	defer func() {
-		if nil != writer.hook && !(level < writer.hookLevel) {
-			go func(level Level, format string) {
-				writer.hook.Fire(level, format)
-			}(level, format)
-		}
-	}()
-
+func (writer *ConsoleWriter) write(level Level, args ...interface{}) {
 	if writer.closed {
 		return
 	}
 
-	writer.blog.write(level, format)
+	defer func() {
+		if nil != writer.hook && !(level < writer.hookLevel) {
+			go func(level Level, args ...interface{}) {
+				writer.hook.Fire(level, args...)
+			}(level, args...)
+		}
+	}()
+
+	writer.blog.write(level, args...)
 }
 
 func (writer *ConsoleWriter) writef(level Level, format string, args ...interface{}) {
+	if writer.closed {
+		return
+	}
+
 	defer func() {
 
 		if nil != writer.hook && !(level < writer.hookLevel) {
@@ -100,10 +104,6 @@ func (writer *ConsoleWriter) writef(level Level, format string, args ...interfac
 			}(level, format, args...)
 		}
 	}()
-
-	if writer.closed {
-		return
-	}
 
 	writer.blog.writef(level, format, args...)
 }
@@ -180,31 +180,13 @@ func (writer *ConsoleWriter) flush() {
 	writer.blog.flush()
 }
 
-// Debug debug
-func (writer *ConsoleWriter) Debug(format string) {
-	if DEBUG < writer.blog.Level() {
-		return
-	}
-
-	writer.write(DEBUG, format)
-}
-
-// Debugf debugf
-func (writer *ConsoleWriter) Debugf(format string, args ...interface{}) {
-	if DEBUG < writer.blog.Level() {
-		return
-	}
-
-	writer.writef(DEBUG, format, args...)
-}
-
 // Trace trace
-func (writer *ConsoleWriter) Trace(format string) {
+func (writer *ConsoleWriter) Trace(args ...interface{}) {
 	if TRACE < writer.blog.Level() {
 		return
 	}
 
-	writer.write(TRACE, format)
+	writer.write(TRACE, args...)
 }
 
 // Tracef tracef
@@ -216,13 +198,31 @@ func (writer *ConsoleWriter) Tracef(format string, args ...interface{}) {
 	writer.writef(TRACE, format, args...)
 }
 
+// Debug debug
+func (writer *ConsoleWriter) Debug(args ...interface{}) {
+	if DEBUG < writer.blog.Level() {
+		return
+	}
+
+	writer.write(DEBUG, args...)
+}
+
+// Debugf debugf
+func (writer *ConsoleWriter) Debugf(format string, args ...interface{}) {
+	if DEBUG < writer.blog.Level() {
+		return
+	}
+
+	writer.writef(DEBUG, format, args...)
+}
+
 // Info info
-func (writer *ConsoleWriter) Info(format string) {
+func (writer *ConsoleWriter) Info(args ...interface{}) {
 	if INFO < writer.blog.Level() {
 		return
 	}
 
-	writer.write(INFO, format)
+	writer.write(INFO, args...)
 }
 
 // Infof infof
@@ -235,12 +235,12 @@ func (writer *ConsoleWriter) Infof(format string, args ...interface{}) {
 }
 
 // Warn warn
-func (writer *ConsoleWriter) Warn(format string) {
+func (writer *ConsoleWriter) Warn(args ...interface{}) {
 	if WARNING < writer.blog.Level() {
 		return
 	}
 
-	writer.write(WARNING, format)
+	writer.write(WARNING, args...)
 }
 
 // Warnf warnf
@@ -253,12 +253,12 @@ func (writer *ConsoleWriter) Warnf(format string, args ...interface{}) {
 }
 
 // Error error
-func (writer *ConsoleWriter) Error(format string) {
+func (writer *ConsoleWriter) Error(args ...interface{}) {
 	if ERROR < writer.blog.Level() {
 		return
 	}
 
-	writer.write(ERROR, format)
+	writer.write(ERROR, args...)
 }
 
 // Errorf errorf
@@ -271,12 +271,12 @@ func (writer *ConsoleWriter) Errorf(format string, args ...interface{}) {
 }
 
 // Critical critical
-func (writer *ConsoleWriter) Critical(format string) {
+func (writer *ConsoleWriter) Critical(args ...interface{}) {
 	if CRITICAL < writer.blog.Level() {
 		return
 	}
 
-	writer.write(CRITICAL, format)
+	writer.write(CRITICAL, args...)
 }
 
 // Criticalf criticalf

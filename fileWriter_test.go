@@ -157,6 +157,7 @@ func TestFileWriterMultiGoroutine(t *testing.T) {
 		beginWg.Wait()
 		for i := 0; i < 100; i++ {
 			blog.Infof("haha %s. en\\en, always %d and %f, %t, %+v", "eddie", 18, 3.1415, true, temp)
+			blog.Info("test for not formated")
 		}
 	}
 
@@ -186,7 +187,7 @@ func TestFileWriterMultiGoroutine(t *testing.T) {
 		t.Errorf("line string convert to int failed. err: %s", err.Error())
 	}
 
-	if 100*100 != lines {
+	if 100*100*2 != lines {
 		t.Errorf("it loses %d lines.", 100*100-lines)
 	}
 
@@ -208,7 +209,7 @@ func TestFileWriterMultiGoroutine(t *testing.T) {
 			t.Errorf("line %d detect inconsistent line. not formatted. lineStr: %s", line, lineStr)
 		}
 
-		if "haha eddie. en\\en, always 18 and 3.141500, true, {A:123 B:test}" != arrs[1] {
+		if "haha eddie. en\\en, always 18 and 3.141500, true, {A:123 B:test}" != arrs[1] && "test for not formated" != arrs[1] {
 			t.Errorf("line %d detect inconsistent line. message not correct. lineStr: %s", line, lineStr)
 		}
 	}

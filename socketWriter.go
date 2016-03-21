@@ -64,16 +64,16 @@ func newSocketWriter(network string, address string) (socketWriter *SocketWriter
 	return socketWriter, nil
 }
 
-func (writer *SocketWriter) write(level Level, format string) {
+func (writer *SocketWriter) write(level Level, args ...interface{}) {
 	writer.lock.Lock()
 
 	defer func() {
 		writer.lock.Unlock()
 		// call log hook
 		if nil != writer.hook && !(level < writer.hookLevel) {
-			go func(level Level, format string) {
-				writer.hook.Fire(level, format)
-			}(level, format)
+			go func(level Level, args ...interface{}) {
+				writer.hook.Fire(level, args...)
+			}(level, args...)
 		}
 	}()
 
@@ -83,7 +83,7 @@ func (writer *SocketWriter) write(level Level, format string) {
 
 	buffer := bytes.NewBuffer(timeCache.format)
 	buffer.WriteString(level.prefix())
-	buffer.WriteString(format)
+	buffer.WriteString(fmt.Sprint(args...))
 	writer.writer.Write(buffer.Bytes())
 }
 
@@ -169,31 +169,13 @@ func (writer *SocketWriter) flush() {
 	return
 }
 
-// Debug debug
-func (writer *SocketWriter) Debug(format string) {
-	if DEBUG < writer.level {
-		return
-	}
-
-	writer.write(DEBUG, format)
-}
-
-// Debugf debugf
-func (writer *SocketWriter) Debugf(format string, args ...interface{}) {
-	if DEBUG < writer.level {
-		return
-	}
-
-	writer.writef(DEBUG, format, args...)
-}
-
 // Trace trace
-func (writer *SocketWriter) Trace(format string) {
+func (writer *SocketWriter) Trace(args ...interface{}) {
 	if TRACE < writer.level {
 		return
 	}
 
-	writer.write(TRACE, format)
+	writer.write(TRACE, args...)
 }
 
 // Tracef tracef
@@ -205,13 +187,31 @@ func (writer *SocketWriter) Tracef(format string, args ...interface{}) {
 	writer.writef(TRACE, format, args...)
 }
 
+// Debug debug
+func (writer *SocketWriter) Debug(args ...interface{}) {
+	if DEBUG < writer.level {
+		return
+	}
+
+	writer.write(DEBUG, args...)
+}
+
+// Debugf debugf
+func (writer *SocketWriter) Debugf(format string, args ...interface{}) {
+	if DEBUG < writer.level {
+		return
+	}
+
+	writer.writef(DEBUG, format, args...)
+}
+
 // Info info
-func (writer *SocketWriter) Info(format string) {
+func (writer *SocketWriter) Info(args ...interface{}) {
 	if INFO < writer.level {
 		return
 	}
 
-	writer.write(INFO, format)
+	writer.write(INFO, args...)
 }
 
 // Infof infof
@@ -224,12 +224,12 @@ func (writer *SocketWriter) Infof(format string, args ...interface{}) {
 }
 
 // Warn warn
-func (writer *SocketWriter) Warn(format string) {
+func (writer *SocketWriter) Warn(args ...interface{}) {
 	if WARNING < writer.level {
 		return
 	}
 
-	writer.write(WARNING, format)
+	writer.write(WARNING, args...)
 }
 
 // Warnf warnf
@@ -242,12 +242,12 @@ func (writer *SocketWriter) Warnf(format string, args ...interface{}) {
 }
 
 // Error error
-func (writer *SocketWriter) Error(format string) {
+func (writer *SocketWriter) Error(args ...interface{}) {
 	if ERROR < writer.level {
 		return
 	}
 
-	writer.write(ERROR, format)
+	writer.write(ERROR, args...)
 }
 
 // Errorf error
@@ -260,12 +260,12 @@ func (writer *SocketWriter) Errorf(format string, args ...interface{}) {
 }
 
 // Critical critical
-func (writer *SocketWriter) Critical(format string) {
+func (writer *SocketWriter) Critical(args ...interface{}) {
 	if CRITICAL < writer.level {
 		return
 	}
 
-	writer.write(CRITICAL, format)
+	writer.write(CRITICAL, args...)
 }
 
 // Criticalf criticalf

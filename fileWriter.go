@@ -279,7 +279,7 @@ func (writer *baseFileWriter) resetFile() {
 }
 
 // write writes pure message with specific level
-func (writer *baseFileWriter) write(level Level, format string) {
+func (writer *baseFileWriter) write(level Level, args ...interface{}) {
 	var size = 0
 	defer func() {
 		// logrotate
@@ -292,7 +292,7 @@ func (writer *baseFileWriter) write(level Level, format string) {
 		return
 	}
 
-	size = writer.blog.write(level, format)
+	size = writer.blog.write(level, args...)
 }
 
 // write formats message with specific level and write it
@@ -400,18 +400,8 @@ func (writer *baseFileWriter) flush() {
 	writer.blog.flush()
 }
 
-// Debug do nothing
-func (writer *baseFileWriter) Debug(format string) {
-	return
-}
-
-// Debugf do nothing
-func (writer *baseFileWriter) Debugf(format string, args ...interface{}) {
-	return
-}
-
 // Trace do nothing
-func (writer *baseFileWriter) Trace(format string) {
+func (writer *baseFileWriter) Trace(args ...interface{}) {
 	return
 }
 
@@ -420,8 +410,18 @@ func (writer *baseFileWriter) Tracef(format string, args ...interface{}) {
 	return
 }
 
+// Debug do nothing
+func (writer *baseFileWriter) Debug(args ...interface{}) {
+	return
+}
+
+// Debugf do nothing
+func (writer *baseFileWriter) Debugf(format string, args ...interface{}) {
+	return
+}
+
 // Info do nothing
-func (writer *baseFileWriter) Info(format string) {
+func (writer *baseFileWriter) Info(args ...interface{}) {
 	return
 }
 
@@ -431,7 +431,7 @@ func (writer *baseFileWriter) Infof(format string, args ...interface{}) {
 }
 
 // Warn do nothing
-func (writer *baseFileWriter) Warn(format string) {
+func (writer *baseFileWriter) Warn(args ...interface{}) {
 	return
 }
 
@@ -441,7 +441,7 @@ func (writer *baseFileWriter) Warnf(format string, args ...interface{}) {
 }
 
 // Error do nothing
-func (writer *baseFileWriter) Error(format string) {
+func (writer *baseFileWriter) Error(args ...interface{}) {
 	return
 }
 
@@ -451,7 +451,7 @@ func (writer *baseFileWriter) Errorf(format string, args ...interface{}) {
 }
 
 // Critical do nothing
-func (writer *baseFileWriter) Critical(format string) {
+func (writer *baseFileWriter) Critical(args ...interface{}) {
 	return
 }
 

@@ -102,17 +102,17 @@ func (writer *MultiWriter) Close() {
 	writer.closed = true
 }
 
-func (writer *MultiWriter) write(level Level, format string) {
+func (writer *MultiWriter) write(level Level, args ...interface{}) {
 	defer func() {
 		// 异步调用log hook
 		if nil != writer.hook && !(level < writer.hookLevel) {
-			go func(level Level, format string) {
-				writer.hook.Fire(level, format)
-			}(level, format)
+			go func(level Level, args ...interface{}) {
+				writer.hook.Fire(level, args...)
+			}(level, args...)
 		}
 	}()
 
-	writer.writers[level].write(level, format)
+	writer.writers[level].write(level, args...)
 }
 
 func (writer *MultiWriter) writef(level Level, format string, args ...interface{}) {
@@ -135,34 +135,14 @@ func (writer *MultiWriter) flush() {
 	}
 }
 
-// Debug debug
-func (writer *MultiWriter) Debug(format string) {
-	_, ok := writer.writers[DEBUG]
-	if !ok || DEBUG < writer.level {
-		return
-	}
-
-	writer.write(DEBUG, format)
-}
-
-// Debugf debugf
-func (writer *MultiWriter) Debugf(format string, args ...interface{}) {
-	_, ok := writer.writers[DEBUG]
-	if !ok || DEBUG < writer.level {
-		return
-	}
-
-	writer.writef(DEBUG, format, args...)
-}
-
 // Trace trace
-func (writer *MultiWriter) Trace(format string) {
+func (writer *MultiWriter) Trace(args ...interface{}) {
 	_, ok := writer.writers[TRACE]
 	if !ok || TRACE < writer.level {
 		return
 	}
 
-	writer.write(TRACE, format)
+	writer.write(TRACE, args...)
 }
 
 // Tracef tracef
@@ -175,14 +155,34 @@ func (writer *MultiWriter) Tracef(format string, args ...interface{}) {
 	writer.writef(TRACE, format, args...)
 }
 
+// Debug debug
+func (writer *MultiWriter) Debug(args ...interface{}) {
+	_, ok := writer.writers[DEBUG]
+	if !ok || DEBUG < writer.level {
+		return
+	}
+
+	writer.write(DEBUG, args...)
+}
+
+// Debugf debugf
+func (writer *MultiWriter) Debugf(format string, args ...interface{}) {
+	_, ok := writer.writers[DEBUG]
+	if !ok || DEBUG < writer.level {
+		return
+	}
+
+	writer.writef(DEBUG, format, args...)
+}
+
 // Info info
-func (writer *MultiWriter) Info(format string) {
+func (writer *MultiWriter) Info(args ...interface{}) {
 	_, ok := writer.writers[INFO]
 	if !ok || INFO < writer.level {
 		return
 	}
 
-	writer.write(INFO, format)
+	writer.write(INFO, args...)
 }
 
 // Infof infof
@@ -196,13 +196,13 @@ func (writer *MultiWriter) Infof(format string, args ...interface{}) {
 }
 
 // Warn warn
-func (writer *MultiWriter) Warn(format string) {
+func (writer *MultiWriter) Warn(args ...interface{}) {
 	_, ok := writer.writers[WARNING]
 	if !ok || WARNING < writer.level {
 		return
 	}
 
-	writer.write(WARNING, format)
+	writer.write(WARNING, args...)
 }
 
 // Warnf warnf
@@ -216,13 +216,13 @@ func (writer *MultiWriter) Warnf(format string, args ...interface{}) {
 }
 
 // Error error
-func (writer *MultiWriter) Error(format string) {
+func (writer *MultiWriter) Error(args ...interface{}) {
 	_, ok := writer.writers[ERROR]
 	if !ok || ERROR < writer.level {
 		return
 	}
 
-	writer.write(ERROR, format)
+	writer.write(ERROR, args...)
 }
 
 // Errorf error
@@ -236,13 +236,13 @@ func (writer *MultiWriter) Errorf(format string, args ...interface{}) {
 }
 
 // Critical critical
-func (writer *MultiWriter) Critical(format string) {
+func (writer *MultiWriter) Critical(args ...interface{}) {
 	_, ok := writer.writers[CRITICAL]
 	if !ok || CRITICAL < writer.level {
 		return
 	}
 
-	writer.write(CRITICAL, format)
+	writer.write(CRITICAL, args...)
 }
 
 // Criticalf criticalf

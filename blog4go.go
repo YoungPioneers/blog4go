@@ -57,19 +57,19 @@ type Writer interface {
 	SetLevel(level Level)
 
 	// write/writef functions with different levels
-	write(level Level, format string)
+	write(level Level, args ...interface{})
 	writef(level Level, format string, args ...interface{})
-	Debug(format string)
+	Debug(args ...interface{})
 	Debugf(format string, args ...interface{})
-	Trace(format string)
+	Trace(args ...interface{})
 	Tracef(format string, args ...interface{})
-	Info(format string)
+	Info(args ...interface{})
 	Infof(format string, args ...interface{})
-	Warn(format string)
+	Warn(args ...interface{})
 	Warnf(format string, args ...interface{})
-	Error(format string)
+	Error(args ...interface{})
 	Errorf(format string, args ...interface{})
-	Critical(format string)
+	Critical(args ...interface{})
 	Criticalf(format string, args ...interface{})
 
 	// flush log to disk
@@ -251,12 +251,13 @@ func NewBLog(in io.Writer) (blog *BLog) {
 }
 
 // write writes pure message with specific level
-func (blog *BLog) write(level Level, format string) int {
+func (blog *BLog) write(level Level, args ...interface{}) int {
 	blog.lock.Lock()
 	defer blog.lock.Unlock()
 
 	// 统计日志size
 	var size = 0
+	format := fmt.Sprint(args...)
 
 	blog.writer.Write(timeCache.format)
 	blog.writer.WriteString(level.prefix())
@@ -436,19 +437,9 @@ func Flush() {
 	blog.flush()
 }
 
-// Debug static function for Debug
-func Debug(format string) {
-	blog.Debug(format)
-}
-
-// Debugf static function for Debugf
-func Debugf(format string, args ...interface{}) {
-	blog.Debugf(format, args...)
-}
-
 // Trace static function for Trace
-func Trace(format string) {
-	blog.Trace(format)
+func Trace(args ...interface{}) {
+	blog.Trace(args...)
 }
 
 // Tracef static function for Tracef
@@ -456,9 +447,19 @@ func Tracef(format string, args ...interface{}) {
 	blog.Tracef(format, args...)
 }
 
+// Debug static function for Debug
+func Debug(args ...interface{}) {
+	blog.Debug(args...)
+}
+
+// Debugf static function for Debugf
+func Debugf(format string, args ...interface{}) {
+	blog.Debugf(format, args...)
+}
+
 // Info static function for Info
-func Info(format string) {
-	blog.Info(format)
+func Info(args ...interface{}) {
+	blog.Info(args...)
 }
 
 // Infof static function for Infof
@@ -467,8 +468,8 @@ func Infof(format string, args ...interface{}) {
 }
 
 // Warn static function for Warn
-func Warn(format string) {
-	blog.Warn(format)
+func Warn(args ...interface{}) {
+	blog.Warn(args...)
 }
 
 // Warnf static function for Warnf
@@ -477,8 +478,8 @@ func Warnf(format string, args ...interface{}) {
 }
 
 // Error static function for Error
-func Error(format string) {
-	blog.Error(format)
+func Error(args ...interface{}) {
+	blog.Error(args...)
 }
 
 // Errorf static function for Errorf
@@ -487,8 +488,8 @@ func Errorf(format string, args ...interface{}) {
 }
 
 // Critical static function for Critical
-func Critical(format string) {
-	blog.Critical(format)
+func Critical(args ...interface{}) {
+	blog.Critical(args...)
 }
 
 // Criticalf static function for Criticalf
