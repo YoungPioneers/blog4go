@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 - write支持args ...interface{}
 - logSizeChan buffer size加大到8192.
 - 简化.travis.yml
+- 增加测试用户覆盖write args ...interface{}
 
 ### Fixed
 - fileWriter关闭时关闭所有对象。
