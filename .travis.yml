@@ -9,8 +9,8 @@ go:
 
 before_install:
         - go get github.com/axw/gocov/gocov
-        #- go get github.com/mattn/goveralls
-        #- if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
+        - go get github.com/mattn/goveralls
+        - if ! go get github.com/golang/tools/cmd/cover; then go get golang.org/x/tools/cmd/cover; fi
 
 install:
         - go get github.com/golang/lint/golint
@@ -18,7 +18,7 @@ install:
         - go get github.com/mdempsky/unconvert
 
 script:
-        #- $HOME/gopath/bin/goveralls
+        - $HOME/gopath/bin/goveralls
         - test -z "$(go fmt ./...)"
         - test -z "$(go vet ./...)"
         - test -z "$(golint)"
