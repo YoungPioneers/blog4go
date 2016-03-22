@@ -11,8 +11,8 @@ type MyHook struct {
 	something string
 }
 
-func (self *MyHook) Fire(level log.Level, message string) {
-	fmt.Println(message)
+func (self *MyHook) Fire(level log.Level, args ...interface{}) {
+	fmt.Println(args...)
 }
 
 type T struct {

@@ -10,8 +10,11 @@ install:
         - go get github.com/golang/lint/golint
         - go get github.com/jgautheron/goconst/cmd/goconst
         - go get github.com/mdempsky/unconvert
+        - go get github.com/mattn/goveralls
+        - go get golang.org/x/tools/cmd/cover
 
 script:
+        - $HOME/gopath/bin/goveralls -service=travis-ci
         - test -z "$(go fmt ./...)"
         - test -z "$(go vet ./...)"
         - test -z "$(golint)"

@@ -1,0 +1,14 @@
+dependencies:
+  override:
+    - go get github.com/golang/lint/golint
+    - go get github.com/jgautheron/goconst/cmd/goconst
+    - go get github.com/mdempsky/unconvert
+
+test:
+  override:
+    - test -z "$(go fmt ./...)"
+    - test -z "$(go vet ./...)"
+    - test -z "$(golint)"
+    - test -z "$(goconst .)"
+    - test -z "$(unconvert -v .)"
+    - go test -test.v .
