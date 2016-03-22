@@ -6,6 +6,7 @@ BLog4go is an efficient logging library written in the [Go](http://golang.org/) 
 BLog4go 是高性能日志库。创新地使用“边解析边输出”方法进行日志输出，同时支持回调函数、日志淘汰和配置文件。可以解决高并发，调用日志函数频繁的情境下，日志库造成的性能问题。
 
 [![Build Status](https://travis-ci.org/YoungPioneers/blog4go.svg?branch=master)](https://travis-ci.org/YoungPioneers/blog4go)
+[![Build Status](https://circleci.com/gh/YoungPioneers/blog4go/tree/master.svg?style=shield&circle-token=91f23f796bd728b15109d25818cf8927a898f53f)](https://circleci.com/gh/YoungPioneers/blog4go)
 [![Coverage Status](https://coveralls.io/repos/github/YoungPioneers/blog4go/badge.svg?branch=master)](https://coveralls.io/github/YoungPioneers/blog4go?branch=master)
 [![GoDoc](https://godoc.org/github.com/YoungPioneers/blog4go?status.svg)](https://godoc.org/github.com/YoungPioneers/blog4go)
 
