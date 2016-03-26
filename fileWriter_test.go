@@ -61,9 +61,23 @@ func TestFileWriterBasicOperation(t *testing.T) {
 	}
 
 	// test basic operations
+	blog.Debug("Debug", 1)
+	blog.Debugf("%s", "Debug")
+	blog.Trace("Trace", 2)
+	blog.Tracef("%s", "Trace")
+	blog.Info("Info", 3)
+	blog.Infof("%s", "Info")
+	blog.Warn("Warn", 4)
+	blog.Warnf("%s", "Warn")
+	blog.Error("Error", 5)
+	blog.Errorf("%s", "Error")
+	blog.Critical("Critical", 6)
+	blog.Criticalf("%s", "Critical")
+	blog.flush()
+
 	blog.SetColored(true)
 	blog.SetTimeRotated(true)
-	blog.SetLevel(INFO)
+	blog.SetLevel(CRITICAL)
 	blog.SetRetentions(7)
 	blog.SetRotateLines(100000)
 	blog.SetRotateSize(ByteSize(1024 * 1024 * 500))

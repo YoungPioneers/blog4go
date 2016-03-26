@@ -3,18 +3,27 @@
 package blog4go
 
 import (
+	"os/exec"
 	"testing"
 	"time"
 )
 
-func TestConsoleWriterBasicOperation(t *testing.T) {
-	_, err := NewConsoleWriter()
-	defer Close()
+func TestBaseFileWriterBasicOperation(t *testing.T) {
+	_, err := NewBaseFileWriter("/tmp/mylog.log", false)
 	if nil != err {
-		t.Error(err.Error())
+		t.Errorf("Failed when initializing base file writer. err: %s", err.Error())
 	}
+	defer func() {
+		Close()
 
-	// test console writer hook
+		// clean logs
+		_, err = exec.Command("/bin/sh", "-c", "/bin/rm /tmp/*.log*").Output()
+		if nil != err {
+			t.Errorf("clean files failed. err: %s", err.Error())
+		}
+	}()
+
+	// test file writer hook
 	hook := new(MyHook)
 	hook.cnt = 0
 
@@ -77,32 +86,4 @@ func TestConsoleWriterBasicOperation(t *testing.T) {
 	blog.Errorf("%s", "Error")
 	blog.Critical("Critical", 6)
 	blog.Criticalf("%s", "Critical")
-}
-
-func TestSingleConsoleWriter(t *testing.T) {
-	_, err := NewConsoleWriter()
-	defer Close()
-	if nil != err {
-		t.Error(err.Error())
-	}
-
-	// duplicate init check
-	_, err = NewConsoleWriter()
-	defer Close()
-	if ErrAlreadyInit != err {
-		t.Error("duplicate init check fail")
-	}
-}
-
-func BenchmarkConsoleWriter(b *testing.B) {
-	_, err := NewConsoleWriter()
-	defer Close()
-	if nil != err {
-		b.Error(err.Error())
-	}
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		blog.Debugf("haha %s. en\\en, always %d and %f", "eddie", 18, 3.1415)
-	}
 }

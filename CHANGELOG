@@ -3,16 +3,18 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.5.4] - 2016-03-23
+## [0.5.4] - 2016-03-26
 ### Added
 - 使用配置文件启动的时候检验配置文件正确性。
 - 加入circle测试。
+- write/writef覆盖测试。
 
 ## Changed
 - write支持args ...interface{}
 - logSizeChan buffer size加大到8192.
 - 简化.travis.yml
 - 增加测试用户覆盖write args ...interface{}
+- baseFileWriter分离出单独文件。
 
 ### Fixed
 - fileWriter关闭时关闭所有对象。

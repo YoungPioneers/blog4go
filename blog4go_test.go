@@ -50,9 +50,23 @@ func TestGlobalOperation(t *testing.T) {
 	}
 
 	// test basic operations
+	Debug("Debug", 1)
+	Debugf("%s", "Debug")
+	Trace("Trace", 2)
+	Tracef("%s", "Trace")
+	Info("Info", 3)
+	Infof("%s", "Info")
+	Warn("Warn", 4)
+	Warnf("%s", "Warn")
+	Error("Error", 5)
+	Errorf("%s", "Error")
+	Critical("Critical", 6)
+	Criticalf("%s", "Critical")
+	Flush()
+
 	SetColored(true)
 	SetTimeRotated(true)
-	SetLevel(INFO)
+	SetLevel(CRITICAL)
 	SetRetentions(7)
 	SetRotateLines(100000)
 	SetRotateSize(ByteSize(1024 * 1024 * 500))
