@@ -136,7 +136,7 @@ func (writer *SocketWriter) SetRetentions(retentions int64) {
 }
 
 // SetRotateSize do nothing
-func (writer *SocketWriter) SetRotateSize(rotateSize ByteSize) {
+func (writer *SocketWriter) SetRotateSize(rotateSize int64) {
 	return
 }
 

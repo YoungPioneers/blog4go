@@ -63,7 +63,7 @@ func TestConsoleWriterBasicOperation(t *testing.T) {
 	blog.SetLevel(CRITICAL)
 	blog.SetRetentions(7)
 	blog.SetRotateLines(100000)
-	blog.SetRotateSize(ByteSize(1024 * 1024 * 500))
+	blog.SetRotateSize(1024 * 1024 * 500)
 
 	blog.Debug("Debug", 1)
 	blog.Debugf("%s", "Debug")

@@ -56,11 +56,11 @@ type file struct {
 }
 
 type rotateFile struct {
-	Path        string   `xml:"path,attr"`
-	Type        string   `xml:"type,attr"`
-	RotateLines int      `xml:"rotateLines,attr"`
-	RotateSize  ByteSize `xml:"rotateSize,attr"`
-	Retentions  int64    `xml:"retentions,attr"`
+	Path        string `xml:"path,attr"`
+	Type        string `xml:"type,attr"`
+	RotateLines int    `xml:"rotateLines,attr"`
+	RotateSize  int64  `xml:"rotateSize,attr"`
+	Retentions  int64  `xml:"retentions,attr"`
 }
 
 //type console struct {

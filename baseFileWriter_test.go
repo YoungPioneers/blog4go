@@ -9,7 +9,7 @@ import (
 )
 
 func TestBaseFileWriterBasicOperation(t *testing.T) {
-	err := NewBaseFileWriter("/tmp/mylog.log", false)
+	err := NewBaseFileWriter("/tmp/mylog.log", true)
 	if nil != err {
 		t.Errorf("Failed when initializing base file writer. err: %s", err.Error())
 	}
@@ -70,9 +70,12 @@ func TestBaseFileWriterBasicOperation(t *testing.T) {
 	blog.SetColored(true)
 	blog.SetTimeRotated(true)
 	blog.SetLevel(CRITICAL)
+	blog.SetRetentions(0)
 	blog.SetRetentions(7)
+	blog.SetRotateLines(0)
 	blog.SetRotateLines(100000)
-	blog.SetRotateSize(ByteSize(1024 * 1024 * 500))
+	blog.SetRotateSize(0)
+	blog.SetRotateSize(1024 * 1024 * 500)
 
 	blog.Debug("Debug", 1)
 	blog.Debugf("%s", "Debug")

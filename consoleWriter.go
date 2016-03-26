@@ -165,7 +165,7 @@ func (writer *ConsoleWriter) SetRetentions(retentions int64) {
 }
 
 // SetRotateSize do nothing
-func (writer *ConsoleWriter) SetRotateSize(rotateSize ByteSize) {
+func (writer *ConsoleWriter) SetRotateSize(rotateSize int64) {
 	return
 }
 

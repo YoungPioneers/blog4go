@@ -52,14 +52,14 @@ func TestConfigValidation(t *testing.T) {
 	f = filter{
 		Levels: "debug",
 		RotateFile: rotateFile{
-			Type: "",
+			Type: "time",
 			Path: "",
 		},
 	}
 	config.Filters = make([]filter, 0)
 	config.Filters = append(config.Filters, f)
 
-	if err := config.valid(); ErrConfigFilePathNotFound == err {
+	if err := config.valid(); ErrConfigFilePathNotFound != err {
 		t.Error("config rotate file filter check failed.")
 	}
 
@@ -97,14 +97,14 @@ func TestConfigValidation(t *testing.T) {
 	f = filter{
 		Levels: "debug",
 		Socket: socket{
-			Network: "",
+			Network: "udp",
 			Address: "",
 		},
 	}
 	config.Filters = make([]filter, 0)
 	config.Filters = append(config.Filters, f)
 
-	if err := config.valid(); ErrConfigSocketAddressNotFound == err {
+	if err := config.valid(); ErrConfigSocketAddressNotFound != err {
 		t.Error("config socket filter check failed.")
 	}
 
@@ -135,5 +135,16 @@ func TestConfigValidation(t *testing.T) {
 
 	if err := config.valid(); ErrConfigLevelsNotFound == err || ErrConfigSocketAddressNotFound == err || ErrConfigSocketNetworkNotFound == err {
 		t.Error("config socket filter check failed.")
+	}
+
+	// missing filter
+	f = filter{
+		Levels: "debug",
+	}
+	config.Filters = make([]filter, 0)
+	config.Filters = append(config.Filters, f)
+
+	if err := config.valid(); ErrConfigMissingFilterType != err {
+		t.Error("config missing filter check failed.")
 	}
 }

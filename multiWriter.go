@@ -51,7 +51,7 @@ func (writer *MultiWriter) SetRetentions(retentions int64) {
 }
 
 // SetRotateSize set size when logroatate
-func (writer *MultiWriter) SetRotateSize(rotateSize ByteSize) {
+func (writer *MultiWriter) SetRotateSize(rotateSize int64) {
 	for _, fileWriter := range writer.writers {
 		fileWriter.SetRotateSize(rotateSize)
 	}

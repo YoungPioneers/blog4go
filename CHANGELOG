@@ -9,6 +9,9 @@ All notable changes to this project will be documented in this file.
 - 加入circle测试。
 - write/writef覆盖测试。
 
+### Removed
+- 去除ByteSize.
+
 ## Changed
 - write支持args ...interface{}
 - logSizeChan buffer size加大到8192.

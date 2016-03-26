@@ -67,9 +67,12 @@ func TestGlobalOperation(t *testing.T) {
 	SetColored(true)
 	SetTimeRotated(true)
 	SetLevel(CRITICAL)
+	SetRetentions(0)
 	SetRetentions(7)
+	SetRotateLines(0)
 	SetRotateLines(100000)
-	SetRotateSize(ByteSize(1024 * 1024 * 500))
+	SetRotateSize(0)
+	SetRotateSize(1024 * 1024 * 500)
 
 	Debug("Debug", 1)
 	Debugf("%s", "Debug")

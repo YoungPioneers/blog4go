@@ -81,7 +81,7 @@ type Writer interface {
 
 	// logrotate
 	SetTimeRotated(timeRotated bool)
-	SetRotateSize(rotateSize ByteSize)
+	SetRotateSize(rotateSize int64)
 	SetRotateLines(rotateLines int)
 	SetRetentions(retentions int64)
 	SetColored(colored bool)
@@ -423,7 +423,7 @@ func SetRetentions(retentions int64) {
 }
 
 // SetRotateSize set size when logroatate
-func SetRotateSize(rotateSize ByteSize) {
+func SetRotateSize(rotateSize int64) {
 	blog.SetRotateSize(rotateSize)
 }
 

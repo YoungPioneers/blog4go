@@ -9,15 +9,12 @@ import (
 	"time"
 )
 
-// ByteSize is type of sizes
-type ByteSize int64
-
 const (
 	// unit of sizes
 
 	_ = iota // ignore first value by assigning to blank identifier
 	// KB unit of kilobyte
-	KB ByteSize = 1 << (10 * iota)
+	KB int64 = 1 << (10 * iota)
 	// MB unit of megabyte
 	MB
 	// GB unit of gigabyte
@@ -86,9 +83,9 @@ type baseFileWriter struct {
 	// signal send when size && line base logrotate
 	sizeRotateSig chan bool
 	// size base logrotate threshold
-	rotateSize ByteSize
+	rotateSize int64
 	// total size written after last size && line logrotate
-	currentSize ByteSize
+	currentSize int64
 	// channel used to sum up sizes written from last logrotate
 	logSizeChan chan int
 
@@ -225,7 +222,7 @@ DaemonLoop:
 
 			writer.lock.Lock()
 
-			writer.currentSize += ByteSize(size)
+			writer.currentSize += int64(size)
 			writer.currentLines++
 
 			if (writer.sizeRotated && writer.currentSize >= writer.rotateSize) || (writer.lineRotated && writer.currentLines >= writer.rotateLines) {
@@ -354,8 +351,8 @@ func (writer *baseFileWriter) SetRetentions(retentions int64) {
 }
 
 // SetRotateSize set size when logroatate
-func (writer *baseFileWriter) SetRotateSize(rotateSize ByteSize) {
-	if rotateSize > ByteSize(0) {
+func (writer *baseFileWriter) SetRotateSize(rotateSize int64) {
+	if rotateSize > 0 {
 		writer.sizeRotated = true
 		writer.rotateSize = rotateSize
 	} else {
