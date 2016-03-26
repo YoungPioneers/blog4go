@@ -267,6 +267,11 @@ func (writer *baseFileWriter) resetFile() {
 // write writes pure message with specific level
 func (writer *baseFileWriter) write(level Level, args ...interface{}) {
 	var size = 0
+
+	if writer.closed {
+		return
+	}
+
 	defer func() {
 		// 异步调用log hook
 		if nil != writer.hook && !(level < writer.hookLevel) {
@@ -281,10 +286,6 @@ func (writer *baseFileWriter) write(level Level, args ...interface{}) {
 		}
 	}()
 
-	if writer.closed {
-		return
-	}
-
 	size = writer.blog.write(level, args...)
 }
 
@@ -296,6 +297,10 @@ func (writer *baseFileWriter) writef(level Level, format string, args ...interfa
 
 	// 统计日志size
 	var size = 0
+
+	if writer.closed {
+		return
+	}
 
 	defer func() {
 		// 异步调用log hook
@@ -310,10 +315,6 @@ func (writer *baseFileWriter) writef(level Level, format string, args ...interfa
 			writer.logSizeChan <- size
 		}
 	}()
-
-	if writer.closed {
-		return
-	}
 
 	size = writer.blog.writef(level, format, args...)
 }

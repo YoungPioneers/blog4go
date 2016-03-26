@@ -25,6 +25,8 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - fileWriter关闭时关闭所有对象。
 - 修复travis-ci调用coveralls适应新版。
+- BLog默认日志等级为TRACE.
+- 调整writer.closed判断位置。
 
 ## [0.5.3] - 2016-03-10
 ### Added

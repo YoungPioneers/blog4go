@@ -78,6 +78,10 @@ func TestConsoleWriterBasicOperation(t *testing.T) {
 	blog.Errorf("%s", "Error")
 	blog.Critical("Critical", 6)
 	blog.Criticalf("%s", "Critical")
+
+	blog.Close()
+	blog.Debug("Debug", 1)
+	blog.Debugf("%s", "Debug")
 }
 
 func TestSingleConsoleWriter(t *testing.T) {

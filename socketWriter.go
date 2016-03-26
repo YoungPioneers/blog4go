@@ -65,9 +65,13 @@ func newSocketWriter(network string, address string) (socketWriter *SocketWriter
 
 func (writer *SocketWriter) write(level Level, args ...interface{}) {
 	writer.lock.Lock()
+	defer writer.lock.Unlock()
+
+	if writer.closed {
+		return
+	}
 
 	defer func() {
-		writer.lock.Unlock()
 		// call log hook
 		if nil != writer.hook && !(level < writer.hookLevel) {
 			go func(level Level, args ...interface{}) {
@@ -75,10 +79,6 @@ func (writer *SocketWriter) write(level Level, args ...interface{}) {
 			}(level, args...)
 		}
 	}()
-
-	if writer.closed {
-		return
-	}
 
 	buffer := bytes.NewBuffer(timeCache.format)
 	buffer.WriteString(level.prefix())
@@ -88,9 +88,13 @@ func (writer *SocketWriter) write(level Level, args ...interface{}) {
 
 func (writer *SocketWriter) writef(level Level, format string, args ...interface{}) {
 	writer.lock.Lock()
+	defer writer.lock.Unlock()
+
+	if writer.closed {
+		return
+	}
 
 	defer func() {
-		writer.lock.Unlock()
 
 		// call log hook
 		if nil != writer.hook && !(level < writer.hookLevel) {
@@ -99,10 +103,6 @@ func (writer *SocketWriter) writef(level Level, format string, args ...interface
 			}(level, format, args...)
 		}
 	}()
-
-	if writer.closed {
-		return
-	}
 
 	buffer := bytes.NewBuffer(timeCache.format)
 	buffer.WriteString(level.prefix())

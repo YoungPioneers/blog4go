@@ -242,7 +242,7 @@ type BLog struct {
 func NewBLog(in io.Writer) (blog *BLog) {
 	blog = new(BLog)
 	blog.in = in
-	blog.level = DEBUG
+	blog.level = TRACE
 	blog.lock = new(sync.Mutex)
 	blog.closed = false
 
