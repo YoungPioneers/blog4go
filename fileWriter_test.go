@@ -76,6 +76,7 @@ func TestFileWriterBasicOperation(t *testing.T) {
 	blog.flush()
 
 	blog.SetColored(true)
+	blog.SetColored(true)
 	blog.SetTimeRotated(true)
 	blog.SetLevel(CRITICAL)
 	blog.SetRetentions(0)
@@ -138,6 +139,12 @@ func TestFileWriterAsConfigFile(t *testing.T) {
 
 	if nil != err {
 		t.Error(err.Error())
+	}
+
+	// duplicate init
+	err = NewWriterFromConfigAsFile("examples/writer_from_configfile/config.example.xml")
+	if ErrAlreadyInit != err {
+		t.Errorf("Duplicate initialization check failed. err: %s", err.Error())
 	}
 
 	blog.Debug("Debug")

@@ -23,6 +23,12 @@ func TestBaseFileWriterBasicOperation(t *testing.T) {
 		}
 	}()
 
+	// duplicate init
+	err = NewBaseFileWriter("/tmp/mylog.log", true)
+	if ErrAlreadyInit != err {
+		t.Errorf("Duplicate initialization check failed. err: %s", err.Error())
+	}
+
 	// test file writer hook
 	hook := new(MyHook)
 	hook.cnt = 0
@@ -67,6 +73,7 @@ func TestBaseFileWriterBasicOperation(t *testing.T) {
 	blog.Criticalf("%s", "Critical")
 	blog.flush()
 
+	blog.SetColored(true)
 	blog.SetColored(true)
 	blog.SetTimeRotated(true)
 	blog.SetLevel(CRITICAL)

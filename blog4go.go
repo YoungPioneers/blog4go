@@ -98,7 +98,7 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 	singltonLock.Lock()
 	defer singltonLock.Unlock()
 	if nil != blog {
-		return
+		return ErrAlreadyInit
 	}
 
 	// read config from file

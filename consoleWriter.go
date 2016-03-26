@@ -107,19 +107,9 @@ func (writer *ConsoleWriter) writef(level Level, format string, args ...interfac
 	writer.blog.writef(level, format, args...)
 }
 
-// Level return logging level threshold
-func (writer *ConsoleWriter) Level() Level {
-	return writer.blog.Level()
-}
-
 // SetLevel set logger level
 func (writer *ConsoleWriter) SetLevel(level Level) {
 	writer.blog.SetLevel(level)
-}
-
-// Colored return whether writer log with color
-func (writer *ConsoleWriter) Colored() bool {
-	return writer.colored
 }
 
 // SetColored set logging color

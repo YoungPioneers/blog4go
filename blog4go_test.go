@@ -65,6 +65,7 @@ func TestGlobalOperation(t *testing.T) {
 	Flush()
 
 	SetColored(true)
+	SetColored(true)
 	SetTimeRotated(true)
 	SetLevel(CRITICAL)
 	SetRetentions(0)

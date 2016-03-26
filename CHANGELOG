@@ -8,9 +8,11 @@ All notable changes to this project will be documented in this file.
 - 使用配置文件启动的时候检验配置文件正确性。
 - 加入circle测试。
 - write/writef覆盖测试。
+- 覆盖重复初始化、重复配置测试。
 
 ### Removed
 - 去除ByteSize.
+- consoleWriter去除Colored(), Level()方法。
 
 ## Changed
 - write支持args ...interface{}

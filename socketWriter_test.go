@@ -63,6 +63,7 @@ func TestSocketWriterBasicOperation(t *testing.T) {
 	blog.flush()
 
 	blog.SetColored(true)
+	blog.SetColored(true)
 	blog.SetTimeRotated(true)
 	blog.SetLevel(CRITICAL)
 	blog.SetRetentions(7)
