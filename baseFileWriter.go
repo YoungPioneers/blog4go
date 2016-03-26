@@ -100,20 +100,20 @@ type baseFileWriter struct {
 }
 
 // NewBaseFileWriter initialize a base file writer
-func NewBaseFileWriter(fileName string, timeRotated bool) (fileWriter *baseFileWriter, err error) {
+func NewBaseFileWriter(fileName string, timeRotated bool) (err error) {
 	singltonLock.Lock()
 	defer singltonLock.Unlock()
 	if nil != blog {
-		return nil, ErrAlreadyInit
+		return ErrAlreadyInit
 	}
 
 	baseFileWriter, err := newBaseFileWriter(fileName, timeRotated)
 	if nil != err {
-		return nil, err
+		return err
 	}
 
 	blog = baseFileWriter
-	return baseFileWriter, err
+	return err
 }
 
 // newbaseFileWriter create a single file writer instance and return the poionter

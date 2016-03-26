@@ -12,7 +12,7 @@ import (
 )
 
 func TestSocketWriterBasicOperation(t *testing.T) {
-	_, err := NewSocketWriter("udp", "127.0.0.1:12124")
+	err := NewSocketWriter("udp", "127.0.0.1:12124")
 	defer Close()
 	if nil != err {
 		t.Error(err.Error())
@@ -84,7 +84,7 @@ func TestSocketWriterBasicOperation(t *testing.T) {
 }
 
 func TestSignleSocketWriter(t *testing.T) {
-	_, err := NewSocketWriter("udp", "127.0.0.1:12124")
+	err := NewSocketWriter("udp", "127.0.0.1:12124")
 	defer Close()
 	if nil != err {
 		t.Error(err.Error())
@@ -135,7 +135,7 @@ func TestSignleSocketWriter(t *testing.T) {
 	wg.Wait()
 
 	// chekc init socket writer multi time
-	_, err = NewSocketWriter("udp", "127.0.0.1:12124")
+	err = NewSocketWriter("udp", "127.0.0.1:12124")
 	defer Close()
 	if ErrAlreadyInit != err {
 		t.Error("duplicate init check fail")
@@ -143,7 +143,7 @@ func TestSignleSocketWriter(t *testing.T) {
 }
 
 func BenchmarkSocketWriter(b *testing.B) {
-	_, err := NewSocketWriter("udp", "127.0.0.1:12124")
+	err := NewSocketWriter("udp", "127.0.0.1:12124")
 	defer Close()
 	if nil != err {
 		b.Error(err.Error())

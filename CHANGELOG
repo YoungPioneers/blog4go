@@ -15,6 +15,7 @@ All notable changes to this project will be documented in this file.
 - 简化.travis.yml
 - 增加测试用户覆盖write args ...interface{}
 - baseFileWriter分离出单独文件。
+- NewBaseFileWriter, NewConsoleWriter, NewSocketWriter不返回writer实例。
 
 ### Fixed
 - fileWriter关闭时关闭所有对象。

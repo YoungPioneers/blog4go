@@ -26,21 +26,20 @@ type SocketWriter struct {
 }
 
 // NewSocketWriter creates a socket writer, singlton
-func NewSocketWriter(network string, address string) (socketWriter *SocketWriter, err error) {
+func NewSocketWriter(network string, address string) (err error) {
 	singltonLock.Lock()
 	defer singltonLock.Unlock()
 	if nil != blog {
-		socketWriter, _ := blog.(*SocketWriter)
-		return socketWriter, ErrAlreadyInit
+		return ErrAlreadyInit
 	}
 
-	socketWriter, err = newSocketWriter(network, address)
+	socketWriter, err := newSocketWriter(network, address)
 	if nil != err {
-		return nil, err
+		return err
 	}
 
 	blog = socketWriter
-	return socketWriter, nil
+	return nil
 }
 
 // newSocketWriter creates a socket writer, not singlton

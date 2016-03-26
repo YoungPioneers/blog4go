@@ -9,7 +9,7 @@ import (
 )
 
 func TestBaseFileWriterBasicOperation(t *testing.T) {
-	_, err := NewBaseFileWriter("/tmp/mylog.log", false)
+	err := NewBaseFileWriter("/tmp/mylog.log", false)
 	if nil != err {
 		t.Errorf("Failed when initializing base file writer. err: %s", err.Error())
 	}

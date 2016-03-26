@@ -22,22 +22,21 @@ type ConsoleWriter struct {
 }
 
 // NewConsoleWriter initialize a console writer, singlton
-func NewConsoleWriter() (consoleWriter *ConsoleWriter, err error) {
+func NewConsoleWriter() (err error) {
 	singltonLock.Lock()
 	defer singltonLock.Unlock()
 	if nil != blog {
-		consoleWriter, _ := blog.(*ConsoleWriter)
-		return consoleWriter, ErrAlreadyInit
+		return ErrAlreadyInit
 	}
 
-	consoleWriter, err = newConsoleWriter()
+	consoleWriter, err := newConsoleWriter()
 	if nil != err {
-		return nil, err
+		return err
 	}
 
 	blog = consoleWriter
 	go consoleWriter.daemon()
-	return consoleWriter, nil
+	return nil
 }
 
 // newConsoleWriter initialize a console writer, not singlton

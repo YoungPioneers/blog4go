@@ -8,7 +8,7 @@ import (
 )
 
 func TestConsoleWriterBasicOperation(t *testing.T) {
-	_, err := NewConsoleWriter()
+	err := NewConsoleWriter()
 	defer Close()
 	if nil != err {
 		t.Error(err.Error())
@@ -80,14 +80,14 @@ func TestConsoleWriterBasicOperation(t *testing.T) {
 }
 
 func TestSingleConsoleWriter(t *testing.T) {
-	_, err := NewConsoleWriter()
+	err := NewConsoleWriter()
 	defer Close()
 	if nil != err {
 		t.Error(err.Error())
 	}
 
 	// duplicate init check
-	_, err = NewConsoleWriter()
+	err = NewConsoleWriter()
 	defer Close()
 	if ErrAlreadyInit != err {
 		t.Error("duplicate init check fail")
@@ -95,7 +95,7 @@ func TestSingleConsoleWriter(t *testing.T) {
 }
 
 func BenchmarkConsoleWriter(b *testing.B) {
-	_, err := NewConsoleWriter()
+	err := NewConsoleWriter()
 	defer Close()
 	if nil != err {
 		b.Error(err.Error())
