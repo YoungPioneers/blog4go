@@ -3,7 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
-## [0.5.4] - 2016-03-26
+## [0.5.4] - 2016-03-27
 ### Added
 - 使用配置文件启动的时候检验配置文件正确性。
 - 加入circle测试。
@@ -27,6 +27,7 @@ All notable changes to this project will be documented in this file.
 - 修复travis-ci调用coveralls适应新版。
 - BLog默认日志等级为TRACE.
 - 调整writer.closed判断位置。
+- consoleWriter close后再writer报错。
 
 ## [0.5.3] - 2016-03-10
 ### Added

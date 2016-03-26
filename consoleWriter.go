@@ -171,7 +171,7 @@ func (writer *ConsoleWriter) flush() {
 
 // Trace trace
 func (writer *ConsoleWriter) Trace(args ...interface{}) {
-	if TRACE < writer.blog.Level() {
+	if nil == writer.blog || TRACE < writer.blog.Level() {
 		return
 	}
 
@@ -180,7 +180,7 @@ func (writer *ConsoleWriter) Trace(args ...interface{}) {
 
 // Tracef tracef
 func (writer *ConsoleWriter) Tracef(format string, args ...interface{}) {
-	if TRACE < writer.blog.Level() {
+	if nil == writer.blog || TRACE < writer.blog.Level() {
 		return
 	}
 
@@ -189,7 +189,7 @@ func (writer *ConsoleWriter) Tracef(format string, args ...interface{}) {
 
 // Debug debug
 func (writer *ConsoleWriter) Debug(args ...interface{}) {
-	if DEBUG < writer.blog.Level() {
+	if nil == writer.blog || DEBUG < writer.blog.Level() {
 		return
 	}
 
@@ -198,7 +198,7 @@ func (writer *ConsoleWriter) Debug(args ...interface{}) {
 
 // Debugf debugf
 func (writer *ConsoleWriter) Debugf(format string, args ...interface{}) {
-	if DEBUG < writer.blog.Level() {
+	if nil == writer.blog || DEBUG < writer.blog.Level() {
 		return
 	}
 
@@ -207,7 +207,7 @@ func (writer *ConsoleWriter) Debugf(format string, args ...interface{}) {
 
 // Info info
 func (writer *ConsoleWriter) Info(args ...interface{}) {
-	if INFO < writer.blog.Level() {
+	if nil == writer.blog || INFO < writer.blog.Level() {
 		return
 	}
 
@@ -216,7 +216,7 @@ func (writer *ConsoleWriter) Info(args ...interface{}) {
 
 // Infof infof
 func (writer *ConsoleWriter) Infof(format string, args ...interface{}) {
-	if INFO < writer.blog.Level() {
+	if nil == writer.blog || INFO < writer.blog.Level() {
 		return
 	}
 
@@ -225,7 +225,7 @@ func (writer *ConsoleWriter) Infof(format string, args ...interface{}) {
 
 // Warn warn
 func (writer *ConsoleWriter) Warn(args ...interface{}) {
-	if WARNING < writer.blog.Level() {
+	if nil == writer.blog || WARNING < writer.blog.Level() {
 		return
 	}
 
@@ -234,7 +234,7 @@ func (writer *ConsoleWriter) Warn(args ...interface{}) {
 
 // Warnf warnf
 func (writer *ConsoleWriter) Warnf(format string, args ...interface{}) {
-	if WARNING < writer.blog.Level() {
+	if nil == writer.blog || WARNING < writer.blog.Level() {
 		return
 	}
 
@@ -243,7 +243,7 @@ func (writer *ConsoleWriter) Warnf(format string, args ...interface{}) {
 
 // Error error
 func (writer *ConsoleWriter) Error(args ...interface{}) {
-	if ERROR < writer.blog.Level() {
+	if nil == writer.blog || ERROR < writer.blog.Level() {
 		return
 	}
 
@@ -252,7 +252,7 @@ func (writer *ConsoleWriter) Error(args ...interface{}) {
 
 // Errorf errorf
 func (writer *ConsoleWriter) Errorf(format string, args ...interface{}) {
-	if ERROR < writer.blog.Level() {
+	if nil == writer.blog || ERROR < writer.blog.Level() {
 		return
 	}
 
@@ -261,7 +261,7 @@ func (writer *ConsoleWriter) Errorf(format string, args ...interface{}) {
 
 // Critical critical
 func (writer *ConsoleWriter) Critical(args ...interface{}) {
-	if CRITICAL < writer.blog.Level() {
+	if nil == writer.blog || CRITICAL < writer.blog.Level() {
 		return
 	}
 
@@ -270,7 +270,7 @@ func (writer *ConsoleWriter) Critical(args ...interface{}) {
 
 // Criticalf criticalf
 func (writer *ConsoleWriter) Criticalf(format string, args ...interface{}) {
-	if CRITICAL < writer.blog.Level() {
+	if nil == writer.blog || CRITICAL < writer.blog.Level() {
 		return
 	}
 
