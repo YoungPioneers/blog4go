@@ -1,7 +1,13 @@
 # Change log
 All notable changes to this project will be documented in this file.
 
-## [Unreleased]
+## [Released]
+## [0.5.5] - 2016-07-09
+### Added
+- hook支持阻塞模式调用
+
+### Fixed
+- examples错误
 
 ## [0.5.4] - 2016-03-27
 ### Added

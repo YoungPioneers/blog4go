@@ -7,23 +7,26 @@ import (
 	"time"
 )
 
+// MyHook .
 type MyHook struct {
 	something string
 }
 
+// T .
 type T struct {
 	A int
 	B string
 }
 
-func (self *MyHook) Fire(level log.Level, message string) {
-	fmt.Println(message)
+// Fire .
+func (hook *MyHook) Fire(level log.Level, args ...interface{}) {
+	fmt.Println(args)
 }
 
 func main() {
 	hook := new(MyHook)
 
-	_, err := log.NewConsoleWriter()
+	err := log.NewConsoleWriter()
 	if nil != err {
 		fmt.Println(err.Error())
 		os.Exit(1)

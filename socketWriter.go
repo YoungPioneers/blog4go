@@ -18,6 +18,7 @@ type SocketWriter struct {
 	// log hook
 	hook      Hook
 	hookLevel Level
+	hookAsync bool
 
 	// socket
 	writer net.Conn
@@ -74,9 +75,15 @@ func (writer *SocketWriter) write(level Level, args ...interface{}) {
 	defer func() {
 		// call log hook
 		if nil != writer.hook && !(level < writer.hookLevel) {
-			go func(level Level, args ...interface{}) {
+			if writer.hookAsync {
+				go func(level Level, args ...interface{}) {
+					writer.hook.Fire(level, args...)
+				}(level, args...)
+
+			} else {
 				writer.hook.Fire(level, args...)
-			}(level, args...)
+
+			}
 		}
 	}()
 
@@ -98,9 +105,15 @@ func (writer *SocketWriter) writef(level Level, format string, args ...interface
 
 		// call log hook
 		if nil != writer.hook && !(level < writer.hookLevel) {
-			go func(level Level, format string, args ...interface{}) {
+			if writer.hookAsync {
+				go func(level Level, format string, args ...interface{}) {
+					writer.hook.Fire(level, fmt.Sprintf(format, args...))
+				}(level, format, args...)
+
+			} else {
 				writer.hook.Fire(level, fmt.Sprintf(format, args...))
-			}(level, format, args...)
+
+			}
 		}
 	}()
 
@@ -118,6 +131,11 @@ func (writer *SocketWriter) SetLevel(level Level) {
 // SetHook set hook for logging action
 func (writer *SocketWriter) SetHook(hook Hook) {
 	writer.hook = hook
+}
+
+// SetHookAsync set hook async for base file writer
+func (writer *SocketWriter) SetHookAsync(async bool) {
+	writer.hookAsync = async
 }
 
 // SetHookLevel set when hook will be called

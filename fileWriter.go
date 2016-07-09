@@ -35,6 +35,7 @@ func NewFileWriter(baseDir string, rotate bool) (err error) {
 	// log hook
 	fileWriter.hook = nil
 	fileWriter.hookLevel = DEBUG
+	fileWriter.hookAsync = true
 
 	blog = fileWriter
 	return

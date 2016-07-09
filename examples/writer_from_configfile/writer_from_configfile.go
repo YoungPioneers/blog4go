@@ -7,14 +7,17 @@ import (
 	"time"
 )
 
+// MyHook .
 type MyHook struct {
 	something string
 }
 
-func (self *MyHook) Fire(level log.Level, args ...interface{}) {
+// Fire .
+func (hook *MyHook) Fire(level log.Level, args ...interface{}) {
 	fmt.Println(args...)
 }
 
+// T .
 type T struct {
 	A int
 	B string

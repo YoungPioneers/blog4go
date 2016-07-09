@@ -78,6 +78,7 @@ type Writer interface {
 	// hook
 	SetHook(hook Hook)
 	SetHookLevel(level Level)
+	SetHookAsync(async bool)
 
 	// logrotate
 	SetTimeRotated(timeRotated bool)
@@ -405,6 +406,11 @@ func SetHook(hook Hook) {
 // SetHookLevel set when hook will be called
 func SetHookLevel(level Level) {
 	blog.SetHookLevel(level)
+}
+
+// SetHookAsync set whether hook is called async
+func SetHookAsync(async bool) {
+	blog.SetHookAsync(async)
 }
 
 // SetColored set logging color

@@ -66,6 +66,7 @@ func main() {
 	hook := new(MyHook)
 	log.SetHook(hook) // writersFromConfig can be replaced with writers
 	log.SetHookLevel(log.INFO)
+	log.SetHookAsync(true) // hook will be called in async mode
 
 	// optionally set output colored
 	log.SetColored(true)

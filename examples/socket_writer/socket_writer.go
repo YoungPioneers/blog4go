@@ -7,24 +7,27 @@ import (
 	"time"
 )
 
+// MyHook .
 type MyHook struct {
 	something string
 }
 
+// T .
 type T struct {
 	A int
 	B string
 }
 
-func (self *MyHook) Fire(level log.Level, message string) {
-	fmt.Println(message)
+// Fire .
+func (hook *MyHook) Fire(level log.Level, args ...interface{}) {
+	fmt.Println(args)
 }
 
 func main() {
 	hook := new(MyHook)
 
 	// nc -u -l 12124 , to receive udp data
-	_, err := log.NewSocketWriter("udp", "127.0.0.1:12124")
+	err := log.NewSocketWriter("udp", "127.0.0.1:12124")
 	if nil != err {
 		fmt.Println(err.Error())
 		os.Exit(1)

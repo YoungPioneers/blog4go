@@ -56,6 +56,8 @@ type baseFileWriter struct {
 	hook Hook
 	// hook is called when message level exceed level of logging action
 	hookLevel Level
+	// it determines whether hook is called async, default true
+	hookAsync bool
 
 	// configuration about logrotate
 	// exclusive lock use in logrotate
@@ -152,6 +154,11 @@ func newBaseFileWriter(fileName string, timeRotated bool) (fileWriter *baseFileW
 	fileWriter.retentions = DefaultLogRetentionCount
 
 	fileWriter.colored = false
+
+	// log hook
+	fileWriter.hook = nil
+	fileWriter.hookLevel = DEBUG
+	fileWriter.hookAsync = true
 
 	go fileWriter.daemon()
 
@@ -275,9 +282,15 @@ func (writer *baseFileWriter) write(level Level, args ...interface{}) {
 	defer func() {
 		// 异步调用log hook
 		if nil != writer.hook && !(level < writer.hookLevel) {
-			go func(level Level, args ...interface{}) {
+			if writer.hookAsync {
+				go func(level Level, args ...interface{}) {
+					writer.hook.Fire(level, args...)
+				}(level, args...)
+
+			} else {
 				writer.hook.Fire(level, args...)
-			}(level, args...)
+
+			}
 		}
 
 		// logrotate
@@ -305,9 +318,15 @@ func (writer *baseFileWriter) writef(level Level, format string, args ...interfa
 	defer func() {
 		// 异步调用log hook
 		if nil != writer.hook && !(level < writer.hookLevel) {
-			go func(level Level, format string, args ...interface{}) {
+			if writer.hookAsync {
+				go func(level Level, format string, args ...interface{}) {
+					writer.hook.Fire(level, fmt.Sprintf(format, args...))
+				}(level, format, args...)
+
+			} else {
 				writer.hook.Fire(level, fmt.Sprintf(format, args...))
-			}(level, format, args...)
+
+			}
 		}
 
 		// logrotate
@@ -389,6 +408,11 @@ func (writer *baseFileWriter) SetLevel(level Level) {
 // SetHook set hook for the base file writer
 func (writer *baseFileWriter) SetHook(hook Hook) {
 	writer.hook = hook
+}
+
+// SetHookAsync set hook async for base file writer
+func (writer *baseFileWriter) SetHookAsync(async bool) {
+	writer.hookAsync = async
 }
 
 // SetHookLevel set when hook will be called

@@ -19,6 +19,7 @@ type ConsoleWriter struct {
 	// log hook
 	hook      Hook
 	hookLevel Level
+	hookAsync bool
 }
 
 // NewConsoleWriter initialize a console writer, singlton
@@ -51,6 +52,7 @@ func newConsoleWriter() (consoleWriter *ConsoleWriter, err error) {
 	// log hook
 	consoleWriter.hook = nil
 	consoleWriter.hookLevel = DEBUG
+	consoleWriter.hookAsync = true
 
 	go consoleWriter.daemon()
 
@@ -81,9 +83,15 @@ func (writer *ConsoleWriter) write(level Level, args ...interface{}) {
 
 	defer func() {
 		if nil != writer.hook && !(level < writer.hookLevel) {
-			go func(level Level, args ...interface{}) {
+			if writer.hookAsync {
+				go func(level Level, args ...interface{}) {
+					writer.hook.Fire(level, args...)
+				}(level, args...)
+
+			} else {
 				writer.hook.Fire(level, args...)
-			}(level, args...)
+
+			}
 		}
 	}()
 
@@ -98,9 +106,15 @@ func (writer *ConsoleWriter) writef(level Level, format string, args ...interfac
 	defer func() {
 
 		if nil != writer.hook && !(level < writer.hookLevel) {
-			go func(level Level, format string, args ...interface{}) {
+			if writer.hookAsync {
+				go func(level Level, format string, args ...interface{}) {
+					writer.hook.Fire(level, fmt.Sprintf(format, args...))
+				}(level, format, args...)
+
+			} else {
 				writer.hook.Fire(level, fmt.Sprintf(format, args...))
-			}(level, format, args...)
+
+			}
 		}
 	}()
 
@@ -126,6 +140,11 @@ func (writer *ConsoleWriter) SetColored(colored bool) {
 // SetHook set hook for logging action
 func (writer *ConsoleWriter) SetHook(hook Hook) {
 	writer.hook = hook
+}
+
+// SetHookAsync set hook async for base file writer
+func (writer *ConsoleWriter) SetHookAsync(async bool) {
+	writer.hookAsync = async
 }
 
 // SetHookLevel set when hook will be called

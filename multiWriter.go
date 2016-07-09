@@ -30,6 +30,8 @@ type MultiWriter struct {
 	hook Hook
 	// hook is called when message level exceed level of logging action
 	hookLevel Level
+	// it determines whether hook is called async, default true
+	hookAsync bool
 }
 
 // SetTimeRotated toggle time base logrotate
@@ -76,6 +78,11 @@ func (writer *MultiWriter) SetHook(hook Hook) {
 	writer.hook = hook
 }
 
+// SetHookAsync set hook async for base file writer
+func (writer *MultiWriter) SetHookAsync(async bool) {
+	writer.hookAsync = async
+}
+
 // SetHookLevel set when hook will be called
 func (writer *MultiWriter) SetHookLevel(level Level) {
 	writer.hookLevel = level
@@ -106,9 +113,15 @@ func (writer *MultiWriter) write(level Level, args ...interface{}) {
 	defer func() {
 		// 异步调用log hook
 		if nil != writer.hook && !(level < writer.hookLevel) {
-			go func(level Level, args ...interface{}) {
+			if writer.hookAsync {
+				go func(level Level, args ...interface{}) {
+					writer.hook.Fire(level, args...)
+				}(level, args...)
+
+			} else {
 				writer.hook.Fire(level, args...)
-			}(level, args...)
+
+			}
 		}
 	}()
 
@@ -119,9 +132,15 @@ func (writer *MultiWriter) writef(level Level, format string, args ...interface{
 	defer func() {
 		// 异步调用log hook
 		if nil != writer.hook && !(level < writer.hookLevel) {
-			go func(level Level, format string, args ...interface{}) {
+			if writer.hookAsync {
+				go func(level Level, format string, args ...interface{}) {
+					writer.hook.Fire(level, fmt.Sprintf(format, args...))
+				}(level, format, args...)
+
+			} else {
 				writer.hook.Fire(level, fmt.Sprintf(format, args...))
-			}(level, format, args...)
+
+			}
 		}
 	}()
 
