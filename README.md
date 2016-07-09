@@ -8,6 +8,7 @@ BLog4go 是高性能日志库。创新地使用“边解析边输出”方法进
 [![Build Status](https://travis-ci.org/YoungPioneers/blog4go.svg?branch=master)](https://travis-ci.org/YoungPioneers/blog4go)
 [![Build Status](https://circleci.com/gh/YoungPioneers/blog4go/tree/master.svg?style=shield&circle-token=91f23f796bd728b15109d25818cf8927a898f53f)](https://circleci.com/gh/YoungPioneers/blog4go)
 [![Coverage Status](https://coveralls.io/repos/github/YoungPioneers/blog4go/badge.svg?branch=master)](https://coveralls.io/github/YoungPioneers/blog4go?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/YoungPioneers/blog4go)](https://goreportcard.com/report/github.com/YoungPioneers/blog4go)
 [![GoDoc](https://godoc.org/github.com/YoungPioneers/blog4go?status.svg)](https://godoc.org/github.com/YoungPioneers/blog4go)
 
 
