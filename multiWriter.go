@@ -98,7 +98,7 @@ func (writer *MultiWriter) SetRotateLines(rotateLines int) {
 	}
 }
 
-// Colored
+// Colored get colored
 func (writer *MultiWriter) Colored() bool {
 	return writer.colored
 }
