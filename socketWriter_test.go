@@ -35,6 +35,7 @@ func TestSocketWriterBasicOperation(t *testing.T) {
 		t.Errorf("hook parameters wrong. level: %s, message: %s", hook.Level().String(), hook.Message())
 	}
 
+	// async
 	blog.Info("yes")
 	// wait for hook called
 	time.Sleep(1 * time.Millisecond)
@@ -46,9 +47,21 @@ func TestSocketWriterBasicOperation(t *testing.T) {
 		t.Errorf("hook parameters wrong. level: %d, message: %s", hook.Level(), hook.Message())
 	}
 
+	// sync
+	blog.SetHookAsync(false)
+	blog.Warn("warn")
+	// wait for hook called
+	if 2 != hook.Cnt() {
+		t.Error("hook not called")
+	}
+
+	if WARNING != hook.Level() || "warn" != hook.Message() {
+		t.Errorf("hook parameters wrong. level: %d, message: %s", hook.Level(), hook.Message())
+	}
+
 	// test basic operations
 	blog.Debug("Debug", 1)
-	blog.Debugf("%s", "Debug")
+	blog.Debugf("%s\\", "Debug")
 	blog.Trace("Trace", 2)
 	blog.Tracef("%s", "Trace")
 	blog.Info("Info", 3)

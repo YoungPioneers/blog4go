@@ -36,6 +36,7 @@ func TestBaseFileWriterBasicOperation(t *testing.T) {
 	blog.SetHookLevel(INFO)
 
 	blog.Debug("something")
+	// async
 	// wait for hook called
 	time.Sleep(1 * time.Millisecond)
 	if 0 != hook.Cnt() {
@@ -47,6 +48,7 @@ func TestBaseFileWriterBasicOperation(t *testing.T) {
 	}
 
 	blog.Info("yes")
+	// async
 	// wait for hook called
 	time.Sleep(1 * time.Millisecond)
 	if 1 != hook.Cnt() {
@@ -57,6 +59,7 @@ func TestBaseFileWriterBasicOperation(t *testing.T) {
 		t.Errorf("hook parameters wrong. level: %d, message: %s", hook.Level(), hook.Message())
 	}
 
+	// sync
 	blog.SetHookAsync(false)
 	blog.Warn("warn")
 	if 2 != hook.Cnt() {
@@ -99,7 +102,7 @@ func TestBaseFileWriterBasicOperation(t *testing.T) {
 	blog.SetRotateSize(1024 * 1024 * 500)
 
 	blog.Debug("Debug", 1)
-	blog.Debugf("%s", "Debug")
+	blog.Debugf("%s\\", "Debug")
 	blog.Trace("Trace", 2)
 	blog.Tracef("%s", "Trace")
 	blog.Info("Info", 3)

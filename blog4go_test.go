@@ -37,6 +37,7 @@ func TestGlobalOperation(t *testing.T) {
 		t.Errorf("hook parameters wrong. level: %s, message: %s", hook.level.String(), hook.Message())
 	}
 
+	// async
 	Info("yes")
 	// wait for hook called
 	time.Sleep(1 * time.Millisecond)
@@ -45,6 +46,17 @@ func TestGlobalOperation(t *testing.T) {
 	}
 
 	if INFO != hook.Level() || "yes" != hook.Message() {
+		t.Errorf("hook parameters wrong. level: %d, message: %s", hook.level, hook.Message())
+	}
+
+	// sync
+	SetHookAsync(false)
+	Warn("warn")
+	if 2 != hook.Cnt() {
+		t.Error("hook not called")
+	}
+
+	if WARNING != hook.Level() || "warn" != hook.Message() {
 		t.Errorf("hook parameters wrong. level: %d, message: %s", hook.level, hook.Message())
 	}
 
@@ -80,7 +92,7 @@ func TestGlobalOperation(t *testing.T) {
 	SetRotateSize(1024 * 1024 * 500)
 
 	Debug("Debug", 1)
-	Debugf("%s", "Debug")
+	Debugf("%s\\", "Debug")
 	Trace("Trace", 2)
 	Tracef("%s", "Trace")
 	Info("Info", 3)
