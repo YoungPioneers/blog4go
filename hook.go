@@ -10,5 +10,5 @@ package blog4go
 // level is the level associate with that logging action.
 // message is the formatted string already written.
 type Hook interface {
-	Fire(level Level, args ...interface{})
+	Fire(level LevelType, args ...interface{})
 }

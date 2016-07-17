@@ -57,6 +57,16 @@ func TestBaseFileWriterBasicOperation(t *testing.T) {
 		t.Errorf("hook parameters wrong. level: %d, message: %s", hook.Level(), hook.Message())
 	}
 
+	blog.SetHookAsync(false)
+	blog.Warn("warn")
+	if 2 != hook.Cnt() {
+		t.Error("hook not called")
+	}
+
+	if WARNING != hook.Level() || "warn" != hook.Message() {
+		t.Errorf("hook parameters wrong. level: %d, message: %s", hook.Level(), hook.Message())
+	}
+
 	// test basic operations
 	blog.Debug("Debug", 1)
 	blog.Debugf("%s", "Debug")

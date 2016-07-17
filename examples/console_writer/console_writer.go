@@ -19,7 +19,7 @@ type T struct {
 }
 
 // Fire .
-func (hook *MyHook) Fire(level log.Level, args ...interface{}) {
+func (hook *MyHook) Fire(level log.LevelType, args ...interface{}) {
 	fmt.Println(args)
 }
 

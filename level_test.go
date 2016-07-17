@@ -7,7 +7,7 @@ import (
 )
 
 func TestLevelValidation(t *testing.T) {
-	if Level(-1).valid() {
+	if LevelType(-1).valid() {
 		t.Errorf("Level Validation Failed. level: %d", -1)
 	}
 
@@ -45,7 +45,7 @@ func TestLevelStringFormat(t *testing.T) {
 		t.Error("CRITICAL Level to wrong prefix string format.")
 	}
 
-	if "UNKNOWN" != Level(-1).String() {
+	if "UNKNOWN" != LevelType(-1).String() {
 		t.Error("Wrong Level to wrong string format.")
 	}
 

@@ -18,10 +18,12 @@ var (
 
 // MultiWriter struct defines an instance for multi writers with different message level
 type MultiWriter struct {
-	level Level
+	level LevelType
 
 	// file writers
-	writers map[Level]Writer
+	writers map[LevelType]Writer
+
+	colored bool
 
 	closed bool
 
@@ -29,16 +31,33 @@ type MultiWriter struct {
 	// actual hook instance
 	hook Hook
 	// hook is called when message level exceed level of logging action
-	hookLevel Level
+	hookLevel LevelType
 	// it determines whether hook is called async, default true
 	hookAsync bool
+
+	// logrotate
+	timeRotated bool
+	retentions  int64
+	rotateSize  int64
+	rotateLines int
+}
+
+// TimeRotated get timeRotated
+func (writer *MultiWriter) TimeRotated() bool {
+	return writer.timeRotated
 }
 
 // SetTimeRotated toggle time base logrotate
 func (writer *MultiWriter) SetTimeRotated(timeRotated bool) {
+	writer.timeRotated = timeRotated
 	for _, fileWriter := range writer.writers {
 		fileWriter.SetTimeRotated(timeRotated)
 	}
+}
+
+// Retentions get retentions
+func (writer *MultiWriter) Retentions() int64 {
+	return writer.retentions
 }
 
 // SetRetentions set how many logs will keep after logrotate
@@ -47,27 +66,46 @@ func (writer *MultiWriter) SetRetentions(retentions int64) {
 		return
 	}
 
+	writer.retentions = retentions
 	for _, fileWriter := range writer.writers {
 		fileWriter.SetRetentions(retentions)
 	}
 }
 
+// RotateSize get rotateSize
+func (writer *MultiWriter) RotateSize() int64 {
+	return writer.rotateSize
+}
+
 // SetRotateSize set size when logroatate
 func (writer *MultiWriter) SetRotateSize(rotateSize int64) {
+	writer.rotateSize = rotateSize
 	for _, fileWriter := range writer.writers {
 		fileWriter.SetRotateSize(rotateSize)
 	}
 }
 
+// RotateLines get rotateLines
+func (writer *MultiWriter) RotateLines() int {
+	return writer.rotateLines
+}
+
 // SetRotateLines set line number when logrotate
 func (writer *MultiWriter) SetRotateLines(rotateLines int) {
+	writer.rotateLines = rotateLines
 	for _, fileWriter := range writer.writers {
 		fileWriter.SetRotateLines(rotateLines)
 	}
 }
 
+// Colored
+func (writer *MultiWriter) Colored() bool {
+	return writer.colored
+}
+
 // SetColored set logging color
 func (writer *MultiWriter) SetColored(colored bool) {
+	writer.colored = colored
 	for _, fileWriter := range writer.writers {
 		fileWriter.SetColored(colored)
 	}
@@ -84,12 +122,12 @@ func (writer *MultiWriter) SetHookAsync(async bool) {
 }
 
 // SetHookLevel set when hook will be called
-func (writer *MultiWriter) SetHookLevel(level Level) {
+func (writer *MultiWriter) SetHookLevel(level LevelType) {
 	writer.hookLevel = level
 }
 
 // SetLevel set logging level threshold
-func (writer *MultiWriter) SetLevel(level Level) {
+func (writer *MultiWriter) SetLevel(level LevelType) {
 	writer.level = level
 	for _, fileWriter := range writer.writers {
 		fileWriter.SetLevel(level)
@@ -97,7 +135,7 @@ func (writer *MultiWriter) SetLevel(level Level) {
 }
 
 // Level return logging level threshold
-func (writer *MultiWriter) Level() Level {
+func (writer *MultiWriter) Level() LevelType {
 	return writer.level
 }
 
@@ -109,12 +147,12 @@ func (writer *MultiWriter) Close() {
 	writer.closed = true
 }
 
-func (writer *MultiWriter) write(level Level, args ...interface{}) {
+func (writer *MultiWriter) write(level LevelType, args ...interface{}) {
 	defer func() {
 		// 异步调用log hook
 		if nil != writer.hook && !(level < writer.hookLevel) {
 			if writer.hookAsync {
-				go func(level Level, args ...interface{}) {
+				go func(level LevelType, args ...interface{}) {
 					writer.hook.Fire(level, args...)
 				}(level, args...)
 
@@ -128,12 +166,12 @@ func (writer *MultiWriter) write(level Level, args ...interface{}) {
 	writer.writers[level].write(level, args...)
 }
 
-func (writer *MultiWriter) writef(level Level, format string, args ...interface{}) {
+func (writer *MultiWriter) writef(level LevelType, format string, args ...interface{}) {
 	defer func() {
 		// 异步调用log hook
 		if nil != writer.hook && !(level < writer.hookLevel) {
 			if writer.hookAsync {
-				go func(level Level, format string, args ...interface{}) {
+				go func(level LevelType, format string, args ...interface{}) {
 					writer.hook.Fire(level, fmt.Sprintf(format, args...))
 				}(level, format, args...)
 

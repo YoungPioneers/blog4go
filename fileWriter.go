@@ -22,7 +22,7 @@ func NewFileWriter(baseDir string, rotate bool) (err error) {
 	fileWriter.level = DEBUG
 	fileWriter.closed = false
 
-	fileWriter.writers = make(map[Level]Writer)
+	fileWriter.writers = make(map[LevelType]Writer)
 	for _, level := range Levels {
 		fileName := fmt.Sprintf("%s.log", strings.ToLower(level.String()))
 		writer, err := newBaseFileWriter(path.Join(baseDir, fileName), rotate)

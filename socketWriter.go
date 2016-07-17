@@ -11,13 +11,13 @@ import (
 
 // SocketWriter is a socket logger
 type SocketWriter struct {
-	level Level
+	level LevelType
 
 	closed bool
 
 	// log hook
 	hook      Hook
-	hookLevel Level
+	hookLevel LevelType
 	hookAsync bool
 
 	// socket
@@ -64,7 +64,7 @@ func newSocketWriter(network string, address string) (socketWriter *SocketWriter
 	return socketWriter, nil
 }
 
-func (writer *SocketWriter) write(level Level, args ...interface{}) {
+func (writer *SocketWriter) write(level LevelType, args ...interface{}) {
 	writer.lock.Lock()
 	defer writer.lock.Unlock()
 
@@ -76,7 +76,7 @@ func (writer *SocketWriter) write(level Level, args ...interface{}) {
 		// call log hook
 		if nil != writer.hook && !(level < writer.hookLevel) {
 			if writer.hookAsync {
-				go func(level Level, args ...interface{}) {
+				go func(level LevelType, args ...interface{}) {
 					writer.hook.Fire(level, args...)
 				}(level, args...)
 
@@ -93,7 +93,7 @@ func (writer *SocketWriter) write(level Level, args ...interface{}) {
 	writer.writer.Write(buffer.Bytes())
 }
 
-func (writer *SocketWriter) writef(level Level, format string, args ...interface{}) {
+func (writer *SocketWriter) writef(level LevelType, format string, args ...interface{}) {
 	writer.lock.Lock()
 	defer writer.lock.Unlock()
 
@@ -106,7 +106,7 @@ func (writer *SocketWriter) writef(level Level, format string, args ...interface
 		// call log hook
 		if nil != writer.hook && !(level < writer.hookLevel) {
 			if writer.hookAsync {
-				go func(level Level, format string, args ...interface{}) {
+				go func(level LevelType, format string, args ...interface{}) {
 					writer.hook.Fire(level, fmt.Sprintf(format, args...))
 				}(level, format, args...)
 
@@ -123,8 +123,13 @@ func (writer *SocketWriter) writef(level Level, format string, args ...interface
 	writer.writer.Write(buffer.Bytes())
 }
 
+// Level get level
+func (writer *SocketWriter) Level() LevelType {
+	return writer.level
+}
+
 // SetLevel set logger level
-func (writer *SocketWriter) SetLevel(level Level) {
+func (writer *SocketWriter) SetLevel(level LevelType) {
 	writer.level = level
 }
 
@@ -139,8 +144,13 @@ func (writer *SocketWriter) SetHookAsync(async bool) {
 }
 
 // SetHookLevel set when hook will be called
-func (writer *SocketWriter) SetHookLevel(level Level) {
+func (writer *SocketWriter) SetHookLevel(level LevelType) {
 	writer.hookLevel = level
+}
+
+// TimeRotated do nothing
+func (writer *SocketWriter) TimeRotated() bool {
+	return false
 }
 
 // SetTimeRotated do nothing
@@ -148,9 +158,19 @@ func (writer *SocketWriter) SetTimeRotated(timeRotated bool) {
 	return
 }
 
+// Retentions do nothing
+func (writer *SocketWriter) Retentions() int64 {
+	return 0
+}
+
 // SetRetentions do nothing
 func (writer *SocketWriter) SetRetentions(retentions int64) {
 	return
+}
+
+// RotateSize do nothing
+func (writer *SocketWriter) RotateSize() int64 {
+	return 0
 }
 
 // SetRotateSize do nothing
@@ -158,9 +178,19 @@ func (writer *SocketWriter) SetRotateSize(rotateSize int64) {
 	return
 }
 
+// RotateLines do nothing
+func (writer *SocketWriter) RotateLines() int {
+	return 0
+}
+
 // SetRotateLines do nothing
 func (writer *SocketWriter) SetRotateLines(rotateLines int) {
 	return
+}
+
+// Colored do nothing
+func (writer *SocketWriter) Colored() bool {
+	return false
 }
 
 // SetColored do nothing

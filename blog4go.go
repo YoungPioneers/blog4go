@@ -54,11 +54,13 @@ type Writer interface {
 	Close()
 
 	// SetLevel set logging level threshold
-	SetLevel(level Level)
+	SetLevel(level LevelType)
+	// Level get log level
+	Level() LevelType
 
 	// write/writef functions with different levels
-	write(level Level, args ...interface{})
-	writef(level Level, format string, args ...interface{})
+	write(level LevelType, args ...interface{})
+	writef(level LevelType, format string, args ...interface{})
 	Debug(args ...interface{})
 	Debugf(format string, args ...interface{})
 	Trace(args ...interface{})
@@ -77,15 +79,20 @@ type Writer interface {
 
 	// hook
 	SetHook(hook Hook)
-	SetHookLevel(level Level)
+	SetHookLevel(level LevelType)
 	SetHookAsync(async bool)
 
 	// logrotate
 	SetTimeRotated(timeRotated bool)
+	TimeRotated() bool
 	SetRotateSize(rotateSize int64)
+	RotateSize() int64
 	SetRotateLines(rotateLines int)
+	RotateLines() int
 	SetRetentions(retentions int64)
+	Retentions() int64
 	SetColored(colored bool)
+	Colored() bool
 }
 
 func init() {
@@ -120,7 +127,7 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 	}
 
 	multiWriter.closed = false
-	multiWriter.writers = make(map[Level]Writer)
+	multiWriter.writers = make(map[LevelType]Writer)
 
 	for _, filter := range config.Filters {
 		var rotate = false
@@ -169,7 +176,7 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 
 		levels := strings.Split(filter.Levels, ",")
 		for _, levelStr := range levels {
-			var level Level
+			var level LevelType
 			if level = LevelFromString(levelStr); !level.valid() {
 				return ErrInvalidLevel
 			}
@@ -223,7 +230,7 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 type BLog struct {
 	// logging level
 	// every message level exceed this level will be written
-	level Level
+	level LevelType
 
 	// input io
 	in io.Writer
@@ -252,7 +259,7 @@ func NewBLog(in io.Writer) (blog *BLog) {
 }
 
 // write writes pure message with specific level
-func (blog *BLog) write(level Level, args ...interface{}) int {
+func (blog *BLog) write(level LevelType, args ...interface{}) int {
 	blog.lock.Lock()
 	defer blog.lock.Unlock()
 
@@ -270,7 +277,7 @@ func (blog *BLog) write(level Level, args ...interface{}) int {
 }
 
 // write formats message with specific level and write it
-func (blog *BLog) writef(level Level, format string, args ...interface{}) int {
+func (blog *BLog) writef(level LevelType, format string, args ...interface{}) int {
 	// 格式化构造message
 	// 边解析边输出
 	// 使用 % 作占位符
@@ -371,12 +378,12 @@ func (blog *BLog) In() io.Writer {
 }
 
 // Level return logging level threshold
-func (blog *BLog) Level() Level {
+func (blog *BLog) Level() LevelType {
 	return blog.level
 }
 
 // SetLevel set logging level threshold
-func (blog *BLog) SetLevel(level Level) *BLog {
+func (blog *BLog) SetLevel(level LevelType) *BLog {
 	blog.level = level
 	return blog
 }
@@ -394,8 +401,13 @@ func (blog *BLog) resetFile(in io.Writer) (err error) {
 	return
 }
 
+// Level get log level
+func Level() LevelType {
+	return blog.Level()
+}
+
 // SetLevel set level for logging action
-func SetLevel(level Level) {
+func SetLevel(level LevelType) {
 	blog.SetLevel(level)
 }
 
@@ -405,7 +417,7 @@ func SetHook(hook Hook) {
 }
 
 // SetHookLevel set when hook will be called
-func SetHookLevel(level Level) {
+func SetHookLevel(level LevelType) {
 	blog.SetHookLevel(level)
 }
 
@@ -414,9 +426,19 @@ func SetHookAsync(async bool) {
 	blog.SetHookAsync(async)
 }
 
+// Colored get whether it is log with colored
+func Colored() bool {
+	return blog.Colored()
+}
+
 // SetColored set logging color
 func SetColored(colored bool) {
 	blog.SetColored(colored)
+}
+
+// TimeRotated get timeRotated
+func TimeRotated() bool {
+	return blog.TimeRotated()
 }
 
 // SetTimeRotated toggle time base logrotate on the fly
@@ -424,14 +446,29 @@ func SetTimeRotated(timeRotated bool) {
 	blog.SetTimeRotated(timeRotated)
 }
 
+// Retentions get retentions
+func Retentions() int64 {
+	return blog.Retentions()
+}
+
 // SetRetentions set how many logs will keep after logrotate
 func SetRetentions(retentions int64) {
 	blog.SetRetentions(retentions)
 }
 
+// RotateSize get rotateSize
+func RotateSize() int64 {
+	return blog.RotateSize()
+}
+
 // SetRotateSize set size when logroatate
 func SetRotateSize(rotateSize int64) {
 	blog.SetRotateSize(rotateSize)
+}
+
+// RotateLines get rotateLines
+func RotateLines() int {
+	return blog.RotateLines()
 }
 
 // SetRotateLines set line number when logrotate

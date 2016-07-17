@@ -7,15 +7,15 @@ import (
 	"strings"
 )
 
-// Level type defined for logging level
+// LevelType type defined for logging level
 // just use int
-type Level int
+type LevelType int
 
 const (
 	// level enum
 
 	// TRACE trace level
-	TRACE Level = iota
+	TRACE LevelType = iota
 	// DEBUG debug level
 	DEBUG
 	// INFO info level
@@ -58,14 +58,14 @@ var (
 	LevelStrings = [...]string{"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "CRITICAL"}
 
 	// StringLevels is map, level strings to levels
-	StringLevels = map[string]Level{"TRACE": TRACE, "DEBUG": DEBUG, "INFO": INFO, "WARN": WARNING, "ERROR": ERROR, "CRITICAL": CRITICAL}
+	StringLevels = map[string]LevelType{"TRACE": TRACE, "DEBUG": DEBUG, "INFO": INFO, "WARN": WARNING, "ERROR": ERROR, "CRITICAL": CRITICAL}
 
 	// Levels is a slice consist of all levels
-	Levels = [...]Level{TRACE, DEBUG, INFO, WARNING, ERROR, CRITICAL}
+	Levels = [...]LevelType{TRACE, DEBUG, INFO, WARNING, ERROR, CRITICAL}
 
 	// Prefix is preformatted level prefix string
 	// help reduce string formatted burden in realtime logging
-	Prefix = make(map[Level]string)
+	Prefix = make(map[LevelType]string)
 )
 
 func init() {
@@ -94,7 +94,7 @@ func initPrefix(colored bool) {
 }
 
 // valid determines whether a Level instance is valid or not
-func (level Level) valid() bool {
+func (level LevelType) valid() bool {
 	if TRACE > level || CRITICAL < level {
 		return false
 	}
@@ -102,7 +102,7 @@ func (level Level) valid() bool {
 }
 
 // String return string format associate with a Level instance
-func (level Level) String() string {
+func (level LevelType) String() string {
 	if !level.valid() {
 		return UNKNOWN
 	}
@@ -110,15 +110,15 @@ func (level Level) String() string {
 }
 
 // prefix return formatted prefix string associate with a Level instance
-func (level Level) prefix() string {
+func (level LevelType) prefix() string {
 	return Prefix[level]
 }
 
 // LevelFromString return Level according to given string
-func LevelFromString(str string) Level {
+func LevelFromString(str string) LevelType {
 	level, ok := StringLevels[strings.ToUpper(str)]
 	if !ok {
-		return Level(-1)
+		return LevelType(-1)
 	}
 	return level
 }

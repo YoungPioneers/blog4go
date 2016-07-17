@@ -55,7 +55,7 @@ type baseFileWriter struct {
 	// actual hook instance
 	hook Hook
 	// hook is called when message level exceed level of logging action
-	hookLevel Level
+	hookLevel LevelType
 	// it determines whether hook is called async, default true
 	hookAsync bool
 
@@ -196,9 +196,6 @@ DaemonLoop:
 			if writer.timeRotated {
 				// if fileName not equal to currentFileName, it needs a time base logrotate
 				if fileName := fmt.Sprintf("%s.%s", writer.fileName, timeCache.Date()); writer.currentFileName != fileName {
-					// lock at this place may cause logrotate not accurate, but reduce lock acquire
-					// TODO have any better solution?
-					// use func to ensure writer.lock will be released
 					writer.resetFile()
 					writer.currentFileName = fileName
 
@@ -226,6 +223,8 @@ DaemonLoop:
 				continue
 			}
 
+			// TODO have any better solution?
+			// use func to ensure writer.lock will be released
 			writer.lock.Lock()
 			writer.currentSize += int64(size)
 			writer.currentLines++
@@ -274,7 +273,7 @@ func (writer *baseFileWriter) resetFile() {
 }
 
 // write writes pure message with specific level
-func (writer *baseFileWriter) write(level Level, args ...interface{}) {
+func (writer *baseFileWriter) write(level LevelType, args ...interface{}) {
 	var size = 0
 
 	if writer.closed {
@@ -285,7 +284,7 @@ func (writer *baseFileWriter) write(level Level, args ...interface{}) {
 		// 异步调用log hook
 		if nil != writer.hook && !(level < writer.hookLevel) {
 			if writer.hookAsync {
-				go func(level Level, args ...interface{}) {
+				go func(level LevelType, args ...interface{}) {
 					writer.hook.Fire(level, args...)
 				}(level, args...)
 
@@ -305,7 +304,7 @@ func (writer *baseFileWriter) write(level Level, args ...interface{}) {
 }
 
 // write formats message with specific level and write it
-func (writer *baseFileWriter) writef(level Level, format string, args ...interface{}) {
+func (writer *baseFileWriter) writef(level LevelType, format string, args ...interface{}) {
 	// 格式化构造message
 	// 边解析边输出
 	// 使用 % 作占位符
@@ -321,7 +320,7 @@ func (writer *baseFileWriter) writef(level Level, format string, args ...interfa
 		// 异步调用log hook
 		if nil != writer.hook && !(level < writer.hookLevel) {
 			if writer.hookAsync {
-				go func(level Level, format string, args ...interface{}) {
+				go func(level LevelType, format string, args ...interface{}) {
 					writer.hook.Fire(level, fmt.Sprintf(format, args...))
 				}(level, format, args...)
 
@@ -368,21 +367,29 @@ func (writer *baseFileWriter) Close() {
 
 // TimeRotated get timeRotated
 func (writer *baseFileWriter) TimeRotated() bool {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
 	return writer.timeRotated
 }
 
 // SetTimeRotated toggle time base logrotate on the fly
 func (writer *baseFileWriter) SetTimeRotated(timeRotated bool) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
 	writer.timeRotated = timeRotated
 }
 
 // Retentions get log retention days
 func (writer *baseFileWriter) Retentions() int64 {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
 	return writer.retentions
 }
 
 // SetExpiredDays set how many days of logs will keep
 func (writer *baseFileWriter) SetRetentions(retentions int64) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
 	if retentions < 1 {
 		return
 	}
@@ -391,11 +398,15 @@ func (writer *baseFileWriter) SetRetentions(retentions int64) {
 
 // RotateSize get log rotate size
 func (writer *baseFileWriter) RotateSize() int64 {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
 	return writer.rotateSize
 }
 
 // SetRotateSize set size when logroatate
 func (writer *baseFileWriter) SetRotateSize(rotateSize int64) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
 	if rotateSize > 0 {
 		writer.sizeRotated = true
 		writer.rotateSize = rotateSize
@@ -406,11 +417,15 @@ func (writer *baseFileWriter) SetRotateSize(rotateSize int64) {
 
 // RotateLines get log rotate lines
 func (writer *baseFileWriter) RotateLines() int {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
 	return writer.rotateLines
 }
 
 // SetRotateLines set line number when logrotate
 func (writer *baseFileWriter) SetRotateLines(rotateLines int) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
 	if rotateLines > 0 {
 		writer.lineRotated = true
 		writer.rotateLines = rotateLines
@@ -421,11 +436,15 @@ func (writer *baseFileWriter) SetRotateLines(rotateLines int) {
 
 // Colored get whether it is log with colored
 func (writer *baseFileWriter) Colored() bool {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
 	return writer.colored
 }
 
 // SetColored set logging color
 func (writer *baseFileWriter) SetColored(colored bool) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
 	if colored == writer.colored {
 		return
 	}
@@ -435,27 +454,37 @@ func (writer *baseFileWriter) SetColored(colored bool) {
 }
 
 // Level get log level
-func (writer *baseFileWriter) Level() Level {
+func (writer *baseFileWriter) Level() LevelType {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
 	return writer.blog.Level()
 }
 
 // SetLevel set logging level threshold
-func (writer *baseFileWriter) SetLevel(level Level) {
+func (writer *baseFileWriter) SetLevel(level LevelType) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
 	writer.blog.SetLevel(level)
 }
 
 // SetHook set hook for the base file writer
 func (writer *baseFileWriter) SetHook(hook Hook) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
 	writer.hook = hook
 }
 
 // SetHookAsync set hook async for base file writer
 func (writer *baseFileWriter) SetHookAsync(async bool) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
 	writer.hookAsync = async
 }
 
 // SetHookLevel set when hook will be called
-func (writer *baseFileWriter) SetHookLevel(level Level) {
+func (writer *baseFileWriter) SetHookLevel(level LevelType) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
 	writer.hookLevel = level
 }
 

@@ -18,7 +18,7 @@ type ConsoleWriter struct {
 
 	// log hook
 	hook      Hook
-	hookLevel Level
+	hookLevel LevelType
 	hookAsync bool
 }
 
@@ -76,7 +76,7 @@ DaemonLoop:
 	}
 }
 
-func (writer *ConsoleWriter) write(level Level, args ...interface{}) {
+func (writer *ConsoleWriter) write(level LevelType, args ...interface{}) {
 	if writer.closed {
 		return
 	}
@@ -84,7 +84,7 @@ func (writer *ConsoleWriter) write(level Level, args ...interface{}) {
 	defer func() {
 		if nil != writer.hook && !(level < writer.hookLevel) {
 			if writer.hookAsync {
-				go func(level Level, args ...interface{}) {
+				go func(level LevelType, args ...interface{}) {
 					writer.hook.Fire(level, args...)
 				}(level, args...)
 
@@ -98,7 +98,7 @@ func (writer *ConsoleWriter) write(level Level, args ...interface{}) {
 	writer.blog.write(level, args...)
 }
 
-func (writer *ConsoleWriter) writef(level Level, format string, args ...interface{}) {
+func (writer *ConsoleWriter) writef(level LevelType, format string, args ...interface{}) {
 	if writer.closed {
 		return
 	}
@@ -107,7 +107,7 @@ func (writer *ConsoleWriter) writef(level Level, format string, args ...interfac
 
 		if nil != writer.hook && !(level < writer.hookLevel) {
 			if writer.hookAsync {
-				go func(level Level, format string, args ...interface{}) {
+				go func(level LevelType, format string, args ...interface{}) {
 					writer.hook.Fire(level, fmt.Sprintf(format, args...))
 				}(level, format, args...)
 
@@ -121,9 +121,19 @@ func (writer *ConsoleWriter) writef(level Level, format string, args ...interfac
 	writer.blog.writef(level, format, args...)
 }
 
+// Level get level
+func (writer *ConsoleWriter) Level() LevelType {
+	return writer.blog.Level()
+}
+
 // SetLevel set logger level
-func (writer *ConsoleWriter) SetLevel(level Level) {
+func (writer *ConsoleWriter) SetLevel(level LevelType) {
 	writer.blog.SetLevel(level)
+}
+
+// Colored get Colored
+func (writer *ConsoleWriter) Colored() bool {
+	return writer.colored
 }
 
 // SetColored set logging color
@@ -148,7 +158,7 @@ func (writer *ConsoleWriter) SetHookAsync(async bool) {
 }
 
 // SetHookLevel set when hook will be called
-func (writer *ConsoleWriter) SetHookLevel(level Level) {
+func (writer *ConsoleWriter) SetHookLevel(level LevelType) {
 	writer.hookLevel = level
 }
 
@@ -163,9 +173,19 @@ func (writer *ConsoleWriter) Close() {
 	writer.closed = true
 }
 
+// TimeRotated do nothing
+func (writer *ConsoleWriter) TimeRotated() bool {
+	return false
+}
+
 // SetTimeRotated do nothing
 func (writer *ConsoleWriter) SetTimeRotated(timeRotated bool) {
 	return
+}
+
+// Retentions do nothing
+func (writer *ConsoleWriter) Retentions() int64 {
+	return 0
 }
 
 // SetRetentions do nothing
@@ -173,9 +193,19 @@ func (writer *ConsoleWriter) SetRetentions(retentions int64) {
 	return
 }
 
+// RotateSize do nothing
+func (writer *ConsoleWriter) RotateSize() int64 {
+	return 0
+}
+
 // SetRotateSize do nothing
 func (writer *ConsoleWriter) SetRotateSize(rotateSize int64) {
 	return
+}
+
+// RotateLines do nothing
+func (writer *ConsoleWriter) RotateLines() int {
+	return 0
 }
 
 // SetRotateLines do nothing

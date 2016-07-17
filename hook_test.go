@@ -12,7 +12,7 @@ import (
 
 type MyHook struct {
 	cnt     int
-	level   Level
+	level   LevelType
 	message string
 
 	l *sync.RWMutex
@@ -40,13 +40,13 @@ func (hook *MyHook) Cnt() int {
 	return hook.cnt
 }
 
-func (hook *MyHook) Level() Level {
+func (hook *MyHook) Level() LevelType {
 	hook.l.RLock()
 	defer hook.l.RUnlock()
 	return hook.level
 }
 
-func (hook *MyHook) SetLevel(level Level) {
+func (hook *MyHook) SetLevel(level LevelType) {
 	hook.l.Lock()
 	defer hook.l.Unlock()
 	hook.level = level
@@ -64,7 +64,7 @@ func (hook *MyHook) SetMessage(message string) {
 	hook.message = message
 }
 
-func (hook *MyHook) Fire(level Level, args ...interface{}) {
+func (hook *MyHook) Fire(level LevelType, args ...interface{}) {
 	hook.Add()
 	hook.SetLevel(level)
 	hook.SetMessage(fmt.Sprint(args...))

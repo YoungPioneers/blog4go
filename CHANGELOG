@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - hook支持阻塞模式调用
 - 测试用例覆盖timeRotate
+- 封装成员属性
 
 ### Fixed
 - examples错误
