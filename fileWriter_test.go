@@ -175,6 +175,10 @@ func TestFileWriterAsConfigFile(t *testing.T) {
 	blog.Warn("Warn")
 	blog.Error("Error")
 	blog.Critical("Critical")
+
+	blog.Close()
+	blog.Debug("Debug", 1)
+	blog.Debugf("%s", "Debug")
 }
 
 // test if log lose in multi goroutine mode
@@ -271,10 +275,10 @@ func TestFileWriterSizeBaseLogrotate(t *testing.T) {
 		Close()
 
 		// clean logs
-		//_, err = exec.Command("/bin/sh", "-c", "/bin/rm /tmp/*.log*").Output()
-		//if nil != err {
-		//t.Errorf("clean files failed. err: %s", err.Error())
-		//}
+		_, err = exec.Command("/bin/sh", "-c", "/bin/rm /tmp/*.log*").Output()
+		if nil != err {
+			t.Errorf("clean files failed. err: %s", err.Error())
+		}
 	}()
 
 	if nil != err {

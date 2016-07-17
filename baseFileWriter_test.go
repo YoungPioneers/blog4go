@@ -88,7 +88,7 @@ func TestBaseFileWriterBasicOperation(t *testing.T) {
 
 	blog.Colored()
 	blog.SetColored(true)
-	blog.Retentions()
+	blog.TimeRotated()
 	blog.SetTimeRotated(true)
 	blog.Level()
 	blog.SetLevel(CRITICAL)
