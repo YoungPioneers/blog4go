@@ -199,10 +199,8 @@ DaemonLoop:
 					// lock at this place may cause logrotate not accurate, but reduce lock acquire
 					// TODO have any better solution?
 					// use func to ensure writer.lock will be released
-					writer.lock.Lock()
 					writer.resetFile()
 					writer.currentFileName = fileName
-					writer.lock.Unlock()
 
 					// when it needs to expire logs
 					if writer.retentions > 0 {
@@ -267,8 +265,8 @@ func (writer *baseFileWriter) resetFile() {
 		fileName = fmt.Sprintf("%s.%s", fileName, timeCache.Date())
 	}
 	file, _ := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
-	writer.file.Close()
 	writer.blog.resetFile(file)
+	writer.file.Close()
 	writer.file = file
 
 	writer.currentSize = 0

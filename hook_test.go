@@ -85,22 +85,22 @@ func TestHook(t *testing.T) {
 	blog.Debug("something")
 	// wait for hook called
 	time.Sleep(1 * time.Millisecond)
-	if 0 != hook.cnt {
+	if 0 != hook.Cnt() {
 		t.Error("hook called not valid")
 	}
 
-	if DEBUG == hook.level || "something" == hook.message {
+	if DEBUG == hook.Level() || "something" == hook.Message() {
 		t.Errorf("hook parameters wrong. level: %s, message: %s", hook.level.String(), hook.message)
 	}
 
 	blog.Info("yes")
 	// wait for hook called
 	time.Sleep(1 * time.Millisecond)
-	if 1 != hook.cnt {
+	if 1 != hook.Cnt() {
 		t.Error("hook not called")
 	}
 
-	if INFO != hook.level || "yes" != hook.message {
+	if INFO != hook.Level() || "yes" != hook.Message() {
 		t.Errorf("hook parameters wrong. level: %d, message: %s", hook.level, hook.message)
 	}
 
