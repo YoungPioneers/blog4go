@@ -3,6 +3,7 @@
 package blog4go
 
 import (
+	"sync"
 	"time"
 )
 
@@ -24,12 +25,16 @@ type timeFormatCacheType struct {
 	format []byte
 	// yesterdate
 	dateYesterday string
+
+	// lock for read && write
+	lock *sync.RWMutex
 }
 
 // global time cache instance used for every log writer
 var timeCache = timeFormatCacheType{}
 
 func init() {
+	timeCache.lock = new(sync.RWMutex)
 	timeCache.now = time.Now()
 	timeCache.date = timeCache.now.Format(DateFormat)
 	timeCache.format = []byte(timeCache.now.Format(PrefixTimeFormat))
@@ -44,16 +49,52 @@ func init() {
 		for {
 			select {
 			case <-t:
-				// get current time and update timeCache
-				now := time.Now()
-				timeCache.now = now
-				timeCache.format = []byte(now.Format(PrefixTimeFormat))
-				date := now.Format(DateFormat)
-				if date != timeCache.date {
-					timeCache.dateYesterday = timeCache.date
-					timeCache.date = now.Format(DateFormat)
-				}
+				timeCache.fresh()
 			}
 		}
 	}()
+}
+
+// Now now
+func (timeCache *timeFormatCacheType) Now() time.Time {
+	timeCache.lock.RLock()
+	defer timeCache.lock.RUnlock()
+	return timeCache.now
+}
+
+// Date date
+func (timeCache *timeFormatCacheType) Date() string {
+	timeCache.lock.RLock()
+	defer timeCache.lock.RUnlock()
+	return timeCache.date
+}
+
+// DateYesterday date
+func (timeCache *timeFormatCacheType) DateYesterday() string {
+	timeCache.lock.RLock()
+	defer timeCache.lock.RUnlock()
+	return timeCache.dateYesterday
+}
+
+// Format format
+func (timeCache *timeFormatCacheType) Format() []byte {
+	timeCache.lock.RLock()
+	defer timeCache.lock.RUnlock()
+	return timeCache.format
+}
+
+// fresh data in timeCache
+func (timeCache *timeFormatCacheType) fresh() {
+	timeCache.lock.Lock()
+	defer timeCache.lock.Unlock()
+
+	// get current time and update timeCache
+	now := time.Now()
+	timeCache.now = now
+	timeCache.format = []byte(now.Format(PrefixTimeFormat))
+	date := now.Format(DateFormat)
+	if date != timeCache.date {
+		timeCache.dateYesterday = timeCache.date
+		timeCache.date = now.Format(DateFormat)
+	}
 }

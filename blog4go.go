@@ -129,7 +129,7 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 
 		var f *os.File
 		var blog *BLog
-		var fileLock *sync.Mutex
+		var fileLock *sync.RWMutex
 
 		// get file path
 		var filePath string
@@ -143,7 +143,7 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 				return err
 			}
 			blog = NewBLog(f)
-			fileLock = new(sync.Mutex)
+			fileLock = new(sync.RWMutex)
 		} else if (rotateFile{}) != filter.RotateFile {
 			// file need logrotate
 			filePath = filter.RotateFile.Path
@@ -152,14 +152,14 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 
 			fileName := filePath
 			if timeRotate {
-				fileName = fmt.Sprintf("%s.%s", fileName, timeCache.date)
+				fileName = fmt.Sprintf("%s.%s", fileName, timeCache.Date())
 			}
 			f, err = os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 			if nil != err {
 				return err
 			}
 			blog = NewBLog(f)
-			fileLock = new(sync.Mutex)
+			fileLock = new(sync.RWMutex)
 		} else if (socket{}) != filter.Socket {
 			isSocket = true
 		} else {
@@ -260,12 +260,12 @@ func (blog *BLog) write(level Level, args ...interface{}) int {
 	var size = 0
 	format := fmt.Sprint(args...)
 
-	blog.writer.Write(timeCache.format)
+	blog.writer.Write(timeCache.Format())
 	blog.writer.WriteString(level.prefix())
 	blog.writer.WriteString(format)
 	blog.writer.WriteByte(EOL)
 
-	size = len(timeCache.format) + len(level.prefix()) + len(format) + 1
+	size = len(timeCache.Format()) + len(level.prefix()) + len(format) + 1
 	return size
 }
 
@@ -291,10 +291,10 @@ func (blog *BLog) writef(level Level, format string, args ...interface{}) int {
 	var last int
 	var s int
 
-	blog.writer.Write(timeCache.format)
+	blog.writer.Write(timeCache.Format())
 	blog.writer.WriteString(level.prefix())
 
-	size += len(timeCache.format) + len(level.prefix())
+	size += len(timeCache.Format()) + len(level.prefix())
 
 	for i, v := range format {
 		if tag {
@@ -356,7 +356,7 @@ func (blog *BLog) Close() {
 	blog.lock.Lock()
 	defer blog.lock.Unlock()
 
-	if blog.closed {
+	if nil == blog || blog.closed {
 		return
 	}
 
@@ -385,6 +385,7 @@ func (blog *BLog) SetLevel(level Level) *BLog {
 func (blog *BLog) resetFile(in io.Writer) (err error) {
 	blog.lock.Lock()
 	defer blog.lock.Unlock()
+
 	blog.writer.Flush()
 
 	blog.in = in

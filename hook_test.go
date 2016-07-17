@@ -5,6 +5,7 @@ package blog4go
 import (
 	"fmt"
 	"os/exec"
+	"sync"
 	"testing"
 	"time"
 )
@@ -13,21 +14,64 @@ type MyHook struct {
 	cnt     int
 	level   Level
 	message string
+
+	l *sync.RWMutex
 }
 
-func (hook *MyHook) add() {
+func NewMyHook() (hook *MyHook) {
+	hook = new(MyHook)
+	hook.cnt = 0
+	hook.level = TRACE
+	hook.message = ""
+	hook.l = new(sync.RWMutex)
+
+	return
+}
+
+func (hook *MyHook) Add() {
+	hook.l.Lock()
+	defer hook.l.Unlock()
 	hook.cnt++
 }
 
-func (hook *MyHook) Fire(level Level, args ...interface{}) {
-	hook.add()
+func (hook *MyHook) Cnt() int {
+	hook.l.RLock()
+	defer hook.l.RUnlock()
+	return hook.cnt
+}
+
+func (hook *MyHook) Level() Level {
+	hook.l.RLock()
+	defer hook.l.RUnlock()
+	return hook.level
+}
+
+func (hook *MyHook) SetLevel(level Level) {
+	hook.l.Lock()
+	defer hook.l.Unlock()
 	hook.level = level
-	hook.message = fmt.Sprint(args...)
+}
+
+func (hook *MyHook) Message() string {
+	hook.l.RLock()
+	defer hook.l.RUnlock()
+	return hook.message
+}
+
+func (hook *MyHook) SetMessage(message string) {
+	hook.l.Lock()
+	defer hook.l.Unlock()
+	hook.message = message
+}
+
+func (hook *MyHook) Fire(level Level, args ...interface{}) {
+	hook.Add()
+	hook.SetLevel(level)
+	hook.SetMessage(fmt.Sprint(args...))
 }
 
 func TestHook(t *testing.T) {
-	hook := new(MyHook)
-	hook.cnt = 0
+	hook := NewMyHook()
 
 	err := NewFileWriter("/tmp", false)
 	defer Close()

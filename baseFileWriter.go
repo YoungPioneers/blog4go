@@ -61,7 +61,7 @@ type baseFileWriter struct {
 
 	// configuration about logrotate
 	// exclusive lock use in logrotate
-	lock *sync.Mutex
+	lock *sync.RWMutex
 
 	// configuration about time base logrotate
 	// sign of time base logrotate, default false
@@ -102,6 +102,7 @@ type baseFileWriter struct {
 func NewBaseFileWriter(fileName string, timeRotated bool) (err error) {
 	singltonLock.Lock()
 	defer singltonLock.Unlock()
+
 	if nil != blog {
 		return ErrAlreadyInit
 	}
@@ -125,7 +126,7 @@ func newBaseFileWriter(fileName string, timeRotated bool) (fileWriter *baseFileW
 	fileWriter.fileName = fileName
 	// open file target file
 	if timeRotated {
-		fileName = fmt.Sprintf("%s.%s", fileName, timeCache.date)
+		fileName = fmt.Sprintf("%s.%s", fileName, timeCache.Date())
 	}
 	file, err := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 	fileWriter.file = file
@@ -138,7 +139,7 @@ func newBaseFileWriter(fileName string, timeRotated bool) (fileWriter *baseFileW
 	fileWriter.closed = false
 
 	// about logrotate
-	fileWriter.lock = new(sync.Mutex)
+	fileWriter.lock = new(sync.RWMutex)
 	fileWriter.timeRotated = timeRotated
 	fileWriter.timeRotateSig = make(chan bool)
 	fileWriter.sizeRotateSig = make(chan bool)
@@ -182,19 +183,19 @@ DaemonLoop:
 	for {
 		select {
 		case <-f:
-			if writer.closed {
+			if writer.Closed() {
 				break DaemonLoop
 			}
 
 			writer.blog.flush()
 		case <-t:
-			if writer.closed {
+			if writer.Closed() {
 				break DaemonLoop
 			}
 
 			if writer.timeRotated {
 				// if fileName not equal to currentFileName, it needs a time base logrotate
-				if fileName := fmt.Sprintf("%s.%s", writer.fileName, timeCache.date); writer.currentFileName != fileName {
+				if fileName := fmt.Sprintf("%s.%s", writer.fileName, timeCache.Date()); writer.currentFileName != fileName {
 					// lock at this place may cause logrotate not accurate, but reduce lock acquire
 					// TODO have any better solution?
 					// use func to ensure writer.lock will be released
@@ -206,7 +207,7 @@ DaemonLoop:
 					// when it needs to expire logs
 					if writer.retentions > 0 {
 						// format the expired log file name
-						date := timeCache.now.Add(time.Duration(-24*(writer.retentions+1)) * time.Hour).Format(DateFormat)
+						date := timeCache.Now().Add(time.Duration(-24*(writer.retentions+1)) * time.Hour).Format(DateFormat)
 						expiredFileName := fmt.Sprintf("%s.%s", writer.fileName, date)
 						// check if expired log exists
 						if _, err := os.Stat(expiredFileName); nil == err {
@@ -219,7 +220,7 @@ DaemonLoop:
 		// analyse lines && size written
 		// do lines && size base logrotate
 		case size := <-writer.logSizeChan:
-			if writer.closed {
+			if writer.Closed() {
 				break DaemonLoop
 			}
 
@@ -228,9 +229,9 @@ DaemonLoop:
 			}
 
 			writer.lock.Lock()
-
 			writer.currentSize += int64(size)
 			writer.currentLines++
+			writer.lock.Unlock()
 
 			if (writer.sizeRotated && writer.currentSize >= writer.rotateSize) || (writer.lineRotated && writer.currentLines >= writer.rotateLines) {
 				// need lines && size base logrotate
@@ -250,25 +251,28 @@ DaemonLoop:
 					os.Rename(writer.currentFileName, oldName)
 
 					writer.resetFile()
-					writer.currentSize = 0
-					writer.currentLines = 0
 				}
 			}
-			writer.lock.Unlock()
 		}
 	}
 }
 
 // resetFile reset current writing file
 func (writer *baseFileWriter) resetFile() {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
+
 	fileName := writer.fileName
 	if writer.timeRotated {
-		fileName = fmt.Sprintf("%s.%s", fileName, timeCache.date)
+		fileName = fmt.Sprintf("%s.%s", fileName, timeCache.Date())
 	}
 	file, _ := os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
 	writer.file.Close()
 	writer.blog.resetFile(file)
 	writer.file = file
+
+	writer.currentSize = 0
+	writer.currentLines = 0
 }
 
 // write writes pure message with specific level
@@ -338,14 +342,21 @@ func (writer *baseFileWriter) writef(level Level, format string, args ...interfa
 	size = writer.blog.writef(level, format, args...)
 }
 
+// Closed get writer status
+func (writer *baseFileWriter) Closed() bool {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
+	return writer.closed
+}
+
 // Close close file writer
 func (writer *baseFileWriter) Close() {
-	writer.lock.Lock()
-	defer writer.lock.Unlock()
-
-	if writer.closed {
+	if writer.Closed() {
 		return
 	}
+
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
 
 	writer.closed = true
 	writer.blog.flush()
@@ -357,9 +368,19 @@ func (writer *baseFileWriter) Close() {
 	close(writer.sizeRotateSig)
 }
 
+// TimeRotated get timeRotated
+func (writer *baseFileWriter) TimeRotated() bool {
+	return writer.timeRotated
+}
+
 // SetTimeRotated toggle time base logrotate on the fly
 func (writer *baseFileWriter) SetTimeRotated(timeRotated bool) {
 	writer.timeRotated = timeRotated
+}
+
+// Retentions get log retention days
+func (writer *baseFileWriter) Retentions() int64 {
+	return writer.retentions
 }
 
 // SetExpiredDays set how many days of logs will keep
@@ -368,6 +389,11 @@ func (writer *baseFileWriter) SetRetentions(retentions int64) {
 		return
 	}
 	writer.retentions = retentions
+}
+
+// RotateSize get log rotate size
+func (writer *baseFileWriter) RotateSize() int64 {
+	return writer.rotateSize
 }
 
 // SetRotateSize set size when logroatate
@@ -380,6 +406,11 @@ func (writer *baseFileWriter) SetRotateSize(rotateSize int64) {
 	}
 }
 
+// RotateLines get log rotate lines
+func (writer *baseFileWriter) RotateLines() int {
+	return writer.rotateLines
+}
+
 // SetRotateLines set line number when logrotate
 func (writer *baseFileWriter) SetRotateLines(rotateLines int) {
 	if rotateLines > 0 {
@@ -390,6 +421,11 @@ func (writer *baseFileWriter) SetRotateLines(rotateLines int) {
 	}
 }
 
+// Colored get whether it is log with colored
+func (writer *baseFileWriter) Colored() bool {
+	return writer.colored
+}
+
 // SetColored set logging color
 func (writer *baseFileWriter) SetColored(colored bool) {
 	if colored == writer.colored {
@@ -398,6 +434,11 @@ func (writer *baseFileWriter) SetColored(colored bool) {
 
 	writer.colored = colored
 	initPrefix(colored)
+}
+
+// Level get log level
+func (writer *baseFileWriter) Level() Level {
+	return writer.blog.Level()
 }
 
 // SetLevel set logging level threshold
