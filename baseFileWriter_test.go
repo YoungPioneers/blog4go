@@ -96,6 +96,9 @@ func TestBaseFileWriterBasicOperation(t *testing.T) {
 	blog.Critical("Critical", 6)
 	blog.Criticalf("%s", "Critical")
 
+	// wait for timeRotate run
+	time.Sleep(1 * time.Second)
+
 	blog.Close()
 	blog.Debug("Debug", 1)
 	blog.Debugf("%s", "Debug")
