@@ -90,7 +90,6 @@ func (writer *ConsoleWriter) write(level LevelType, args ...interface{}) {
 
 			} else {
 				writer.hook.Fire(level, args...)
-
 			}
 		}
 	}()

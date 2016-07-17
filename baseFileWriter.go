@@ -290,7 +290,6 @@ func (writer *baseFileWriter) write(level LevelType, args ...interface{}) {
 
 			} else {
 				writer.hook.Fire(level, args...)
-
 			}
 		}
 

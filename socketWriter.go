@@ -112,7 +112,6 @@ func (writer *SocketWriter) writef(level LevelType, format string, args ...inter
 
 			} else {
 				writer.hook.Fire(level, fmt.Sprintf(format, args...))
-
 			}
 		}
 	}()
