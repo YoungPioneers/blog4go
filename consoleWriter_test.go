@@ -57,12 +57,17 @@ func TestConsoleWriterBasicOperation(t *testing.T) {
 	blog.Criticalf("%s", "Critical")
 	blog.flush()
 
+	blog.Colored()
 	blog.SetColored(true)
-	blog.SetColored(true)
+	blog.TimeRotated()
 	blog.SetTimeRotated(true)
+	blog.Level()
 	blog.SetLevel(CRITICAL)
+	blog.Retentions()
 	blog.SetRetentions(7)
+	blog.RotateLines()
 	blog.SetRotateLines(100000)
+	blog.RotateSize()
 	blog.SetRotateSize(1024 * 1024 * 500)
 
 	blog.Debug("Debug", 1)

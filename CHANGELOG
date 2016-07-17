@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 ## [0.5.5] - 2016-07-17
 ### Added
 - hook支持阻塞模式调用
-- 测试用例覆盖timeRotate
+- 测试用例覆盖timeRotate, 成员属性方法
 - 封装成员属性
 
 ### Fixed
