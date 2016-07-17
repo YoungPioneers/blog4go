@@ -27,6 +27,7 @@ func TestGlobalOperation(t *testing.T) {
 	SetHookLevel(INFO)
 
 	Debug("something")
+	Debugf("%s", "something")
 	// wait for hook called
 	time.Sleep(1 * time.Millisecond)
 	if 0 != hook.cnt {

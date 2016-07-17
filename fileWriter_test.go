@@ -38,6 +38,7 @@ func TestFileWriterBasicOperation(t *testing.T) {
 	blog.SetHookLevel(INFO)
 
 	blog.Debug("something")
+	blog.Debugf("%s", "something")
 	// wait for hook called
 	time.Sleep(1 * time.Millisecond)
 	if 0 != hook.Cnt() {

@@ -24,6 +24,7 @@ func TestSocketWriterBasicOperation(t *testing.T) {
 	blog.SetHook(hook)
 	blog.SetHookLevel(INFO)
 
+	blog.Debug("something")
 	blog.Debugf("%s", "something")
 	// wait for hook called
 	time.Sleep(1 * time.Millisecond)
