@@ -20,7 +20,7 @@ Features
 * Configurable logrotate strategy
 * Call user defined hook in asynchronous mode for every logging action
 * Adjustable message formatting
-* Configurable logging behavier when looging *on the fly* without restarting
+* Configurable logging behavier when logging *on the fly* without restarting
 * Suit configuration to the environment when logging start
 * Try best to get every done in background
 * File writer can be configured according to given config file
