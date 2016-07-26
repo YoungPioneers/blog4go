@@ -1,7 +1,7 @@
 Introduction
 =======
 
-BLog4go is an efficient logging library written in the [Go](http://golang.org/) programming language, providing logging hook, log rotate, filtering and formatting log message. 
+BLog4go is an efficient logging library written in the [Go](http://golang.org/) programming language, providing logging hook, log rotate, filtering and formatting log message.
 
 BLog4go 是高性能日志库。创新地使用“边解析边输出”方法进行日志输出，同时支持回调函数、日志淘汰和配置文件。可以解决高并发，调用日志函数频繁的情境下，日志库造成的性能问题。
 
@@ -50,13 +50,13 @@ type MyHook struct {
 // when log-level exceed level, call the hook
 // level is the level associate with that logging action.
 // message is the formatted string already written.
-func (self *MyHook) Fire(level log.Level, message string) {
-	fmt.Println(message)
+func (self *MyHook) Fire(level log.LevelType, args ...interface{}) {
+	fmt.Println(args...)
 }
 
 func main() {
 	// init a file write using xml config file
-	err := log.NewFileWriterFromConfigAsFile("config.xml")
+	err := log.NewWriterFromConfigAsFile("config.xml")
 	if nil != err {
 		fmt.Println(err.Error())
 		os.Exit(1)
@@ -74,7 +74,6 @@ func main() {
 
 	log.Debugf("Good morning, %s", "eddie")
 	log.Warn("It's time to have breakfast")
-
 }
 ```
 
@@ -96,7 +95,7 @@ config.xml
 Installation
 ------------------
 
-If you don't have the Go development environment installed, visit the 
+If you don't have the Go development environment installed, visit the
 [Getting Started](http://golang.org/doc/install.html) document and follow the instructions. Once you're ready, execute the following command:
 
 ```
