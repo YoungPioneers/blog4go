@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 - benchmark移动到[benchmark](https://github.com/YoungPioneers/blog4go-benchmark)
+- travis-ci去掉go1.5版本测试
 
 ## [0.5.5] - 2016-07-17
 ### Added
