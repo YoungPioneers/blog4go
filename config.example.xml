@@ -1,0 +1,17 @@
+<blog4go minlevel="info">
+	<filter levels="trace">
+		<rotatefile path="/tmp/trace.log" type="time" retentions="5"></rotatefile>
+	</filter>
+	<filter levels="debug" colored="true">
+		<file path="/tmp/debug.log"></file>
+	</filter>
+	<filter levels="debug" colored="true">
+		<console redirect="true"></console>
+	</filter>
+	<filter levels="warn,error">
+		<rotatefile path="/tmp/error.log" type="size" rotateSize="50000000" retentions="10"></rotatefile>
+	</filter>
+	<filter levels="critical">
+		<socket network="udp" address="127.0.0.1:12124"></socket>
+	</filter>
+</blog4go>

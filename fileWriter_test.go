@@ -148,7 +148,7 @@ func TestSingleFileWriter(t *testing.T) {
 }
 
 func TestFileWriterAsConfigFile(t *testing.T) {
-	err := NewWriterFromConfigAsFile("examples/writer_from_configfile/config.example.xml")
+	err := NewWriterFromConfigAsFile("config.example.xml")
 	defer func() {
 		Close()
 
