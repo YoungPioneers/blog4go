@@ -325,7 +325,6 @@ func (writer *baseFileWriter) writef(level LevelType, format string, args ...int
 
 			} else {
 				writer.hook.Fire(level, fmt.Sprintf(format, args...))
-
 			}
 		}
 

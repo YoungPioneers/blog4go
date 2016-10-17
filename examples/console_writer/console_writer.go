@@ -26,7 +26,10 @@ func (hook *MyHook) Fire(level log.LevelType, args ...interface{}) {
 func main() {
 	hook := new(MyHook)
 
-	err := log.NewConsoleWriter()
+	// redirect stderr to stdout
+	err := log.NewConsoleWriter(true)
+	// warning && error will be writer to stderr
+	// err := log.NewConsoleWriter(true)
 	if nil != err {
 		fmt.Println(err.Error())
 		os.Exit(1)

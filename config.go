@@ -31,8 +31,6 @@ var (
 	ErrConfigSocketAddressNotFound = errors.New("Please define a socket address")
 	// ErrConfigSocketNetworkNotFound not found socket port
 	ErrConfigSocketNetworkNotFound = errors.New("Please define a socket network type")
-	// ErrConfigMissingFilterType miss a filter configuration
-	ErrConfigMissingFilterType = errors.New("Missing filter configuration")
 )
 
 // Config struct define the config struct used for file wirter
@@ -47,8 +45,8 @@ type filter struct {
 	Colored    bool       `xml:"colored,attr"`
 	File       file       `xml:"file"`
 	RotateFile rotateFile `xml:"rotatefile"`
-	//Console    console    `xml:"console"`
-	Socket socket `xml:"socket"`
+	Console    console    `xml:"console"`
+	Socket     socket     `xml:"socket"`
 }
 
 type file struct {
@@ -63,9 +61,10 @@ type rotateFile struct {
 	Retentions  int64  `xml:"retentions,attr"`
 }
 
-//type console struct {
-//XMLName xml.Name `xml:"console"`
-//}
+type console struct {
+	// redirect stderr to stdout
+	Redirect bool `xml:"redirect"`
+}
 
 type socket struct {
 	Network string `xml:"network,attr"`
@@ -92,9 +91,9 @@ func (config *Config) valid() error {
 
 		if (file{}) != filter.File {
 			// seem not needed now
-			//if "" == filter.File.Path {
-			//return ErrConfigFilePathNotFound
-			//}
+			if "" == filter.File.Path {
+				return ErrConfigFilePathNotFound
+			}
 		} else if (rotateFile{}) != filter.RotateFile {
 			if "" == filter.RotateFile.Path {
 				return ErrConfigFilePathNotFound
@@ -111,8 +110,6 @@ func (config *Config) valid() error {
 			if "" == filter.Socket.Network {
 				return ErrConfigSocketNetworkNotFound
 			}
-		} else {
-			return ErrConfigMissingFilterType
 		}
 	}
 

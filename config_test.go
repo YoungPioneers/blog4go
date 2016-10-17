@@ -136,15 +136,4 @@ func TestConfigValidation(t *testing.T) {
 	if err := config.valid(); ErrConfigLevelsNotFound == err || ErrConfigSocketAddressNotFound == err || ErrConfigSocketNetworkNotFound == err {
 		t.Error("config socket filter check failed.")
 	}
-
-	// missing filter
-	f = filter{
-		Levels: "debug",
-	}
-	config.Filters = make([]filter, 0)
-	config.Filters = append(config.Filters, f)
-
-	if err := config.valid(); ErrConfigMissingFilterType != err {
-		t.Error("config missing filter check failed.")
-	}
 }

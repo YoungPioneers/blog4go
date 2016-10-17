@@ -30,7 +30,7 @@ const (
 	UNKNOWN = "UNKNOWN"
 
 	// DefaultLevel default level for writers
-	DefaultLevel = DEBUG
+	DefaultLevel = TRACE
 
 	// PrefixFormat is the level format ahead every message
 	PrefixFormat = " [%s] " // pure format

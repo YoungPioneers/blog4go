@@ -11,6 +11,10 @@ import (
 // ConsoleWriter is a console logger
 type ConsoleWriter struct {
 	blog *BLog
+	// for stderr
+	errblog *BLog
+
+	redirected bool
 
 	closed bool
 
@@ -23,14 +27,14 @@ type ConsoleWriter struct {
 }
 
 // NewConsoleWriter initialize a console writer, singlton
-func NewConsoleWriter() (err error) {
+func NewConsoleWriter(redirected bool) (err error) {
 	singltonLock.Lock()
 	defer singltonLock.Unlock()
 	if nil != blog {
 		return ErrAlreadyInit
 	}
 
-	consoleWriter, err := newConsoleWriter()
+	consoleWriter, err := newConsoleWriter(redirected)
 	if nil != err {
 		return err
 	}
@@ -41,9 +45,14 @@ func NewConsoleWriter() (err error) {
 }
 
 // newConsoleWriter initialize a console writer, not singlton
-func newConsoleWriter() (consoleWriter *ConsoleWriter, err error) {
+// if redirected, stderr will be redirected to stdout
+func newConsoleWriter(redirected bool) (consoleWriter *ConsoleWriter, err error) {
 	consoleWriter = new(ConsoleWriter)
 	consoleWriter.blog = NewBLog(os.Stdout)
+	consoleWriter.redirected = redirected
+	if !redirected {
+		consoleWriter.errblog = NewBLog(os.Stderr)
+	}
 
 	consoleWriter.closed = false
 
@@ -94,6 +103,11 @@ func (writer *ConsoleWriter) write(level LevelType, args ...interface{}) {
 		}
 	}()
 
+	if !writer.redirected && level >= WARNING {
+		writer.errblog.write(level, args...)
+		return
+	}
+
 	writer.blog.write(level, args...)
 }
 
@@ -112,10 +126,14 @@ func (writer *ConsoleWriter) writef(level LevelType, format string, args ...inte
 
 			} else {
 				writer.hook.Fire(level, fmt.Sprintf(format, args...))
-
 			}
 		}
 	}()
+
+	if !writer.redirected && level >= WARNING {
+		writer.errblog.writef(level, format, args...)
+		return
+	}
 
 	writer.blog.writef(level, format, args...)
 }

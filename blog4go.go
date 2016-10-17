@@ -133,6 +133,7 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 		var rotate = false
 		var timeRotate = false
 		var isSocket = false
+		var isConsole = false
 
 		var f *os.File
 		var blog *BLog
@@ -170,8 +171,8 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 		} else if (socket{}) != filter.Socket {
 			isSocket = true
 		} else {
-			// config error
-			return ErrFilePathNotFound
+			// use console writer as default
+			isConsole = true
 		}
 
 		levels := strings.Split(filter.Levels, ",")
@@ -179,6 +180,17 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 			var level LevelType
 			if level = LevelFromString(levelStr); !level.valid() {
 				return ErrInvalidLevel
+			}
+
+			if isConsole {
+				// console writer
+				writer, err := newConsoleWriter(filter.Console.Redirect)
+				if nil != err {
+					return err
+				}
+
+				multiWriter.writers[level] = writer
+				continue
 			}
 
 			if isSocket {

@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 
 ## [Released]
+## [0.5.6] - 2016-10-17
+### Changed
+- multiWriter默认使用console writer
+- DefaultLevel修复为TRACE
 
 ## [0.5.5] - 2016-07-17
 ### Added
@@ -24,7 +28,7 @@ All notable changes to this project will be documented in this file.
 - 去除ByteSize.
 - consoleWriter去除Colored(), Level()方法。
 
-## Changed
+### Changed
 - write支持args ...interface{}
 - logSizeChan buffer size加大到8192.
 - 简化.travis.yml
