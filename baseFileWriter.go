@@ -493,60 +493,108 @@ func (writer *baseFileWriter) flush() {
 
 // Trace trace
 func (writer *baseFileWriter) Trace(args ...interface{}) {
+	if nil == writer.blog || TRACE < writer.blog.Level() {
+		return
+	}
+	
 	writer.write(TRACE, args...)
 }
 
 // Tracef tracef
 func (writer *baseFileWriter) Tracef(format string, args ...interface{}) {
+	if nil == writer.blog || TRACE < writer.blog.Level() {
+		return
+	}
+	
 	writer.writef(TRACE, format, args...)
 }
 
 // Debug debug
 func (writer *baseFileWriter) Debug(args ...interface{}) {
+	if nil == writer.blog || DEBUG < writer.blog.Level() {
+		return
+	}
+	
 	writer.write(DEBUG, args...)
 }
 
 // Debugf debugf
 func (writer *baseFileWriter) Debugf(format string, args ...interface{}) {
+	if nil == writer.blog || DEBUG < writer.blog.Level() {
+		return
+	}
+	
 	writer.writef(DEBUG, format, args...)
 }
 
 // Info info
 func (writer *baseFileWriter) Info(args ...interface{}) {
+	if nil == writer.blog || INFO < writer.blog.Level() {
+		return
+	}
+	
 	writer.write(INFO, args...)
 }
 
 // Infof infof
 func (writer *baseFileWriter) Infof(format string, args ...interface{}) {
+	if nil == writer.blog || INFO < writer.blog.Level() {
+		return
+	}
+	
 	writer.writef(INFO, format, args...)
 }
 
 // Warn warn
 func (writer *baseFileWriter) Warn(args ...interface{}) {
+	if nil == writer.blog || WARNING < writer.blog.Level() {
+		return
+	}
+	
 	writer.write(WARNING, args...)
 }
 
 // Warnf warn
 func (writer *baseFileWriter) Warnf(format string, args ...interface{}) {
+	if nil == writer.blog || WARNING < writer.blog.Level() {
+		return
+	}
+	
 	writer.writef(WARNING, format, args...)
 }
 
 // Error error
 func (writer *baseFileWriter) Error(args ...interface{}) {
+	if nil == writer.blog || ERROR < writer.blog.Level() {
+		return
+	}
+	
 	writer.write(ERROR, args...)
 }
 
 // Errorf errorf
 func (writer *baseFileWriter) Errorf(format string, args ...interface{}) {
+	if nil == writer.blog || ERROR < writer.blog.Level() {
+		return
+	}
+	
 	writer.writef(ERROR, format, args...)
 }
 
 // Critical critical
 func (writer *baseFileWriter) Critical(args ...interface{}) {
+	if nil == writer.blog || CRITICAL < writer.blog.Level() {
+		return
+	}
+	
 	writer.write(CRITICAL, args...)
 }
 
 // Criticalf criticalf
 func (writer *baseFileWriter) Criticalf(format string, args ...interface{}) {
+	if nil == writer.blog || CRITICAL < writer.blog.Level() {
+		return
+	}
+	
 	writer.writef(CRITICAL, format, args...)
 }
