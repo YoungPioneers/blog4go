@@ -496,7 +496,7 @@ func (writer *baseFileWriter) Trace(args ...interface{}) {
 	if nil == writer.blog || TRACE < writer.blog.Level() {
 		return
 	}
-	
+
 	writer.write(TRACE, args...)
 }
 
@@ -505,7 +505,7 @@ func (writer *baseFileWriter) Tracef(format string, args ...interface{}) {
 	if nil == writer.blog || TRACE < writer.blog.Level() {
 		return
 	}
-	
+
 	writer.writef(TRACE, format, args...)
 }
 
@@ -514,7 +514,7 @@ func (writer *baseFileWriter) Debug(args ...interface{}) {
 	if nil == writer.blog || DEBUG < writer.blog.Level() {
 		return
 	}
-	
+
 	writer.write(DEBUG, args...)
 }
 
@@ -523,7 +523,7 @@ func (writer *baseFileWriter) Debugf(format string, args ...interface{}) {
 	if nil == writer.blog || DEBUG < writer.blog.Level() {
 		return
 	}
-	
+
 	writer.writef(DEBUG, format, args...)
 }
 
@@ -532,7 +532,7 @@ func (writer *baseFileWriter) Info(args ...interface{}) {
 	if nil == writer.blog || INFO < writer.blog.Level() {
 		return
 	}
-	
+
 	writer.write(INFO, args...)
 }
 
@@ -541,7 +541,7 @@ func (writer *baseFileWriter) Infof(format string, args ...interface{}) {
 	if nil == writer.blog || INFO < writer.blog.Level() {
 		return
 	}
-	
+
 	writer.writef(INFO, format, args...)
 }
 
@@ -550,7 +550,7 @@ func (writer *baseFileWriter) Warn(args ...interface{}) {
 	if nil == writer.blog || WARNING < writer.blog.Level() {
 		return
 	}
-	
+
 	writer.write(WARNING, args...)
 }
 
@@ -559,7 +559,7 @@ func (writer *baseFileWriter) Warnf(format string, args ...interface{}) {
 	if nil == writer.blog || WARNING < writer.blog.Level() {
 		return
 	}
-	
+
 	writer.writef(WARNING, format, args...)
 }
 
@@ -568,7 +568,7 @@ func (writer *baseFileWriter) Error(args ...interface{}) {
 	if nil == writer.blog || ERROR < writer.blog.Level() {
 		return
 	}
-	
+
 	writer.write(ERROR, args...)
 }
 
@@ -577,7 +577,7 @@ func (writer *baseFileWriter) Errorf(format string, args ...interface{}) {
 	if nil == writer.blog || ERROR < writer.blog.Level() {
 		return
 	}
-	
+
 	writer.writef(ERROR, format, args...)
 }
 
@@ -586,7 +586,7 @@ func (writer *baseFileWriter) Critical(args ...interface{}) {
 	if nil == writer.blog || CRITICAL < writer.blog.Level() {
 		return
 	}
-	
+
 	writer.write(CRITICAL, args...)
 }
 
@@ -595,6 +595,6 @@ func (writer *baseFileWriter) Criticalf(format string, args ...interface{}) {
 	if nil == writer.blog || CRITICAL < writer.blog.Level() {
 		return
 	}
-	
+
 	writer.writef(CRITICAL, format, args...)
 }
