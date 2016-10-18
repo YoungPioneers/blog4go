@@ -70,7 +70,7 @@ func newConsoleWriter(redirected bool) (consoleWriter *ConsoleWriter, err error)
 }
 
 func (writer *ConsoleWriter) daemon() {
-	f := time.Tick(10 * time.Second)
+	f := time.Tick(1 * time.Second)
 
 DaemonLoop:
 	for {

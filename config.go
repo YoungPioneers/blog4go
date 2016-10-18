@@ -91,9 +91,9 @@ func (config *Config) valid() error {
 
 		if (file{}) != filter.File {
 			// seem not needed now
-			if "" == filter.File.Path {
-				return ErrConfigFilePathNotFound
-			}
+			//if "" == filter.File.Path {
+			//return ErrConfigFilePathNotFound
+			//}
 		} else if (rotateFile{}) != filter.RotateFile {
 			if "" == filter.RotateFile.Path {
 				return ErrConfigFilePathNotFound

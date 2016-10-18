@@ -88,6 +88,7 @@ func TestFileWriterBasicOperation(t *testing.T) {
 	blog.Criticalf("%s", "Critical")
 	blog.flush()
 
+	blog.SetHookAsync(true)
 	blog.Colored()
 	blog.SetColored(true)
 	blog.TimeRotated()
@@ -285,6 +286,7 @@ func TestFileWriterSizeBaseLogrotate(t *testing.T) {
 		t.Errorf("initialize file writer faied. err: %s", err.Error())
 	}
 	blog.SetRotateSize(60)
+	blog.SetTimeRotated(true)
 
 	blog.Info("1")
 	Flush()

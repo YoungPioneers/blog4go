@@ -75,6 +75,7 @@ func TestSocketWriterBasicOperation(t *testing.T) {
 	blog.Criticalf("%s", "Critical")
 	blog.flush()
 
+	blog.SetHookAsync(true)
 	blog.Colored()
 	blog.SetColored(true)
 	blog.TimeRotated()

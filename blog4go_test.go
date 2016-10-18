@@ -76,6 +76,7 @@ func TestGlobalOperation(t *testing.T) {
 	Criticalf("%s", "Critical")
 	Flush()
 
+	SetHookAsync(true)
 	Colored()
 	SetColored(true)
 	TimeRotated()
