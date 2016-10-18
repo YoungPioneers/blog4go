@@ -217,7 +217,7 @@ func (writer *SocketWriter) flush() {
 
 // Trace trace
 func (writer *SocketWriter) Trace(args ...interface{}) {
-	if TRACE < writer.level {
+	if nil == writer.writer || TRACE < writer.level {
 		return
 	}
 
@@ -226,7 +226,7 @@ func (writer *SocketWriter) Trace(args ...interface{}) {
 
 // Tracef tracef
 func (writer *SocketWriter) Tracef(format string, args ...interface{}) {
-	if TRACE < writer.level {
+	if nil == writer.writer || TRACE < writer.level {
 		return
 	}
 
@@ -235,7 +235,7 @@ func (writer *SocketWriter) Tracef(format string, args ...interface{}) {
 
 // Debug debug
 func (writer *SocketWriter) Debug(args ...interface{}) {
-	if DEBUG < writer.level {
+	if nil == writer.writer || DEBUG < writer.level {
 		return
 	}
 
@@ -244,7 +244,7 @@ func (writer *SocketWriter) Debug(args ...interface{}) {
 
 // Debugf debugf
 func (writer *SocketWriter) Debugf(format string, args ...interface{}) {
-	if DEBUG < writer.level {
+	if nil == writer.writer || DEBUG < writer.level {
 		return
 	}
 
@@ -253,7 +253,7 @@ func (writer *SocketWriter) Debugf(format string, args ...interface{}) {
 
 // Info info
 func (writer *SocketWriter) Info(args ...interface{}) {
-	if INFO < writer.level {
+	if nil == writer.writer || INFO < writer.level {
 		return
 	}
 
@@ -262,7 +262,7 @@ func (writer *SocketWriter) Info(args ...interface{}) {
 
 // Infof infof
 func (writer *SocketWriter) Infof(format string, args ...interface{}) {
-	if INFO < writer.level {
+	if nil == writer.writer || INFO < writer.level {
 		return
 	}
 
@@ -271,7 +271,7 @@ func (writer *SocketWriter) Infof(format string, args ...interface{}) {
 
 // Warn warn
 func (writer *SocketWriter) Warn(args ...interface{}) {
-	if WARNING < writer.level {
+	if nil == writer.writer || WARNING < writer.level {
 		return
 	}
 
@@ -280,7 +280,7 @@ func (writer *SocketWriter) Warn(args ...interface{}) {
 
 // Warnf warnf
 func (writer *SocketWriter) Warnf(format string, args ...interface{}) {
-	if WARNING < writer.level {
+	if nil == writer.writer || WARNING < writer.level {
 		return
 	}
 
@@ -289,7 +289,7 @@ func (writer *SocketWriter) Warnf(format string, args ...interface{}) {
 
 // Error error
 func (writer *SocketWriter) Error(args ...interface{}) {
-	if ERROR < writer.level {
+	if nil == writer.writer || ERROR < writer.level {
 		return
 	}
 
@@ -298,7 +298,7 @@ func (writer *SocketWriter) Error(args ...interface{}) {
 
 // Errorf error
 func (writer *SocketWriter) Errorf(format string, args ...interface{}) {
-	if ERROR < writer.level {
+	if nil == writer.writer || ERROR < writer.level {
 		return
 	}
 
@@ -307,7 +307,7 @@ func (writer *SocketWriter) Errorf(format string, args ...interface{}) {
 
 // Critical critical
 func (writer *SocketWriter) Critical(args ...interface{}) {
-	if CRITICAL < writer.level {
+	if nil == writer.writer || CRITICAL < writer.level {
 		return
 	}
 
@@ -316,7 +316,7 @@ func (writer *SocketWriter) Critical(args ...interface{}) {
 
 // Criticalf criticalf
 func (writer *SocketWriter) Criticalf(format string, args ...interface{}) {
-	if CRITICAL < writer.level {
+	if nil == writer.writer || CRITICAL < writer.level {
 		return
 	}
 

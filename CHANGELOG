@@ -3,8 +3,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Released]
 ## [0.5.6] - 2016-10-17
-###
+### Added
 - travis-ci增加go1.7版本测试
+- socker writer判断实例有效性
+- file writer判断实例有效性。thanks @sillydong [#8](https://github.com/YoungPioneers/blog4go/pull/8)
 
 ### Changed
 - multiWriter默认使用console writer
