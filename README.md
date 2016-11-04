@@ -56,6 +56,7 @@ func (self *MyHook) Fire(level log.LevelType, args ...interface{}) {
 
 func main() {
 	// init a file write using xml config file
+	// log.SetBufferSize(0) // close buffer for in time logging when debugging
 	err := log.NewWriterFromConfigAsFile("config.xml")
 	if nil != err {
 		fmt.Println(err.Error())

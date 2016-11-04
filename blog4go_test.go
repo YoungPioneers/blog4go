@@ -105,4 +105,6 @@ func TestGlobalOperation(t *testing.T) {
 	Errorf("%s", "Error")
 	Critical("Critical", 6)
 	Criticalf("%s", "Critical")
+
+	SetBufferSize(0)
 }

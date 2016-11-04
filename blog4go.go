@@ -413,6 +413,11 @@ func (blog *BLog) resetFile(in io.Writer) (err error) {
 	return
 }
 
+// SetBufferSize set bufio buffer size in bytes
+func SetBufferSize(size int) {
+	DefaultBufferSize = size
+}
+
 // Level get log level
 func Level() LevelType {
 	return blog.Level()
