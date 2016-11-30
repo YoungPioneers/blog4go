@@ -9,11 +9,11 @@ import (
 
 var (
 	// ErrFilePathNotFound file path not found
-	ErrFilePathNotFound = errors.New("File Path must be defined.")
+	ErrFilePathNotFound = errors.New("File Path must be defined")
 	// ErrInvalidLevel invalid level string
-	ErrInvalidLevel = errors.New("Invalid level string.")
+	ErrInvalidLevel = errors.New("Invalid level string")
 	// ErrInvalidRotateType invalid logrotate type
-	ErrInvalidRotateType = errors.New("Invalid log rotate type.")
+	ErrInvalidRotateType = errors.New("Invalid log rotate type")
 )
 
 // MultiWriter struct defines an instance for multi writers with different message level
