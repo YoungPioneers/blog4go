@@ -133,7 +133,7 @@ TODO
 Examples
 ---------------
 
-Full examples please view [EXAMPLES](https://github.com/YoungPioneers/blog4go/tree/master/examples)
+Full examples please view [EXAMPLES](https://github.com/YoungPioneers/blog4go-examples)
 
 
 Changelog
