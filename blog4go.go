@@ -276,16 +276,13 @@ func (blog *BLog) write(level LevelType, args ...interface{}) int {
 	defer blog.lock.Unlock()
 
 	// 统计日志size
-	var size = 0
-	format := fmt.Sprint(args...)
-
-	blog.writer.Write(timeCache.Format())
-	blog.writer.WriteString(level.prefix())
-	blog.writer.WriteString(format)
-	blog.writer.WriteByte(EOL)
-
-	size = len(timeCache.Format()) + len(level.prefix()) + len(format) + 1
-	return size
+	buf := make([]byte, 0)
+	buf = append(buf, timeCache.Format()...)
+	buf = append(buf, level.prefix()...)
+	buf = append(buf, fmt.Sprint(args...)...)
+	buf = append(buf, EOL)
+	blog.writer.Write(buf)
+	return len(buf)
 }
 
 // write formats message with specific level and write it
@@ -297,65 +294,73 @@ func (blog *BLog) writef(level LevelType, format string, args ...interface{}) in
 	defer blog.lock.Unlock()
 
 	// 统计日志size
-	var size = 0
+	// var size = 0
 
-	// 识别占位符标记
-	var tag = false
-	var tagPos int
-	// 转义字符标记
-	var escape = false
-	// 在处理的args 下标
-	var n int
-	// 未输出的，第一个普通字符位置
-	var last int
-	var s int
+	// // 识别占位符标记
+	// var tag = false
+	// var tagPos int
+	// // 转义字符标记
+	// var escape = false
+	// // 在处理的args 下标
+	// var n int
+	// // 未输出的，第一个普通字符位置
+	// var last int
+	// var s int
 
-	blog.writer.Write(timeCache.Format())
-	blog.writer.WriteString(level.prefix())
+	// blog.writer.Write(timeCache.Format())
+	// blog.writer.WriteString(level.prefix())
 
-	size += len(timeCache.Format()) + len(level.prefix())
+	// size += len(timeCache.Format()) + len(level.prefix())
 
-	for i, v := range format {
-		if tag {
-			switch v {
-			case 'd', 'f', 'v', 'b', 'o', 'x', 'X', 'c', 'p', 't', 's', 'T', 'q', 'U', 'e', 'E', 'g', 'G':
-				if escape {
-					escape = false
-				}
+	// for i, v := range format {
+	// 	if tag {
+	// 		switch v {
+	// 		case 'd', 'f', 'v', 'b', 'o', 'x', 'X', 'c', 'p', 't', 's', 'T', 'q', 'U', 'e', 'E', 'g', 'G':
+	// 			if escape {
+	// 				escape = false
+	// 			}
 
-				s, _ = blog.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
-				size += s
-				n++
-				last = i + 1
-				tag = false
-			//转义符
-			case ESCAPE:
-				if escape {
-					blog.writer.WriteByte(ESCAPE)
-					size++
-				}
-				escape = !escape
-			//默认
-			default:
+	// 			s, _ = blog.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+	// 			size += s
+	// 			n++
+	// 			last = i + 1
+	// 			tag = false
+	// 		//转义符
+	// 		case ESCAPE:
+	// 			if escape {
+	// 				blog.writer.WriteByte(ESCAPE)
+	// 				size++
+	// 			}
+	// 			escape = !escape
+	// 		//默认
+	// 		default:
 
-			}
+	// 		}
 
-		} else {
-			// 占位符，百分号
-			if PLACEHOLDER == format[i] && !escape {
-				tag = true
-				tagPos = i
-				s, _ = blog.writer.WriteString(format[last:i])
-				size += s
-				escape = false
-			}
-		}
-	}
-	blog.writer.WriteString(format[last:])
-	blog.writer.WriteByte(EOL)
+	// 	} else {
+	// 		// 占位符，百分号
+	// 		if PLACEHOLDER == format[i] && !escape {
+	// 			tag = true
+	// 			tagPos = i
+	// 			s, _ = blog.writer.WriteString(format[last:i])
+	// 			size += s
+	// 			escape = false
+	// 		}
+	// 	}
+	// }
+	// blog.writer.WriteString(format[last:])
+	// blog.writer.WriteByte(EOL)
 
-	size += len(format[last:]) + 1
-	return size
+	// size += len(format[last:]) + 1
+	// return size
+	buf := make([]byte, 0)
+	buf = append(buf, timeCache.Format()...)
+	buf = append(buf, level.prefix()...)
+	buf = append(buf, fmt.Sprintf(format, args...)...)
+	buf = append(buf, EOL)
+	blog.writer.Write(buf)
+
+	return len(buf)
 }
 
 // Flush flush buffer to disk
