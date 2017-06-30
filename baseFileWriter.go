@@ -169,7 +169,7 @@ func newBaseFileWriter(fileName string, timeRotated bool) (fileWriter *baseFileW
 // daemon run in background as NewbaseFileWriter called.
 // It flushes writer buffer every 1 second.
 // It decides whether a time base when logrotate is needed.
-// It sums up lines && sizes already written. Alse it does the lines &&
+// It sums up lines && sizes already written. Also it supports the lines &&
 // size base logrotate
 func (writer *baseFileWriter) daemon() {
 	// tick every seconds
