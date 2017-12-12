@@ -5,11 +5,12 @@ package blog4go
 import (
 	"sync"
 	"time"
+	"fmt"
 )
 
 const (
 	// PrefixTimeFormat const time format prefix
-	PrefixTimeFormat = "[2006/01/02:15:04:05]"
+	PrefixTimeFormat = "[2006/01/02 15:04:05"
 
 	// DateFormat date format
 	DateFormat = "2006-01-02"
@@ -28,6 +29,9 @@ type timeFormatCacheType struct {
 
 	// lock for read && write
 	lock *sync.RWMutex
+
+	//millisceonds cache
+	milliSeconds	[][]byte
 }
 
 // global time cache instance used for every log writer
@@ -39,6 +43,7 @@ func init() {
 	timeCache.date = timeCache.now.Format(DateFormat)
 	timeCache.format = []byte(timeCache.now.Format(PrefixTimeFormat))
 	timeCache.dateYesterday = timeCache.now.Add(-24 * time.Hour).Format(DateFormat)
+	initMilliSeconds()
 
 	// update timeCache every seconds
 	go func() {
@@ -53,6 +58,19 @@ func init() {
 			}
 		}
 	}()
+}
+
+func initMilliSeconds()  {
+	timeCache.milliSeconds = make([][]byte, 1024)
+	var index = 0
+	for {
+		if index >= 1024 {
+			break
+		}
+		timeCache.milliSeconds[index] = []byte(fmt.Sprintf(".%03d]", index))
+
+		index += 1
+	}
 }
 
 // Now now
@@ -74,6 +92,12 @@ func (timeCache *timeFormatCacheType) DateYesterday() string {
 	timeCache.lock.RLock()
 	defer timeCache.lock.RUnlock()
 	return timeCache.dateYesterday
+}
+
+func (timeCache *timeFormatCacheType) FormatMilliSeconds() []byte {
+	now := time.Now()
+	milliSeconds := now.Nanosecond() / 1000/ 1000
+	return timeCache.milliSeconds[milliSeconds % 1024]
 }
 
 // Format format

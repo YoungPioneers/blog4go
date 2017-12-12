@@ -278,13 +278,15 @@ func (blog *BLog) write(level LevelType, args ...interface{}) int {
 	// 统计日志size
 	var size = 0
 	format := fmt.Sprint(args...)
+	var milliSeconds = timeCache.FormatMilliSeconds()
 
 	blog.writer.Write(timeCache.Format())
+	blog.writer.Write(milliSeconds)
 	blog.writer.WriteString(level.prefix())
 	blog.writer.WriteString(format)
 	blog.writer.WriteByte(EOL)
 
-	size = len(timeCache.Format()) + len(level.prefix()) + len(format) + 1
+	size = len(timeCache.Format()) + len(milliSeconds) + len(level.prefix()) + len(format) + 1
 	return size
 }
 
