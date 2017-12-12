@@ -312,10 +312,13 @@ func (blog *BLog) writef(level LevelType, format string, args ...interface{}) in
 	var last int
 	var s int
 
+	var milliSeconds = timeCache.FormatMilliSeconds()
+
 	blog.writer.Write(timeCache.Format())
+	blog.writer.Write(milliSeconds)
 	blog.writer.WriteString(level.prefix())
 
-	size += len(timeCache.Format()) + len(level.prefix())
+	size += len(timeCache.Format()) + len(milliSeconds) + len(level.prefix())
 
 	for i, v := range format {
 		if tag {
