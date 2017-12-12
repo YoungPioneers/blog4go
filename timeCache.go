@@ -3,9 +3,9 @@
 package blog4go
 
 import (
+	"fmt"
 	"sync"
 	"time"
-	"fmt"
 )
 
 const (
@@ -31,7 +31,7 @@ type timeFormatCacheType struct {
 	lock *sync.RWMutex
 
 	//millisceonds cache
-	milliSeconds	[][]byte
+	milliSeconds [][]byte
 }
 
 // global time cache instance used for every log writer
@@ -60,7 +60,7 @@ func init() {
 	}()
 }
 
-func initMilliSeconds()  {
+func initMilliSeconds() {
 	timeCache.milliSeconds = make([][]byte, 1024)
 	var index = 0
 	for {
@@ -68,8 +68,7 @@ func initMilliSeconds()  {
 			break
 		}
 		timeCache.milliSeconds[index] = []byte(fmt.Sprintf(".%03d]", index))
-
-		index += 1
+		index++
 	}
 }
 
@@ -96,8 +95,8 @@ func (timeCache *timeFormatCacheType) DateYesterday() string {
 
 func (timeCache *timeFormatCacheType) FormatMilliSeconds() []byte {
 	now := time.Now()
-	milliSeconds := now.Nanosecond() / 1000/ 1000
-	return timeCache.milliSeconds[milliSeconds % 1024]
+	milliSeconds := now.Nanosecond() / 1000 / 1000
+	return timeCache.milliSeconds[milliSeconds%1024]
 }
 
 // Format format
