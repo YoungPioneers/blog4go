@@ -87,7 +87,9 @@ func (writer *SocketWriter) write(level LevelType, args ...interface{}) {
 		}
 	}()
 
-	buffer := bytes.NewBuffer(timeCache.Format())
+	secondsFormat, milliSecondsFormat := timeCache.Format()
+	buffer := bytes.NewBuffer(secondsFormat)
+	buffer.Write(milliSecondsFormat)
 	buffer.WriteString(level.prefix())
 	buffer.WriteString(fmt.Sprint(args...))
 	writer.writer.Write(buffer.Bytes())
@@ -116,7 +118,9 @@ func (writer *SocketWriter) writef(level LevelType, format string, args ...inter
 		}
 	}()
 
-	buffer := bytes.NewBuffer(timeCache.Format())
+	secondsFormat, milliSecondsFormat := timeCache.Format()
+	buffer := bytes.NewBuffer(secondsFormat)
+	buffer.Write(milliSecondsFormat)
 	buffer.WriteString(level.prefix())
 	buffer.WriteString(fmt.Sprintf(format, args...))
 	writer.writer.Write(buffer.Bytes())
