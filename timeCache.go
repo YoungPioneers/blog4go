@@ -107,8 +107,8 @@ func (timeCache *timeFormatCacheType) Format() ([]byte, []byte) {
 	if oldValue != newValue {
 		format := []byte(now.Format(PrefixTimeFormat))
 		if atomic.CompareAndSwapInt64(&timeCache.seconds, oldValue, newValue) {
-			timeCache.seconds = now.Unix()
 			timeCache.formatCache = format
+			atomic.StoreInt64(&timeCache.seconds, newValue)
 		}
 	}
 	return timeCache.formatCache, milliSecondsFormat
