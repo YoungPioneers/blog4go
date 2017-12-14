@@ -3,10 +3,10 @@
 package blog4go
 
 import (
-	"sync"
-	"time"
 	"fmt"
+	"sync"
 	"sync/atomic"
+	"time"
 )
 
 const (
@@ -32,8 +32,8 @@ type timeFormatCacheType struct {
 	lock *sync.RWMutex
 
 	//millisceonds cache
-	seconds			int64
-	formatCache		[]byte
+	seconds      int64
+	formatCache  []byte
 	milliSeconds [][]byte
 }
 
@@ -101,8 +101,8 @@ func (timeCache *timeFormatCacheType) Format() ([]byte, []byte) {
 	now := time.Now()
 	oldValue := atomic.LoadInt64(&timeCache.seconds)
 	newValue := now.Unix()
-	milliSeconds := now.Nanosecond() / 1000/ 1000
-	milliSecondsFormat := timeCache.milliSeconds[milliSeconds % 1024]
+	milliSeconds := now.Nanosecond() / 1000 / 1000
+	milliSecondsFormat := timeCache.milliSeconds[milliSeconds%1024]
 
 	if oldValue != newValue {
 		format := []byte(now.Format(PrefixTimeFormat))
