@@ -278,15 +278,15 @@ func (blog *BLog) write(level LevelType, args ...interface{}) int {
 	// 统计日志size
 	var size = 0
 	format := fmt.Sprint(args...)
-	var milliSeconds = timeCache.FormatMilliSeconds()
 
-	blog.writer.Write(timeCache.Format())
-	blog.writer.Write(milliSeconds)
+	secondsFormat, milliSecondsFormat := timeCache.Format()
+	blog.writer.Write(secondsFormat)
+	blog.writer.Write(milliSecondsFormat)
 	blog.writer.WriteString(level.prefix())
 	blog.writer.WriteString(format)
 	blog.writer.WriteByte(EOL)
 
-	size = len(timeCache.Format()) + len(milliSeconds) + len(level.prefix()) + len(format) + 1
+	size = len(secondsFormat) + len(milliSecondsFormat) + len(level.prefix()) + len(format) + 1
 	return size
 }
 
@@ -312,13 +312,12 @@ func (blog *BLog) writef(level LevelType, format string, args ...interface{}) in
 	var last int
 	var s int
 
-	var milliSeconds = timeCache.FormatMilliSeconds()
-
-	blog.writer.Write(timeCache.Format())
-	blog.writer.Write(milliSeconds)
+	secondsFormat, milliSecondsFormat := timeCache.Format()
+	blog.writer.Write(secondsFormat)
+	blog.writer.Write(milliSecondsFormat)
 	blog.writer.WriteString(level.prefix())
 
-	size += len(timeCache.Format()) + len(milliSeconds) + len(level.prefix())
+	size += len(secondsFormat) + len(milliSecondsFormat) + len(level.prefix())
 
 	for i, v := range format {
 		if tag {

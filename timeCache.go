@@ -4,6 +4,7 @@ package blog4go
 
 import (
 	"sync"
+	"sync/atomic"
 	"time"
 	"fmt"
 )
@@ -32,6 +33,8 @@ type timeFormatCacheType struct {
 
 	//millisceonds cache
 	milliSeconds	[][]byte
+	seconds			int64
+	formatCache		[]byte
 }
 
 // global time cache instance used for every log writer
@@ -68,8 +71,7 @@ func initMilliSeconds()  {
 			break
 		}
 		timeCache.milliSeconds[index] = []byte(fmt.Sprintf(".%03d]", index))
-
-		index += 1
+		index++
 	}
 }
 
@@ -94,17 +96,22 @@ func (timeCache *timeFormatCacheType) DateYesterday() string {
 	return timeCache.dateYesterday
 }
 
-func (timeCache *timeFormatCacheType) FormatMilliSeconds() []byte {
-	now := time.Now()
-	milliSeconds := now.Nanosecond() / 1000/ 1000
-	return timeCache.milliSeconds[milliSeconds % 1024]
-}
-
 // Format format
-func (timeCache *timeFormatCacheType) Format() []byte {
-	timeCache.lock.RLock()
-	defer timeCache.lock.RUnlock()
-	return timeCache.format
+func (timeCache *timeFormatCacheType) Format() ([]byte, []byte) {
+	now := time.Now()
+	oldValue := atomic.LoadInt64(&timeCache.seconds)
+	newValue := now.Unix()
+	milliSeconds := now.Nanosecond() / 1000/ 1000
+	milliSecondsFormat := timeCache.milliSeconds[milliSeconds % 1024]
+
+	if oldValue != newValue {
+		format := []byte(now.Format(PrefixTimeFormat))
+		if atomic.CompareAndSwapInt64(&timeCache.seconds, oldValue, newValue) {
+			timeCache.seconds = now.Unix()
+			timeCache.formatCache = format
+		}
+	}
+	return timeCache.formatCache, milliSecondsFormat
 }
 
 // fresh data in timeCache
