@@ -4,9 +4,9 @@ package blog4go
 
 import (
 	"sync"
-	"sync/atomic"
 	"time"
 	"fmt"
+	"sync/atomic"
 )
 
 const (
@@ -32,9 +32,9 @@ type timeFormatCacheType struct {
 	lock *sync.RWMutex
 
 	//millisceonds cache
-	milliSeconds	[][]byte
 	seconds			int64
 	formatCache		[]byte
+	milliSeconds [][]byte
 }
 
 // global time cache instance used for every log writer
@@ -63,7 +63,7 @@ func init() {
 	}()
 }
 
-func initMilliSeconds()  {
+func initMilliSeconds() {
 	timeCache.milliSeconds = make([][]byte, 1024)
 	var index = 0
 	for {
