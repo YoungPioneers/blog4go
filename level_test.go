@@ -41,7 +41,27 @@ func TestLevelStringFormat(t *testing.T) {
 		t.Error("CRITICAL Level to wrong string format.")
 	}
 
-	if " [CRITICAL] " != CRITICAL.prefix() {
+	if " level=\"DEBUG\" " != DEBUG.prefix() {
+		t.Error("DEBUG Level to wrong prefix string format.")
+	}
+
+	if " level=\"TRACE\" " != TRACE.prefix() {
+		t.Error("TRACE Level to wrong prefix string format.")
+	}
+
+	if " level=\"INFO\" " != INFO.prefix() {
+		t.Error("INFO Level to wrong prefix string format.")
+	}
+
+	if " level=\"WARN\" " != WARNING.prefix() {
+		t.Error("WARN Level to wrong prefix string format.")
+	}
+
+	if " level=\"ERROR\" " != ERROR.prefix() {
+		t.Error("ERROR Level to wrong prefix string format.")
+	}
+
+	if " level=\"CRITICAL\" " != CRITICAL.prefix() {
 		t.Error("CRITICAL Level to wrong prefix string format.")
 	}
 
@@ -51,27 +71,27 @@ func TestLevelStringFormat(t *testing.T) {
 
 	initPrefix(true)
 
-	if " [\x1b[37mTRACE\x1b[0m] " != TRACE.prefix() {
+	if " level=\"\x1b[37mTRACE\x1b[0m\" " != TRACE.prefix() {
 		t.Error("TRACE Level with color to wrong prefix string format.")
 	}
 
-	if " [\x1b[32mDEBUG\x1b[0m] " != DEBUG.prefix() {
+	if " level=\"\x1b[32mDEBUG\x1b[0m\" " != DEBUG.prefix() {
 		t.Error("DEBUG Level with color to wrong prefix string format.")
 	}
 
-	if " [\x1b[34mINFO\x1b[0m] " != INFO.prefix() {
+	if " level=\"\x1b[34mINFO\x1b[0m\" " != INFO.prefix() {
 		t.Error("INFO Level with color to wrong prefix string format.")
 	}
 
-	if " [\x1b[33mWARN\x1b[0m] " != WARNING.prefix() {
+	if " level=\"\x1b[33mWARN\x1b[0m\" " != WARNING.prefix() {
 		t.Error("WARN Level with color to wrong prefix string format.")
 	}
 
-	if " [\x1b[31mERROR\x1b[0m] " != ERROR.prefix() {
+	if " level=\"\x1b[31mERROR\x1b[0m\" " != ERROR.prefix() {
 		t.Error("ERROR Level with color to wrong prefix string format.")
 	}
 
-	if " [\x1b[31mCRITICAL\x1b[0m] " != CRITICAL.prefix() {
+	if " level=\"\x1b[31mCRITICAL\x1b[0m\" " != CRITICAL.prefix() {
 		t.Error("CRITICAL Level with color to wrong prefix string format.")
 	}
 }

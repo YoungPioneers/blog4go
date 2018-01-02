@@ -12,6 +12,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - multiWriter默认使用console writer
 - DefaultLevel修复为TRACE
+- 修改日志输出格式为tsv
 
 ### Removed
 - benchmark移动到[benchmark](https://github.com/YoungPioneers/blog4go-benchmark)

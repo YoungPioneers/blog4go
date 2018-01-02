@@ -33,9 +33,9 @@ const (
 	DefaultLevel = TRACE
 
 	// PrefixFormat is the level format ahead every message
-	PrefixFormat = " [%s] " // pure format
+	PrefixFormat = " level=\"%s\" " // pure format
 	// ColoredPrefixFormat is the colored level format adhead every message
-	ColoredPrefixFormat = " [\x1b[%dm%s\x1b[0m] " // colored format
+	ColoredPrefixFormat = " level=\"\x1b[%dm%s\x1b[0m\" " // colored format
 
 	// color enum used in formating color bytes
 
