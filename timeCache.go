@@ -43,7 +43,7 @@ func init() {
 	// update timeCache every seconds
 	go func() {
 		// tick every seconds
-		t := time.Tick(1 * time.Second)
+		t := time.Tick(1 * time.Millisecond)
 
 		//UpdateTimeCacheLoop:
 		for {
