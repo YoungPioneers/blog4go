@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 ### Changed
 - 更新时间缓存的间隔由1秒改成1毫秒. @egmkang
 
+### Fixed
+- 修复baseFileWriter初始化是会出现的资源竞争
+
 ## [0.5.6] - 2016-10-17
 ### Added
 - travis-ci增加go1.7版本测试
