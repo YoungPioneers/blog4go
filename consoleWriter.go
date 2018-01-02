@@ -5,6 +5,7 @@ package blog4go
 import (
 	"fmt"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -24,6 +25,8 @@ type ConsoleWriter struct {
 	hook      Hook
 	hookLevel LevelType
 	hookAsync bool
+
+	lock *sync.RWMutex
 }
 
 // NewConsoleWriter initialize a console writer, singlton
@@ -63,6 +66,8 @@ func newConsoleWriter(redirected bool) (consoleWriter *ConsoleWriter, err error)
 	consoleWriter.hookLevel = DEBUG
 	consoleWriter.hookAsync = true
 
+	consoleWriter.lock = new(sync.RWMutex)
+
 	go consoleWriter.daemon()
 
 	blog = consoleWriter
@@ -76,7 +81,7 @@ DaemonLoop:
 	for {
 		select {
 		case <-f:
-			if writer.closed {
+			if writer.Closed() {
 				break DaemonLoop
 			}
 
@@ -86,6 +91,9 @@ DaemonLoop:
 }
 
 func (writer *ConsoleWriter) write(level LevelType, args ...interface{}) {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
+
 	if writer.closed {
 		return
 	}
@@ -112,6 +120,9 @@ func (writer *ConsoleWriter) write(level LevelType, args ...interface{}) {
 }
 
 func (writer *ConsoleWriter) writef(level LevelType, format string, args ...interface{}) {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
+
 	if writer.closed {
 		return
 	}
@@ -138,23 +149,43 @@ func (writer *ConsoleWriter) writef(level LevelType, format string, args ...inte
 	writer.blog.writef(level, format, args...)
 }
 
+// Closed get writer status
+func (writer *ConsoleWriter) Closed() bool {
+	writer.lock.RLock()
+	writer.lock.RUnlock()
+
+	return writer.closed
+}
+
 // Level get level
 func (writer *ConsoleWriter) Level() LevelType {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
+
 	return writer.blog.Level()
 }
 
 // SetLevel set logger level
 func (writer *ConsoleWriter) SetLevel(level LevelType) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
+
 	writer.blog.SetLevel(level)
 }
 
 // Colored get Colored
 func (writer *ConsoleWriter) Colored() bool {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
+
 	return writer.colored
 }
 
 // SetColored set logging color
 func (writer *ConsoleWriter) SetColored(colored bool) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
+
 	if colored == writer.colored {
 		return
 	}
@@ -166,21 +197,33 @@ func (writer *ConsoleWriter) SetColored(colored bool) {
 
 // SetHook set hook for logging action
 func (writer *ConsoleWriter) SetHook(hook Hook) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
+
 	writer.hook = hook
 }
 
 // SetHookAsync set hook async for base file writer
 func (writer *ConsoleWriter) SetHookAsync(async bool) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
+
 	writer.hookAsync = async
 }
 
 // SetHookLevel set when hook will be called
 func (writer *ConsoleWriter) SetHookLevel(level LevelType) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
+
 	writer.hookLevel = level
 }
 
 // Close close console writer
 func (writer *ConsoleWriter) Close() {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
+
 	if writer.closed {
 		return
 	}
@@ -192,6 +235,9 @@ func (writer *ConsoleWriter) Close() {
 
 // TimeRotated do nothing
 func (writer *ConsoleWriter) TimeRotated() bool {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
+
 	return false
 }
 
@@ -202,31 +248,49 @@ func (writer *ConsoleWriter) SetTimeRotated(timeRotated bool) {
 
 // Retentions do nothing
 func (writer *ConsoleWriter) Retentions() int64 {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
+
 	return 0
 }
 
 // SetRetentions do nothing
 func (writer *ConsoleWriter) SetRetentions(retentions int64) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
+
 	return
 }
 
 // RotateSize do nothing
 func (writer *ConsoleWriter) RotateSize() int64 {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
+
 	return 0
 }
 
 // SetRotateSize do nothing
 func (writer *ConsoleWriter) SetRotateSize(rotateSize int64) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
+
 	return
 }
 
 // RotateLines do nothing
 func (writer *ConsoleWriter) RotateLines() int {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
+
 	return 0
 }
 
 // SetRotateLines do nothing
 func (writer *ConsoleWriter) SetRotateLines(rotateLines int) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
+
 	return
 }
 

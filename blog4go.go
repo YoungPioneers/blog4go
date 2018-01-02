@@ -135,39 +135,17 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 		var isSocket = false
 		var isConsole = false
 
-		var f *os.File
-		var blog *BLog
-		var fileLock *sync.RWMutex
-
 		// get file path
 		var filePath string
 		if (file{}) != filter.File {
 			// file do not need logrotate
 			filePath = filter.File.Path
 			rotate = false
-
-			f, err = os.OpenFile(filePath, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
-			if nil != err {
-				return err
-			}
-			blog = NewBLog(f)
-			fileLock = new(sync.RWMutex)
 		} else if (rotateFile{}) != filter.RotateFile {
 			// file need logrotate
 			filePath = filter.RotateFile.Path
 			rotate = true
 			timeRotate = TypeTimeBaseRotate == filter.RotateFile.Type
-
-			fileName := filePath
-			if timeRotate {
-				fileName = fmt.Sprintf("%s.%s", fileName, timeCache.Date())
-			}
-			f, err = os.OpenFile(fileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(0644))
-			if nil != err {
-				return err
-			}
-			blog = NewBLog(f)
-			fileLock = new(sync.RWMutex)
 		} else if (socket{}) != filter.Socket {
 			isSocket = true
 		} else {
@@ -223,10 +201,6 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 					return ErrInvalidRotateType
 				}
 			}
-
-			writer.file = f
-			writer.blog = blog
-			writer.lock = fileLock
 
 			// set color
 			multiWriter.SetColored(filter.Colored)

@@ -123,6 +123,7 @@ func NewBaseFileWriter(fileName string, timeRotated bool) (err error) {
 // rotate determine if it will logrotate
 func newBaseFileWriter(fileName string, timeRotated bool) (fileWriter *baseFileWriter, err error) {
 	fileWriter = new(baseFileWriter)
+
 	fileWriter.fileName = fileName
 	// open file target file
 	if timeRotated {
@@ -187,7 +188,7 @@ DaemonLoop:
 				break DaemonLoop
 			}
 
-			writer.blog.flush()
+			writer.Flush()
 		case <-t:
 			if writer.Closed() {
 				break DaemonLoop
@@ -341,17 +342,18 @@ func (writer *baseFileWriter) writef(level LevelType, format string, args ...int
 func (writer *baseFileWriter) Closed() bool {
 	writer.lock.RLock()
 	defer writer.lock.RUnlock()
+
 	return writer.closed
 }
 
 // Close close file writer
 func (writer *baseFileWriter) Close() {
-	if writer.Closed() {
-		return
-	}
-
 	writer.lock.Lock()
 	defer writer.lock.Unlock()
+
+	if writer.closed {
+		return
+	}
 
 	writer.closed = true
 	writer.blog.flush()
@@ -484,6 +486,14 @@ func (writer *baseFileWriter) SetHookLevel(level LevelType) {
 	writer.lock.Lock()
 	defer writer.lock.Unlock()
 	writer.hookLevel = level
+}
+
+// Flush flush logs to disk
+func (writer *baseFileWriter) Flush() {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
+
+	writer.flush()
 }
 
 // flush flush logs to disk

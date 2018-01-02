@@ -165,7 +165,7 @@ func TestFileWriterAsConfigFile(t *testing.T) {
 	}
 
 	// duplicate init
-	err = NewWriterFromConfigAsFile("examples/writer_from_configfile/config.example.xml")
+	err = NewWriterFromConfigAsFile("config.example.xml")
 	if ErrAlreadyInit != err {
 		t.Errorf("Duplicate initialization check failed. err: %s", err.Error())
 	}

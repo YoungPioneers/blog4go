@@ -22,3 +22,4 @@ script:
         - test -z "$(goconst .)"
         - test -z "$(unconvert -v .)"
         - go test -test.v .
+        - go test -test.v -race .

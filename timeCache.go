@@ -35,6 +35,7 @@ var timeCache = timeFormatCacheType{}
 
 func init() {
 	timeCache.lock = new(sync.RWMutex)
+
 	timeCache.now = time.Now()
 	timeCache.date = timeCache.now.Format(DateFormat)
 	timeCache.format = []byte(timeCache.now.Format(PrefixTimeFormat))
@@ -59,6 +60,7 @@ func init() {
 func (timeCache *timeFormatCacheType) Now() time.Time {
 	timeCache.lock.RLock()
 	defer timeCache.lock.RUnlock()
+
 	return timeCache.now
 }
 
@@ -66,6 +68,7 @@ func (timeCache *timeFormatCacheType) Now() time.Time {
 func (timeCache *timeFormatCacheType) Date() string {
 	timeCache.lock.RLock()
 	defer timeCache.lock.RUnlock()
+
 	return timeCache.date
 }
 
@@ -73,6 +76,7 @@ func (timeCache *timeFormatCacheType) Date() string {
 func (timeCache *timeFormatCacheType) DateYesterday() string {
 	timeCache.lock.RLock()
 	defer timeCache.lock.RUnlock()
+
 	return timeCache.dateYesterday
 }
 
@@ -80,6 +84,7 @@ func (timeCache *timeFormatCacheType) DateYesterday() string {
 func (timeCache *timeFormatCacheType) Format() []byte {
 	timeCache.lock.RLock()
 	defer timeCache.lock.RUnlock()
+
 	return timeCache.format
 }
 
