@@ -279,14 +279,12 @@ func (blog *BLog) write(level LevelType, args ...interface{}) int {
 	var size = 0
 	format := fmt.Sprint(args...)
 
-	secondsFormat, milliSecondsFormat := timeCache.Format()
-	blog.writer.Write(secondsFormat)
-	blog.writer.Write(milliSecondsFormat)
+	blog.writer.Write(timeCache.Format())
 	blog.writer.WriteString(level.prefix())
 	blog.writer.WriteString(format)
 	blog.writer.WriteByte(EOL)
 
-	size = len(secondsFormat) + len(milliSecondsFormat) + len(level.prefix()) + len(format) + 1
+	size = len(timeCache.Format()) + len(level.prefix()) + len(format) + 1
 	return size
 }
 
@@ -312,12 +310,10 @@ func (blog *BLog) writef(level LevelType, format string, args ...interface{}) in
 	var last int
 	var s int
 
-	secondsFormat, milliSecondsFormat := timeCache.Format()
-	blog.writer.Write(secondsFormat)
-	blog.writer.Write(milliSecondsFormat)
+	blog.writer.Write(timeCache.Format())
 	blog.writer.WriteString(level.prefix())
 
-	size += len(secondsFormat) + len(milliSecondsFormat) + len(level.prefix())
+	size += len(timeCache.Format()) + len(level.prefix())
 
 	for i, v := range format {
 		if tag {
