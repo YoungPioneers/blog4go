@@ -22,6 +22,8 @@ const (
 	ESCAPE = '\\'
 	// PLACEHOLDER placeholder
 	PLACEHOLDER = '%'
+	// QUOTE quote character
+	QUOTE = '"'
 )
 
 var (
@@ -251,7 +253,7 @@ func (blog *BLog) write(level LevelType, args ...interface{}) int {
 
 	// 统计日志size
 	var size = 0
-	format := fmt.Sprint(args...)
+	format := fmt.Sprintf("msg=\"%s\"", fmt.Sprint(args...))
 
 	blog.writer.Write(timeCache.Format())
 	blog.writer.WriteString(level.prefix())
@@ -286,6 +288,7 @@ func (blog *BLog) writef(level LevelType, format string, args ...interface{}) in
 
 	blog.writer.Write(timeCache.Format())
 	blog.writer.WriteString(level.prefix())
+	blog.writer.WriteString("msg=\"")
 
 	size += len(timeCache.Format()) + len(level.prefix())
 
@@ -326,6 +329,7 @@ func (blog *BLog) writef(level LevelType, format string, args ...interface{}) in
 		}
 	}
 	blog.writer.WriteString(format[last:])
+	blog.writer.WriteByte(QUOTE)
 	blog.writer.WriteByte(EOL)
 
 	size += len(format[last:]) + 1

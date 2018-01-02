@@ -141,15 +141,15 @@ func TestSignleSocketWriter(t *testing.T) {
 		}
 
 		str := string(bytes)
-		arrs := strings.Split(str, "[DEBUG] ")
+		arrs := strings.Split(str, " level=\"DEBUG\" ")
 		if len(arrs) != 2 {
 			t.Errorf("udp message format wrong. str: %s", str)
 			return
 		}
 
 		// FIXME this may not be accurate
-		if arrs[1][:4] != "haha" {
-			t.Errorf("udp message content wrong. str: %s", arrs[1][:4])
+		if arrs[1][:10] != "msg=\"haha\"" {
+			t.Errorf("udp message content wrong. str: %s", arrs[1][:10])
 			return
 		}
 	}()
