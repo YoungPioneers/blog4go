@@ -95,6 +95,7 @@ func (writer *SocketWriter) write(level LevelType, args ...interface{}) {
 	buffer.WriteString(level.prefix())
 	buffer.WriteString(writer.tagStr)
 	buffer.WriteString(fmt.Sprintf("msg=\"%s\"", fmt.Sprint(args...)))
+	buffer.WriteByte(EOL)
 	writer.writer.Write(buffer.Bytes())
 }
 
@@ -125,6 +126,7 @@ func (writer *SocketWriter) writef(level LevelType, format string, args ...inter
 	buffer.WriteString(level.prefix())
 	buffer.WriteString(writer.tagStr)
 	buffer.WriteString(fmt.Sprintf("msg=\"%s\"", fmt.Sprintf(format, args...)))
+	buffer.WriteByte(EOL)
 	writer.writer.Write(buffer.Bytes())
 }
 
