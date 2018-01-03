@@ -62,6 +62,9 @@ func TestGlobalOperation(t *testing.T) {
 	}
 
 	// test basic operations
+	SetTags(map[string]string{"tagName": "tagValue"})
+	Tags()
+
 	Debug("Debug", 1)
 	Debugf("%s", "Debug")
 	Trace("Trace", 2)

@@ -57,6 +57,9 @@ func TestConsoleWriterBasicOperation(t *testing.T) {
 	}
 
 	// test basic operations
+	blog.SetTags(map[string]string{"tagName": "tagValue"})
+	blog.Tags()
+
 	blog.Debug("Debug", 1)
 	blog.Debugf("%s", "Debug")
 	blog.Trace("Trace", 2)

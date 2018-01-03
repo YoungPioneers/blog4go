@@ -95,6 +95,10 @@ type Writer interface {
 	Retentions() int64
 	SetColored(colored bool)
 	Colored() bool
+
+	// tags
+	SetTags(tags map[string]string)
+	Tags() map[string]string
 }
 
 func init() {
@@ -229,6 +233,10 @@ type BLog struct {
 	// exclusive lock while calling write function of bufio.Writer
 	lock *sync.Mutex
 
+	// tags
+	tags   map[string]string
+	tagStr string
+
 	// closed tag
 	closed bool
 }
@@ -253,14 +261,16 @@ func (blog *BLog) write(level LevelType, args ...interface{}) int {
 
 	// 统计日志size
 	var size = 0
+
 	format := fmt.Sprintf("msg=\"%s\"", fmt.Sprint(args...))
 
 	blog.writer.Write(timeCache.Format())
 	blog.writer.WriteString(level.prefix())
+	blog.writer.WriteString(blog.tagStr)
 	blog.writer.WriteString(format)
 	blog.writer.WriteByte(EOL)
 
-	size = len(timeCache.Format()) + len(level.prefix()) + len(format) + 1
+	size = len(timeCache.Format()) + len(level.prefix()) + len(blog.tagStr) + len(format) + 1
 	return size
 }
 
@@ -288,9 +298,10 @@ func (blog *BLog) writef(level LevelType, format string, args ...interface{}) in
 
 	blog.writer.Write(timeCache.Format())
 	blog.writer.WriteString(level.prefix())
+	blog.writer.WriteString(blog.tagStr)
 	blog.writer.WriteString("msg=\"")
 
-	size += len(timeCache.Format()) + len(level.prefix())
+	size += len(timeCache.Format()) + len(level.prefix()) + len(blog.tagStr)
 
 	for i, v := range format {
 		if tag {
@@ -378,6 +389,24 @@ func (blog *BLog) SetLevel(level LevelType) *BLog {
 	return blog
 }
 
+// Tags return logging tags
+func (blog *BLog) Tags() map[string]string {
+	return blog.tags
+}
+
+// SetTags set logging tags
+func (blog *BLog) SetTags(tags map[string]string) *BLog {
+	blog.tags = tags
+
+	var tagStr string
+	for tagName, tagValue := range blog.tags {
+		tagStr = fmt.Sprintf("%s%s=\"%s\" ", tagStr, tagName, tagValue)
+	}
+	blog.tagStr = tagStr
+
+	return blog
+}
+
 // resetFile resets file descriptor of the writer with specific file name
 func (blog *BLog) resetFile(in io.Writer) (err error) {
 	blog.lock.Lock()
@@ -404,6 +433,16 @@ func Level() LevelType {
 // SetLevel set level for logging action
 func SetLevel(level LevelType) {
 	blog.SetLevel(level)
+}
+
+// Tags return logging tags
+func Tags() map[string]string {
+	return blog.Tags()
+}
+
+// SetTags set logging tags
+func SetTags(tags map[string]string) {
+	blog.SetTags(tags)
 }
 
 // SetHook set hook for logging action

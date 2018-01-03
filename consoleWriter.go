@@ -128,7 +128,6 @@ func (writer *ConsoleWriter) writef(level LevelType, format string, args ...inte
 	}
 
 	defer func() {
-
 		if nil != writer.hook && !(level < writer.hookLevel) {
 			if writer.hookAsync {
 				go func(level LevelType, format string, args ...interface{}) {
@@ -171,6 +170,22 @@ func (writer *ConsoleWriter) SetLevel(level LevelType) {
 	defer writer.lock.Unlock()
 
 	writer.blog.SetLevel(level)
+}
+
+// Tags return logging tags
+func (writer *ConsoleWriter) Tags() map[string]string {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
+
+	return writer.blog.Tags()
+}
+
+// SetTags set logging tags
+func (writer *ConsoleWriter) SetTags(tags map[string]string) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
+
+	writer.blog.SetTags(tags)
 }
 
 // Colored get Colored

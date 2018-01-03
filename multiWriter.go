@@ -40,6 +40,9 @@ type MultiWriter struct {
 	retentions  int64
 	rotateSize  int64
 	rotateLines int
+
+	// tags
+	tags map[string]string
 }
 
 // TimeRotated get timeRotated
@@ -131,6 +134,20 @@ func (writer *MultiWriter) SetLevel(level LevelType) {
 	writer.level = level
 	for _, fileWriter := range writer.writers {
 		fileWriter.SetLevel(level)
+	}
+}
+
+// Tags return logging tags
+func (writer *MultiWriter) Tags() map[string]string {
+	return writer.tags
+}
+
+// SetTags set logging tags
+func (writer *MultiWriter) SetTags(tags map[string]string) {
+	writer.tags = tags
+
+	for _, singleWriter := range writer.writers {
+		singleWriter.SetTags(tags)
 	}
 }
 

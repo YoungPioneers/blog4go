@@ -474,6 +474,20 @@ func (writer *baseFileWriter) SetHook(hook Hook) {
 	writer.hook = hook
 }
 
+// Tags return logging tags
+func (writer *baseFileWriter) Tags() map[string]string {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
+	return writer.blog.Tags()
+}
+
+// SetTags set logging tags
+func (writer *baseFileWriter) SetTags(tags map[string]string) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
+	writer.blog.SetTags(tags)
+}
+
 // SetHookAsync set hook async for base file writer
 func (writer *baseFileWriter) SetHookAsync(async bool) {
 	writer.lock.Lock()

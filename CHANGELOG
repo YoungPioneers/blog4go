@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Released]
 ## [0.5.7] - 2018-01-02
+### Added
+- 支持自定义字段输出
+
 ### Changed
 - 更新时间缓存的间隔由1秒改成1毫秒. @egmkang
 

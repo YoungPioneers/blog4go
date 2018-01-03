@@ -24,6 +24,10 @@ type SocketWriter struct {
 	writer net.Conn
 
 	lock *sync.Mutex
+
+	// tags
+	tags   map[string]string
+	tagStr string
 }
 
 // NewSocketWriter creates a socket writer, singlton
@@ -89,6 +93,7 @@ func (writer *SocketWriter) write(level LevelType, args ...interface{}) {
 
 	buffer := bytes.NewBuffer(timeCache.Format())
 	buffer.WriteString(level.prefix())
+	buffer.WriteString(writer.tagStr)
 	buffer.WriteString(fmt.Sprintf("msg=\"%s\"", fmt.Sprint(args...)))
 	writer.writer.Write(buffer.Bytes())
 }
@@ -118,6 +123,7 @@ func (writer *SocketWriter) writef(level LevelType, format string, args ...inter
 
 	buffer := bytes.NewBuffer(timeCache.Format())
 	buffer.WriteString(level.prefix())
+	buffer.WriteString(writer.tagStr)
 	buffer.WriteString(fmt.Sprintf("msg=\"%s\"", fmt.Sprintf(format, args...)))
 	writer.writer.Write(buffer.Bytes())
 }
@@ -130,6 +136,23 @@ func (writer *SocketWriter) Level() LevelType {
 // SetLevel set logger level
 func (writer *SocketWriter) SetLevel(level LevelType) {
 	writer.level = level
+}
+
+// Tags return logging tags
+func (writer *SocketWriter) Tags() map[string]string {
+	return writer.tags
+}
+
+// SetTags set logging tags
+func (writer *SocketWriter) SetTags(tags map[string]string) {
+	writer.tags = tags
+
+	var tagStr string
+	for tagName, tagValue := range writer.tags {
+		tagStr = fmt.Sprintf("%s%s=\"%s\" ", tagStr, tagName, tagValue)
+	}
+
+	writer.tagStr = tagStr
 }
 
 // SetHook set hook for logging action
