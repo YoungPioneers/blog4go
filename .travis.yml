@@ -3,6 +3,8 @@ language: go
 os:
         - linux
 
+group: travis_lts
+
 go:
         - 1.8
         - 1.9
