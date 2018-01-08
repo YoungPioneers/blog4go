@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - 更新时间缓存的间隔由1秒改成1毫秒. @egmkang
+- 修改日志输出格式为类似ltsv的格式
 
 ### Fixed
 - 修复baseFileWriter初始化是会出现的资源竞争

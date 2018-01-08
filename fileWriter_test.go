@@ -263,7 +263,7 @@ func TestFileWriterMultiGoroutine(t *testing.T) {
 			t.Errorf("line %d detect inconsistent line. not formatted. lineStr: %s", line, lineStr)
 		}
 
-		if "haha eddie. en\\en, always 18 and 3.141500, true, {A:123 B:test}\"" != arrs[1] && "test for not formated\"" != arrs[1] {
+		if "haha eddie. en\\en, always 18 and 3.141500, true, {A:123 B:test}\" " != arrs[1] && "test for not formated\" " != arrs[1] {
 			t.Errorf("line %d detect inconsistent line. message not correct. lineStr: %s", line, lineStr)
 		}
 	}
