@@ -108,7 +108,6 @@ func (writer *SocketWriter) writef(level LevelType, format string, args ...inter
 	}
 
 	defer func() {
-
 		// call log hook
 		if nil != writer.hook && !(level < writer.hookLevel) {
 			if writer.hookAsync {

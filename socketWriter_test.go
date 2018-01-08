@@ -3,7 +3,6 @@
 package blog4go
 
 import (
-	"fmt"
 	"net"
 	"strings"
 	"sync"
@@ -111,12 +110,6 @@ func TestSocketWriterBasicOperation(t *testing.T) {
 }
 
 func TestSignleSocketWriter(t *testing.T) {
-	err := NewSocketWriter("udp", "127.0.0.1:12124")
-	defer Close()
-	if nil != err {
-		t.Error(err.Error())
-	}
-
 	var wg sync.WaitGroup
 	var wgListen sync.WaitGroup
 
@@ -127,42 +120,51 @@ func TestSignleSocketWriter(t *testing.T) {
 
 		initPrefix(false)
 
-		// begin listen udp packages on 127.0.0.1:12124
-		serverAddr, _ := net.ResolveUDPAddr("udp", "127.0.0.1:12124")
-		conn, err := net.ListenUDP("udp", serverAddr)
+		// begin listen tcp packages on 127.0.0.1:12124
+		serverAddr, _ := net.ResolveTCPAddr("tcp", "127.0.0.1:12124")
+		listener, err := net.ListenTCP("tcp", serverAddr)
 		if nil != err {
-			fmt.Println(err.Error())
 			t.Error(err.Error())
 		}
 		wgListen.Done()
 
+		conn, err := listener.Accept()
+		if nil != err {
+			t.Error(err.Error())
+		}
+
 		var bytes = make([]byte, 1024)
 		_, err = conn.Read(bytes)
 		if nil != err {
-			fmt.Println(err.Error())
 			t.Error(err.Error())
 		}
 
 		str := string(bytes)
 		arrs := strings.Split(str, " level=\"DEBUG\" ")
 		if len(arrs) != 2 {
-			t.Errorf("udp message format wrong. str: %s", str)
+			t.Errorf("tcp message format wrong. str: %s", str)
 			return
 		}
 
 		// FIXME this may not be accurate
 		if arrs[1][:10] != "msg=\"haha\"" {
-			t.Errorf("udp message content wrong. str: %s", arrs[1][:10])
+			t.Errorf("tcp message content wrong. str: %s", arrs[1][:10])
 			return
 		}
 	}()
-
 	wgListen.Wait()
+
+	err := NewSocketWriter("tcp", "127.0.0.1:12124")
+	defer Close()
+	if nil != err {
+		t.Error(err.Error())
+	}
+
 	blog.Debug("haha")
 	wg.Wait()
 
 	// chekc init socket writer multi time
-	err = NewSocketWriter("udp", "127.0.0.1:12124")
+	err = NewSocketWriter("tcp", "127.0.0.1:12124")
 	defer Close()
 	if ErrAlreadyInit != err {
 		t.Error("duplicate init check fail")
