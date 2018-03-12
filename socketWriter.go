@@ -23,7 +23,7 @@ type SocketWriter struct {
 	// socket
 	writer net.Conn
 
-	lock *sync.Mutex
+	lock *sync.RWMutex
 
 	// tags
 	tags   map[string]string
@@ -52,7 +52,7 @@ func newSocketWriter(network string, address string) (socketWriter *SocketWriter
 	socketWriter = new(SocketWriter)
 	socketWriter.level = DEBUG
 	socketWriter.closed = false
-	socketWriter.lock = new(sync.Mutex)
+	socketWriter.lock = new(sync.RWMutex)
 
 	// log hook
 	socketWriter.hook = nil
@@ -69,8 +69,8 @@ func newSocketWriter(network string, address string) (socketWriter *SocketWriter
 }
 
 func (writer *SocketWriter) write(level LevelType, args ...interface{}) {
-	writer.lock.Lock()
-	defer writer.lock.Unlock()
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
 
 	if writer.closed {
 		return
@@ -81,12 +81,18 @@ func (writer *SocketWriter) write(level LevelType, args ...interface{}) {
 		if nil != writer.hook && !(level < writer.hookLevel) {
 			if writer.hookAsync {
 				go func(level LevelType, args ...interface{}) {
-					writer.hook.Fire(level, args...)
+					writer.lock.RLock()
+					defer writer.lock.RUnlock()
+
+					if writer.closed {
+						return
+					}
+
+					writer.hook.Fire(level, writer.Tags(), args...)
 				}(level, args...)
 
 			} else {
-				writer.hook.Fire(level, args...)
-
+				writer.hook.Fire(level, writer.Tags(), args...)
 			}
 		}
 	}()
@@ -100,8 +106,8 @@ func (writer *SocketWriter) write(level LevelType, args ...interface{}) {
 }
 
 func (writer *SocketWriter) writef(level LevelType, format string, args ...interface{}) {
-	writer.lock.Lock()
-	defer writer.lock.Unlock()
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
 
 	if writer.closed {
 		return
@@ -112,11 +118,18 @@ func (writer *SocketWriter) writef(level LevelType, format string, args ...inter
 		if nil != writer.hook && !(level < writer.hookLevel) {
 			if writer.hookAsync {
 				go func(level LevelType, format string, args ...interface{}) {
-					writer.hook.Fire(level, fmt.Sprintf(format, args...))
+					writer.lock.RLock()
+					defer writer.lock.RUnlock()
+
+					if writer.closed {
+						return
+					}
+
+					writer.hook.Fire(level, writer.Tags(), fmt.Sprintf(format, args...))
 				}(level, format, args...)
 
 			} else {
-				writer.hook.Fire(level, fmt.Sprintf(format, args...))
+				writer.hook.Fire(level, writer.Tags(), fmt.Sprintf(format, args...))
 			}
 		}
 	}()
@@ -141,11 +154,15 @@ func (writer *SocketWriter) SetLevel(level LevelType) {
 
 // Tags return logging tags
 func (writer *SocketWriter) Tags() map[string]string {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
 	return writer.tags
 }
 
 // SetTags set logging tags
 func (writer *SocketWriter) SetTags(tags map[string]string) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
 	writer.tags = tags
 
 	var tagStr string

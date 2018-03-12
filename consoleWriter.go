@@ -58,7 +58,6 @@ func newConsoleWriter(redirected bool) (consoleWriter *ConsoleWriter, err error)
 	}
 
 	consoleWriter.closed = false
-
 	consoleWriter.colored = false
 
 	// log hook
@@ -99,14 +98,22 @@ func (writer *ConsoleWriter) write(level LevelType, args ...interface{}) {
 	}
 
 	defer func() {
-		if nil != writer.hook && !(level < writer.hookLevel) {
+		if nil != writer.hook && !(level < writer.hookLevel) && !writer.closed {
 			if writer.hookAsync {
 				go func(level LevelType, args ...interface{}) {
-					writer.hook.Fire(level, args...)
+					writer.lock.RLock()
+					defer writer.lock.RUnlock()
+
+					if writer.closed {
+						return
+					}
+
+					//fmt.Printf("level: %s\n", level.String())
+					writer.hook.Fire(level, writer.blog.Tags(), args...)
 				}(level, args...)
 
 			} else {
-				writer.hook.Fire(level, args...)
+				writer.hook.Fire(level, writer.blog.Tags(), args...)
 			}
 		}
 	}()
@@ -128,14 +135,21 @@ func (writer *ConsoleWriter) writef(level LevelType, format string, args ...inte
 	}
 
 	defer func() {
-		if nil != writer.hook && !(level < writer.hookLevel) {
+		if nil != writer.hook && !(level < writer.hookLevel) && !writer.closed {
 			if writer.hookAsync {
 				go func(level LevelType, format string, args ...interface{}) {
-					writer.hook.Fire(level, fmt.Sprintf(format, args...))
+					writer.lock.RLock()
+					defer writer.lock.RUnlock()
+
+					if writer.closed {
+						return
+					}
+
+					writer.hook.Fire(level, writer.blog.Tags(), fmt.Sprintf(format, args...))
 				}(level, format, args...)
 
 			} else {
-				writer.hook.Fire(level, fmt.Sprintf(format, args...))
+				writer.hook.Fire(level, writer.blog.Tags(), fmt.Sprintf(format, args...))
 			}
 		}
 	}()

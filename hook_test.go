@@ -64,7 +64,7 @@ func (hook *MyHook) SetMessage(message string) {
 	hook.message = message
 }
 
-func (hook *MyHook) Fire(level LevelType, args ...interface{}) {
+func (hook *MyHook) Fire(level LevelType, tags map[string]string, args ...interface{}) {
 	hook.Add()
 	hook.SetLevel(level)
 	hook.SetMessage(fmt.Sprint(args...))
