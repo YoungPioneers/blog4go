@@ -275,6 +275,8 @@ func (writer *baseFileWriter) resetFile() {
 
 // write writes pure message with specific level
 func (writer *baseFileWriter) write(level LevelType, args ...interface{}) {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
 	var size = 0
 
 	if writer.closed {
@@ -286,11 +288,17 @@ func (writer *baseFileWriter) write(level LevelType, args ...interface{}) {
 		if nil != writer.hook && !(level < writer.hookLevel) {
 			if writer.hookAsync {
 				go func(level LevelType, args ...interface{}) {
-					writer.hook.Fire(level, args...)
+					writer.lock.RLock()
+					defer writer.lock.RUnlock()
+
+					if writer.closed {
+						return
+					}
+					writer.hook.Fire(level, writer.blog.Tags(), args...)
 				}(level, args...)
 
 			} else {
-				writer.hook.Fire(level, args...)
+				writer.hook.Fire(level, writer.blog.Tags(), args...)
 			}
 		}
 
@@ -321,11 +329,17 @@ func (writer *baseFileWriter) writef(level LevelType, format string, args ...int
 		if nil != writer.hook && !(level < writer.hookLevel) {
 			if writer.hookAsync {
 				go func(level LevelType, format string, args ...interface{}) {
-					writer.hook.Fire(level, fmt.Sprintf(format, args...))
+					writer.lock.RLock()
+					defer writer.lock.RUnlock()
+
+					if writer.closed {
+						return
+					}
+					writer.hook.Fire(level, writer.blog.Tags(), fmt.Sprintf(format, args...))
 				}(level, format, args...)
 
 			} else {
-				writer.hook.Fire(level, fmt.Sprintf(format, args...))
+				writer.hook.Fire(level, writer.blog.Tags(), fmt.Sprintf(format, args...))
 			}
 		}
 

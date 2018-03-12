@@ -128,6 +128,7 @@ func NewWriterFromConfigAsFile(configFile string) (err error) {
 	}
 
 	multiWriter := new(MultiWriter)
+	multiWriter.lock = new(sync.RWMutex)
 
 	multiWriter.level = DEBUG
 	if level := LevelFromString(config.MinLevel); level.valid() {
@@ -233,7 +234,7 @@ type BLog struct {
 	writer *bufio.Writer
 
 	// exclusive lock while calling write function of bufio.Writer
-	lock *sync.Mutex
+	lock *sync.RWMutex
 
 	// tags
 	tags   map[string]string
@@ -249,7 +250,7 @@ func NewBLog(in io.Writer) (blog *BLog) {
 	blog = new(BLog)
 	blog.in = in
 	blog.level = TRACE
-	blog.lock = new(sync.Mutex)
+	blog.lock = new(sync.RWMutex)
 	blog.closed = false
 
 	blog.writer = bufio.NewWriterSize(in, DefaultBufferSize)
@@ -352,8 +353,8 @@ func (blog *BLog) writef(level LevelType, format string, args ...interface{}) in
 
 // Flush flush buffer to disk
 func (blog *BLog) flush() {
-	blog.lock.Lock()
-	defer blog.lock.Unlock()
+	blog.lock.RLock()
+	defer blog.lock.RUnlock()
 
 	if blog.closed {
 		return
@@ -394,11 +395,15 @@ func (blog *BLog) SetLevel(level LevelType) *BLog {
 
 // Tags return logging tags
 func (blog *BLog) Tags() map[string]string {
+	blog.lock.RLock()
+	defer blog.lock.RUnlock()
 	return blog.tags
 }
 
 // SetTags set logging tags
 func (blog *BLog) SetTags(tags map[string]string) *BLog {
+	blog.lock.Lock()
+	defer blog.lock.Unlock()
 	blog.tags = tags
 
 	var tagStr string

@@ -5,6 +5,7 @@ package blog4go
 import (
 	"errors"
 	"fmt"
+	"sync"
 )
 
 var (
@@ -43,6 +44,9 @@ type MultiWriter struct {
 
 	// tags
 	tags map[string]string
+
+	// lock
+	lock *sync.RWMutex
 }
 
 // TimeRotated get timeRotated
@@ -139,11 +143,15 @@ func (writer *MultiWriter) SetLevel(level LevelType) {
 
 // Tags return logging tags
 func (writer *MultiWriter) Tags() map[string]string {
+	writer.lock.RLock()
+	defer writer.lock.RUnlock()
 	return writer.tags
 }
 
 // SetTags set logging tags
 func (writer *MultiWriter) SetTags(tags map[string]string) {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
 	writer.tags = tags
 
 	for _, singleWriter := range writer.writers {
@@ -158,6 +166,9 @@ func (writer *MultiWriter) Level() LevelType {
 
 // Close close file writer
 func (writer *MultiWriter) Close() {
+	writer.lock.Lock()
+	defer writer.lock.Unlock()
+
 	for _, fileWriter := range writer.writers {
 		fileWriter.Close()
 	}
@@ -170,11 +181,18 @@ func (writer *MultiWriter) write(level LevelType, args ...interface{}) {
 		if nil != writer.hook && !(level < writer.hookLevel) {
 			if writer.hookAsync {
 				go func(level LevelType, args ...interface{}) {
-					writer.hook.Fire(level, args...)
+					writer.lock.RLock()
+					defer writer.lock.RUnlock()
+
+					if writer.closed {
+						return
+					}
+
+					writer.hook.Fire(level, writer.Tags(), args...)
 				}(level, args...)
 
 			} else {
-				writer.hook.Fire(level, args...)
+				writer.hook.Fire(level, writer.Tags(), args...)
 			}
 		}
 	}()
@@ -188,11 +206,18 @@ func (writer *MultiWriter) writef(level LevelType, format string, args ...interf
 		if nil != writer.hook && !(level < writer.hookLevel) {
 			if writer.hookAsync {
 				go func(level LevelType, format string, args ...interface{}) {
-					writer.hook.Fire(level, fmt.Sprintf(format, args...))
+					writer.lock.RLock()
+					defer writer.lock.RUnlock()
+
+					if writer.closed {
+						return
+					}
+
+					writer.hook.Fire(level, writer.Tags(), fmt.Sprintf(format, args...))
 				}(level, format, args...)
 
 			} else {
-				writer.hook.Fire(level, fmt.Sprintf(format, args...))
+				writer.hook.Fire(level, writer.Tags(), fmt.Sprintf(format, args...))
 
 			}
 		}

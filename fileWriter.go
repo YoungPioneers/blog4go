@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"path"
 	"strings"
+	"sync"
 )
 
 // NewFileWriter initialize a file writer
@@ -19,6 +20,7 @@ func NewFileWriter(baseDir string, rotate bool) (err error) {
 	}
 
 	fileWriter := new(MultiWriter)
+	fileWriter.lock = new(sync.RWMutex)
 	fileWriter.level = DEBUG
 	fileWriter.closed = false
 
