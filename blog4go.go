@@ -353,8 +353,8 @@ func (blog *BLog) writef(level LevelType, format string, args ...interface{}) in
 
 // Flush flush buffer to disk
 func (blog *BLog) flush() {
-	blog.lock.RLock()
-	defer blog.lock.RUnlock()
+	blog.lock.Lock()
+	defer blog.lock.Unlock()
 
 	if blog.closed {
 		return
