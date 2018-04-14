@@ -11,7 +11,6 @@ BLog4go 是高性能日志库。创新地使用“边解析边输出”方法进
 [![Go Report Card](https://goreportcard.com/badge/github.com/YoungPioneers/blog4go)](https://goreportcard.com/report/github.com/YoungPioneers/blog4go)
 [![GoDoc](https://godoc.org/github.com/YoungPioneers/blog4go?status.svg)](https://godoc.org/github.com/YoungPioneers/blog4go)
 
-
 Features
 ------------------
 * *Partially write* to the [bufio.Writer](https://golang.org/pkg/bufio/#Writer) as soon as posible while formatting message to improve performance
@@ -28,7 +27,6 @@ Features
 	* Console writer
 	* File writer
 	* Socket writer
-
 
 Quick-start
 ------------------
