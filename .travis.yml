@@ -8,6 +8,7 @@ group: travis_lts
 go:
         - 1.8
         - 1.9
+        - 1.10
         - tip
 install:
         - go get github.com/golang/lint/golint
