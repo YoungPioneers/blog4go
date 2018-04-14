@@ -2,6 +2,10 @@
 All notable changes to this project will be documented in this file.
 
 ## [Released]
+## [0.5.8] - 2018-04-14
+### Fixed
+- 修复全局方法竞态crash
+
 ## [0.5.7] - 2018-01-02
 ### Added
 - 支持自定义字段输出

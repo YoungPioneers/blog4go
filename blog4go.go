@@ -33,7 +33,7 @@ var (
 	blog Writer
 
 	// global mutex log used for singlton
-	singltonLock *sync.Mutex
+	singltonLock *sync.RWMutex
 
 	// DefaultBufferSize bufio buffer size
 	DefaultBufferSize = 4096 // default memory page size
@@ -104,7 +104,7 @@ type Writer interface {
 }
 
 func init() {
-	singltonLock = new(sync.Mutex)
+	singltonLock = new(sync.RWMutex)
 	DefaultBufferSize = os.Getpagesize()
 }
 
@@ -430,156 +430,249 @@ func (blog *BLog) resetFile(in io.Writer) (err error) {
 
 // SetBufferSize set bufio buffer size in bytes
 func SetBufferSize(size int) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	DefaultBufferSize = size
 }
 
 // Level get log level
 func Level() LevelType {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	return blog.Level()
 }
 
 // SetLevel set level for logging action
 func SetLevel(level LevelType) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.SetLevel(level)
 }
 
 // Tags return logging tags
 func Tags() map[string]string {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	return blog.Tags()
 }
 
 // SetTags set logging tags
 func SetTags(tags map[string]string) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.SetTags(tags)
 }
 
 // SetHook set hook for logging action
 func SetHook(hook Hook) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.SetHook(hook)
 }
 
 // SetHookLevel set when hook will be called
 func SetHookLevel(level LevelType) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.SetHookLevel(level)
 }
 
 // SetHookAsync set whether hook is called async
 func SetHookAsync(async bool) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.SetHookAsync(async)
 }
 
 // Colored get whether it is log with colored
 func Colored() bool {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	return blog.Colored()
 }
 
 // SetColored set logging color
 func SetColored(colored bool) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.SetColored(colored)
 }
 
 // TimeRotated get timeRotated
 func TimeRotated() bool {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	return blog.TimeRotated()
 }
 
 // SetTimeRotated toggle time base logrotate on the fly
 func SetTimeRotated(timeRotated bool) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.SetTimeRotated(timeRotated)
 }
 
 // Retentions get retentions
 func Retentions() int64 {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	return blog.Retentions()
 }
 
 // SetRetentions set how many logs will keep after logrotate
 func SetRetentions(retentions int64) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.SetRetentions(retentions)
 }
 
 // RotateSize get rotateSize
 func RotateSize() int64 {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	return blog.RotateSize()
 }
 
 // SetRotateSize set size when logroatate
 func SetRotateSize(rotateSize int64) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.SetRotateSize(rotateSize)
 }
 
 // RotateLines get rotateLines
 func RotateLines() int {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	return blog.RotateLines()
 }
 
 // SetRotateLines set line number when logrotate
 func SetRotateLines(rotateLines int) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.SetRotateLines(rotateLines)
 }
 
 // Flush flush logs to disk
 func Flush() {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.flush()
 }
 
 // Trace static function for Trace
 func Trace(args ...interface{}) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.Trace(args...)
 }
 
 // Tracef static function for Tracef
 func Tracef(format string, args ...interface{}) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.Tracef(format, args...)
 }
 
 // Debug static function for Debug
 func Debug(args ...interface{}) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.Debug(args...)
 }
 
 // Debugf static function for Debugf
 func Debugf(format string, args ...interface{}) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.Debugf(format, args...)
 }
 
 // Info static function for Info
 func Info(args ...interface{}) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.Info(args...)
 }
 
 // Infof static function for Infof
 func Infof(format string, args ...interface{}) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.Infof(format, args...)
 }
 
 // Warn static function for Warn
 func Warn(args ...interface{}) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.Warn(args...)
 }
 
 // Warnf static function for Warnf
 func Warnf(format string, args ...interface{}) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.Warnf(format, args...)
 }
 
 // Error static function for Error
 func Error(args ...interface{}) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.Error(args...)
 }
 
 // Errorf static function for Errorf
 func Errorf(format string, args ...interface{}) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.Errorf(format, args...)
 }
 
 // Critical static function for Critical
 func Critical(args ...interface{}) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.Critical(args...)
 }
 
 // Criticalf static function for Criticalf
 func Criticalf(format string, args ...interface{}) {
+	singltonLock.RLock()
+	defer singltonLock.RUnlock()
+
 	blog.Criticalf(format, args...)
 }
 
