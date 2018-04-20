@@ -176,54 +176,30 @@ func (writer *MultiWriter) Close() {
 }
 
 func (writer *MultiWriter) write(level LevelType, args ...interface{}) {
-	defer func() {
-		// 异步调用log hook
-		if nil != writer.hook && !(level < writer.hookLevel) {
-			if writer.hookAsync {
-				go func(level LevelType, args ...interface{}) {
-					writer.lock.RLock()
-					defer writer.lock.RUnlock()
-
-					if writer.closed {
-						return
-					}
-
-					writer.hook.Fire(level, writer.Tags(), args...)
-				}(level, args...)
-
-			} else {
-				writer.hook.Fire(level, writer.Tags(), args...)
-			}
-		}
-	}()
-
 	writer.writers[level].write(level, args...)
+
+	if nil != writer.hook && !(level < writer.hookLevel) {
+		if writer.hookAsync {
+			// 异步调用log hook
+			go writer.hook.Fire(level, writer.Tags(), args...)
+		} else {
+			writer.hook.Fire(level, writer.Tags(), args...)
+		}
+	}
 }
 
 func (writer *MultiWriter) writef(level LevelType, format string, args ...interface{}) {
-	defer func() {
-		// 异步调用log hook
-		if nil != writer.hook && !(level < writer.hookLevel) {
-			if writer.hookAsync {
-				go func(level LevelType, format string, args ...interface{}) {
-					writer.lock.RLock()
-					defer writer.lock.RUnlock()
-
-					if writer.closed {
-						return
-					}
-
-					writer.hook.Fire(level, writer.Tags(), fmt.Sprintf(format, args...))
-				}(level, format, args...)
-
-			} else {
-				writer.hook.Fire(level, writer.Tags(), fmt.Sprintf(format, args...))
-
-			}
-		}
-	}()
-
 	writer.writers[level].writef(level, format, args...)
+
+	if nil != writer.hook && !(level < writer.hookLevel) {
+		if writer.hookAsync {
+			// 异步调用log hook
+			go writer.hook.Fire(level, writer.Tags(), fmt.Sprintf(format, args...))
+		} else {
+			writer.hook.Fire(level, writer.Tags(), fmt.Sprintf(format, args...))
+
+		}
+	}
 }
 
 // flush flush logs to disk

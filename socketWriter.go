@@ -76,33 +76,21 @@ func (writer *SocketWriter) write(level LevelType, args ...interface{}) {
 		return
 	}
 
-	defer func() {
-		// call log hook
-		if nil != writer.hook && !(level < writer.hookLevel) {
-			if writer.hookAsync {
-				go func(level LevelType, args ...interface{}) {
-					writer.lock.RLock()
-					defer writer.lock.RUnlock()
-
-					if writer.closed {
-						return
-					}
-
-					writer.hook.Fire(level, writer.Tags(), args...)
-				}(level, args...)
-
-			} else {
-				writer.hook.Fire(level, writer.Tags(), args...)
-			}
-		}
-	}()
-
 	buffer := bytes.NewBuffer(timeCache.Format())
 	buffer.WriteString(level.prefix())
 	buffer.WriteString(writer.tagStr)
 	buffer.WriteString(fmt.Sprintf("msg=\"%s\" ", fmt.Sprint(args...)))
 	buffer.WriteByte(EOL)
 	writer.writer.Write(buffer.Bytes())
+
+	// call log hook
+	if nil != writer.hook && !(level < writer.hookLevel) {
+		if writer.hookAsync {
+			go writer.hook.Fire(level, writer.Tags(), args...)
+		} else {
+			writer.hook.Fire(level, writer.Tags(), args...)
+		}
+	}
 }
 
 func (writer *SocketWriter) writef(level LevelType, format string, args ...interface{}) {
@@ -113,33 +101,21 @@ func (writer *SocketWriter) writef(level LevelType, format string, args ...inter
 		return
 	}
 
-	defer func() {
-		// call log hook
-		if nil != writer.hook && !(level < writer.hookLevel) {
-			if writer.hookAsync {
-				go func(level LevelType, format string, args ...interface{}) {
-					writer.lock.RLock()
-					defer writer.lock.RUnlock()
-
-					if writer.closed {
-						return
-					}
-
-					writer.hook.Fire(level, writer.Tags(), fmt.Sprintf(format, args...))
-				}(level, format, args...)
-
-			} else {
-				writer.hook.Fire(level, writer.Tags(), fmt.Sprintf(format, args...))
-			}
-		}
-	}()
-
 	buffer := bytes.NewBuffer(timeCache.Format())
 	buffer.WriteString(level.prefix())
 	buffer.WriteString(writer.tagStr)
 	buffer.WriteString(fmt.Sprintf("msg=\"%s\" ", fmt.Sprintf(format, args...)))
 	buffer.WriteByte(EOL)
 	writer.writer.Write(buffer.Bytes())
+
+	// call log hook
+	if nil != writer.hook && !(level < writer.hookLevel) {
+		if writer.hookAsync {
+			go writer.hook.Fire(level, writer.Tags(), fmt.Sprintf(format, args...))
+		} else {
+			writer.hook.Fire(level, writer.Tags(), fmt.Sprintf(format, args...))
+		}
+	}
 }
 
 // Level get level

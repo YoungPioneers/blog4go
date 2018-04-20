@@ -283,32 +283,21 @@ func (writer *baseFileWriter) write(level LevelType, args ...interface{}) {
 		return
 	}
 
-	defer func() {
-		// 异步调用log hook
-		if nil != writer.hook && !(level < writer.hookLevel) {
-			if writer.hookAsync {
-				go func(level LevelType, args ...interface{}) {
-					writer.lock.RLock()
-					defer writer.lock.RUnlock()
-
-					if writer.closed {
-						return
-					}
-					writer.hook.Fire(level, writer.blog.Tags(), args...)
-				}(level, args...)
-
-			} else {
-				writer.hook.Fire(level, writer.blog.Tags(), args...)
-			}
-		}
-
-		// logrotate
-		if writer.sizeRotated || writer.lineRotated {
-			writer.logSizeChan <- size
-		}
-	}()
-
 	size = writer.blog.write(level, args...)
+
+	// logrotate
+	if writer.sizeRotated || writer.lineRotated {
+		writer.logSizeChan <- size
+	}
+
+	if nil != writer.hook && !(level < writer.hookLevel) {
+		if writer.hookAsync {
+			// 异步调用log hook
+			go writer.hook.Fire(level, writer.blog.Tags(), args...)
+		} else {
+			writer.hook.Fire(level, writer.blog.Tags(), args...)
+		}
+	}
 }
 
 // write formats message with specific level and write it
@@ -324,32 +313,21 @@ func (writer *baseFileWriter) writef(level LevelType, format string, args ...int
 		return
 	}
 
-	defer func() {
-		// 异步调用log hook
-		if nil != writer.hook && !(level < writer.hookLevel) {
-			if writer.hookAsync {
-				go func(level LevelType, format string, args ...interface{}) {
-					writer.lock.RLock()
-					defer writer.lock.RUnlock()
-
-					if writer.closed {
-						return
-					}
-					writer.hook.Fire(level, writer.blog.Tags(), fmt.Sprintf(format, args...))
-				}(level, format, args...)
-
-			} else {
-				writer.hook.Fire(level, writer.blog.Tags(), fmt.Sprintf(format, args...))
-			}
-		}
-
-		// logrotate
-		if writer.sizeRotated || writer.lineRotated {
-			writer.logSizeChan <- size
-		}
-	}()
-
 	size = writer.blog.writef(level, format, args...)
+
+	// logrotate
+	if writer.sizeRotated || writer.lineRotated {
+		writer.logSizeChan <- size
+	}
+
+	if nil != writer.hook && !(level < writer.hookLevel) {
+		if writer.hookAsync {
+			// 异步调用log hook
+			go writer.hook.Fire(level, writer.blog.Tags(), fmt.Sprintf(format, args...))
+		} else {
+			writer.hook.Fire(level, writer.blog.Tags(), fmt.Sprintf(format, args...))
+		}
+	}
 }
 
 // Closed get writer status

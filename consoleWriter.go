@@ -97,33 +97,20 @@ func (writer *ConsoleWriter) write(level LevelType, args ...interface{}) {
 		return
 	}
 
-	defer func() {
-		if nil != writer.hook && !(level < writer.hookLevel) && !writer.closed {
-			if writer.hookAsync {
-				go func(level LevelType, args ...interface{}) {
-					writer.lock.RLock()
-					defer writer.lock.RUnlock()
-
-					if writer.closed {
-						return
-					}
-
-					//fmt.Printf("level: %s\n", level.String())
-					writer.hook.Fire(level, writer.blog.Tags(), args...)
-				}(level, args...)
-
-			} else {
-				writer.hook.Fire(level, writer.blog.Tags(), args...)
-			}
-		}
-	}()
-
 	if !writer.redirected && level >= WARNING {
 		writer.errblog.write(level, args...)
-		return
+	} else {
+		writer.blog.write(level, args...)
 	}
 
-	writer.blog.write(level, args...)
+	if nil != writer.hook && !(level < writer.hookLevel) && !writer.closed {
+		if writer.hookAsync {
+			go writer.hook.Fire(level, writer.blog.Tags(), args...)
+
+		} else {
+			writer.hook.Fire(level, writer.blog.Tags(), args...)
+		}
+	}
 }
 
 func (writer *ConsoleWriter) writef(level LevelType, format string, args ...interface{}) {
@@ -134,32 +121,19 @@ func (writer *ConsoleWriter) writef(level LevelType, format string, args ...inte
 		return
 	}
 
-	defer func() {
-		if nil != writer.hook && !(level < writer.hookLevel) && !writer.closed {
-			if writer.hookAsync {
-				go func(level LevelType, format string, args ...interface{}) {
-					writer.lock.RLock()
-					defer writer.lock.RUnlock()
-
-					if writer.closed {
-						return
-					}
-
-					writer.hook.Fire(level, writer.blog.Tags(), fmt.Sprintf(format, args...))
-				}(level, format, args...)
-
-			} else {
-				writer.hook.Fire(level, writer.blog.Tags(), fmt.Sprintf(format, args...))
-			}
-		}
-	}()
-
 	if !writer.redirected && level >= WARNING {
 		writer.errblog.writef(level, format, args...)
-		return
+	} else {
+		writer.blog.writef(level, format, args...)
 	}
 
-	writer.blog.writef(level, format, args...)
+	if nil != writer.hook && !(level < writer.hookLevel) && !writer.closed {
+		if writer.hookAsync {
+			go writer.hook.Fire(level, writer.blog.Tags(), fmt.Sprintf(format, args...))
+		} else {
+			writer.hook.Fire(level, writer.blog.Tags(), fmt.Sprintf(format, args...))
+		}
+	}
 }
 
 // Closed get writer status

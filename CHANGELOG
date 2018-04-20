@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.
 
 ## [Released]
 ## [0.5.8] - 2018-04-14
+### Changed
+- hook调用的逻辑不使用defer
+
 ### Fixed
 - 修复全局方法竞态crash
 
