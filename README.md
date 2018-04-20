@@ -107,16 +107,16 @@ Benchmark
 I do some benchmark on a HDD disk comparing amoung fmt,blog4go,seelog,logrus. [Benchmark Code](https://github.com/YoungPioneers/blog4go-benchmark)
 
 ```
-BenchmarkBlog4goSingleGoroutine-4               	 1000000	      1087 ns/op
-BenchmarkBlog4goMultiGoroutine-4                	   30000	     56569 ns/op
-BenchmarkFmtFormatSingleGoroutine-4             	  300000	      5104 ns/op
-BenchmarkFmtFormatWithTimecacheSingleGoroutine-4	  300000	      4256 ns/op
-BenchmarkFmtFormatWithTimecacheMultiGoroutine-4 	    3000	    509579 ns/op
-BenchmarkLogrusSingleGoroutine-4                	  100000	     13757 ns/op
-BenchmarkLogrusWithTimecacheSingleGoroutine-4   	  100000	     12752 ns/op
-BenchmarkLogrusWithTimecacheMultiGoroutine-4    	    1000	   2049809 ns/op
-BenchmarkSeelogSingleGoroutine-4                	   50000	     32846 ns/op
-BenchmarkSeelogMultiGoroutine-4                 	    1000	   3191334 ns/op
+BenchmarkBlog4goSingleGoroutine-4                        300000          4981 ns/op
+BenchmarkBlog4goMultiGoroutine-4                           3000        554542 ns/op
+BenchmarkFmtFormatSingleGoroutine-4                      300000          3727 ns/op
+BenchmarkFmtFormatWithTimecacheSingleGoroutine-4         500000          2951 ns/op
+BenchmarkFmtFormatWithTimecacheMultiGoroutine-4            3000        421204 ns/op
+BenchmarkLogrusSingleGoroutine-4                         100000         18652 ns/op
+BenchmarkLogrusWithTimecacheSingleGoroutine-4            100000         16024 ns/op
+BenchmarkLogrusWithTimecacheMultiGoroutine-4                500       2238614 ns/op
+BenchmarkSeelogSingleGoroutine-4                          50000         23476 ns/op
+BenchmarkSeelogMultiGoroutine-4                             500       2722851 ns/op
 ```
 
 It shows that blog4go can write log very fast, especially in situation with multi goroutines running at the same time~
