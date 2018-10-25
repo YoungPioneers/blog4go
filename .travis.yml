@@ -9,7 +9,7 @@ go:
         - 1.8
         - 1.9
 install:
-        - go get github.com/golang/lint/golint
+        - go get golang.org/x/lint/golint
         - go get github.com/jgautheron/goconst/cmd/goconst
         - go get github.com/mdempsky/unconvert
         - go get github.com/mattn/goveralls
