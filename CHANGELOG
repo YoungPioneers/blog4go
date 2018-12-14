@@ -2,6 +2,9 @@
 All notable changes to this project will be documented in this file.
 
 ## [Released]
+## [0.5.9] - 2018-12-14
+- timeCache的更新时间改回1秒
+
 ## [0.5.8] - 2018-04-14
 ### Changed
 - hook调用的逻辑不使用defer

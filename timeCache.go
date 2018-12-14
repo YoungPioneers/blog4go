@@ -44,14 +44,11 @@ func init() {
 	// update timeCache every seconds
 	go func() {
 		// tick every seconds
-		t := time.Tick(1 * time.Millisecond)
+		t := time.NewTicker(1 * time.Second)
 
 		//UpdateTimeCacheLoop:
-		for {
-			select {
-			case <-t:
-				timeCache.fresh()
-			}
+		for range t.C {
+			timeCache.fresh()
 		}
 	}()
 }
