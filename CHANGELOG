@@ -3,7 +3,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Released]
 ## [0.5.9] - 2018-12-14
+### Changed
 - timeCache的更新时间改回1秒
+
+### Fixed
+- multiWriter的write操作添加锁，避免不同level写同一个文件时会发生内容错乱
 
 ## [0.5.8] - 2018-04-14
 ### Changed

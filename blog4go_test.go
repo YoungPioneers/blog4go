@@ -3,6 +3,7 @@
 package blog4go
 
 import (
+	"fmt"
 	"os/exec"
 	"testing"
 	"time"
@@ -26,7 +27,9 @@ func TestGlobalOperation(t *testing.T) {
 	SetHook(hook)
 	SetHookLevel(INFO)
 
+	fmt.Println("something")
 	Debug("something")
+	fmt.Println("something2")
 	Debugf("%s", "something")
 	// wait for hook called
 	time.Sleep(1 * time.Millisecond)

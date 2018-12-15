@@ -176,7 +176,10 @@ func (writer *MultiWriter) Close() {
 }
 
 func (writer *MultiWriter) write(level LevelType, args ...interface{}) {
+
+	writer.lock.Lock()
 	writer.writers[level].write(level, args...)
+	writer.lock.Unlock()
 
 	if nil != writer.hook && !(level < writer.hookLevel) {
 		if writer.hookAsync {
@@ -189,7 +192,9 @@ func (writer *MultiWriter) write(level LevelType, args ...interface{}) {
 }
 
 func (writer *MultiWriter) writef(level LevelType, format string, args ...interface{}) {
+	writer.lock.Lock()
 	writer.writers[level].writef(level, format, args...)
+	writer.lock.Unlock()
 
 	if nil != writer.hook && !(level < writer.hookLevel) {
 		if writer.hookAsync {
