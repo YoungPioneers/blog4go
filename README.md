@@ -138,3 +138,9 @@ Changelog
 ------------------
 
 [CHANGELOG](https://raw.githubusercontent.com/YoungPioneers/blog4go/master/CHANGELOG)
+
+
+Stargazers over time
+------------------
+
+[![Stargazers over time](https://starchart.cc/YoungPioneers/blog4go.svg)](https://starchart.cc/YoungPioneers/blog4go)
