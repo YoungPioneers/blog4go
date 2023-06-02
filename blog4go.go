@@ -314,7 +314,13 @@ func (blog *BLog) writef(level LevelType, format string, args ...interface{}) in
 					escape = false
 				}
 
-				s, _ = blog.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				// 如果args越界的话，直接输出后续的内容
+				if n >= len(args) {
+					s, _ = blog.writer.WriteString(format[tagPos : i+1])
+				} else {
+					s, _ = blog.writer.WriteString(fmt.Sprintf(format[tagPos:i+1], args[n]))
+				}
+
 				size += s
 				n++
 				last = i + 1
@@ -330,7 +336,6 @@ func (blog *BLog) writef(level LevelType, format string, args ...interface{}) in
 			default:
 
 			}
-
 		} else {
 			// 占位符，百分号
 			if PLACEHOLDER == format[i] && !escape {

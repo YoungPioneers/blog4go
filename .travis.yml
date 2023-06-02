@@ -6,9 +6,9 @@ os:
 group: travis_lts
 
 go:
-        - "1.9"
-        - "1.10"
-        - "1.11"
+        - "1.18"
+        - "1.19"
+        - "1.20"
 install:
         - go get golang.org/x/lint/golint
         - go get github.com/jgautheron/goconst/cmd/goconst
