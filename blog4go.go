@@ -30,7 +30,7 @@ const (
 
 var (
 	// blog is the singleton instance use for blog.write/writef
-	blog Writer = &DefaultWriter{}
+	blog Writer
 
 	// global mutex log used for singlton
 	singltonLock *sync.RWMutex
